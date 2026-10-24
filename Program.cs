@@ -90,6 +90,14 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
+    // مستخدمون تجريبيون: يُنشأون فقط إذا كان SeedTestUsers=true في الإعدادات.
+    // لا تترك هذا مفعّلًا في أي نشر عام (راجع تحذير SeedTestUsersAsync).
+    if (bool.TryParse(builder.Configuration["SeedTestUsers"], out var seedTestUsers) && seedTestUsers)
+    {
+        var testUserManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        await SeedData.SeedTestUsersAsync(testUserManager);
+    }
+
     // الأدمن الأول: سجّل حسابًا بالإيميل الموجود في AdminEmail ثم أعد تشغيل التطبيق،
     // وسيُمنح دور Admin تلقائيًا. لا يوجد مستخدم أدمن مُنشأ بكلمة مرور داخل الكود.
     var adminEmail = builder.Configuration["AdminEmail"];

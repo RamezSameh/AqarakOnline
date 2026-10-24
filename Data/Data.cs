@@ -1,4 +1,5 @@
 using AqarakOnline.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -88,5 +89,49 @@ public static class SeedData
                 CreatedAt = seedDate
             });
         context.SaveChanges();
+    }
+
+    /// <summary>
+    /// مستخدمون تجريبيون للتجربة المحلية فقط.
+    /// تحذير أمني: كلمات المرور هنا معروفة ومنشورة مع الكود، فلا تنشر التطبيق
+    /// بهذه الإعدادات أبدًا. قبل أي نشر عام، اضبط SeedTestUsers على false
+    /// واحذف هؤلاء المستخدمين من قاعدة البيانات، وغيّر كلمات المرور.
+    /// المستخدم غير الموثَّق ليس له دور بعد، لأنه يأخذ دوره عند التأكيد فقط.
+    /// </summary>
+    public static async Task SeedTestUsersAsync(UserManager<ApplicationUser> userManager)
+    {
+        var testUsers = new[]
+        {
+            new { Phone = "01000000001", FullName = "أدمن تجريبي", Address = "القاهرة", Email = "Admin@Aqarak.com", Password = "Admin123456", Role = "Admin", Confirmed = true },
+            new { Phone = "01000000002", FullName = "مستخدم تجريبي", Address = "الجيزة", Email = "user@aqarak.test", Password = "User123456", Role = "User", Confirmed = true },
+            new { Phone = "01000000003", FullName = "مستخدم غير موثق (للتجربة)", Address = "القاهرة", Email = "unverified@aqarak.test", Password = "User123456", Role = "", Confirmed = false },
+        };
+
+        foreach (var test in testUsers)
+        {
+            var existing = await userManager.FindByNameAsync(test.Phone);
+            if (existing != null)
+            {
+                continue;
+            }
+            var user = new ApplicationUser
+            {
+                UserName = test.Phone,
+                PhoneNumber = test.Phone,
+                PhoneNumberConfirmed = test.Confirmed,
+                FullName = test.FullName,
+                Address = test.Address,
+                Email = test.Email
+            };
+            var result = await userManager.CreateAsync(user, test.Password);
+            if (!result.Succeeded)
+            {
+                continue;
+            }
+            if (!string.IsNullOrEmpty(test.Role))
+            {
+                await userManager.AddToRoleAsync(user, test.Role);
+            }
+        }
     }
 }
