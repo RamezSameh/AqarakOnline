@@ -466,6 +466,7 @@ public class ContactController : Controller
         ViewBag.Listing = listing;
         ViewBag.ContactPhone = _contact.Phone;
         ViewBag.ContactWhatsApp = _contact.WhatsApp;
+        ViewBag.ContactEmail = _contact.Email;
         return View(new ContactRequest
         {
             ListingId = listing.Id,
@@ -491,6 +492,7 @@ public class ContactController : Controller
             ViewBag.Listing = listing;
             ViewBag.ContactPhone = _contact.Phone;
             ViewBag.ContactWhatsApp = _contact.WhatsApp;
+            ViewBag.ContactEmail = _contact.Email;
             return View(request);
         }
 
@@ -527,6 +529,7 @@ public class ContactController : Controller
         ViewBag.WhatsAppUrl = $"https://wa.me/{_contact.WhatsAppDigits}?text={Uri.EscapeDataString(text)}";
         ViewBag.ContactPhone = _contact.Phone;
         ViewBag.ContactWhatsApp = _contact.WhatsApp;
+        ViewBag.ContactEmail = _contact.Email;
         return View(request);
     }
 }

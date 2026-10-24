@@ -46,7 +46,8 @@ dotnet run
   "AdminEmail": "ضع هنا إيميل حساب الأدمن",
   "Contact": {
     "Phone": "+20xxxxxxxxxx",
-    "WhatsApp": "+20xxxxxxxxxx"
+    "WhatsApp": "+20xxxxxxxxxx",
+    "Email": "contact@example.com"
   }
 }
 ```

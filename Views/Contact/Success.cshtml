@@ -5,4 +5,5 @@
 <p>@L.T("Phone"): @ViewBag.ContactPhone</p>
 <p><a class="btn btn-primary" href="@ViewBag.WhatsAppUrl" target="_blank" rel="noreferrer">@L.T("OpenWhatsApp")</a></p>
 <p>@L.T("WhatsApp"): @ViewBag.ContactWhatsApp</p>
+<p>@L.T("Email"): <a href="mailto:@ViewBag.ContactEmail">@ViewBag.ContactEmail</a></p>
 <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index">@L.T("BackToList")</a>

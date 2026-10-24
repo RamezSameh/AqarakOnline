@@ -8,6 +8,9 @@ public class ContactSettings
     /// <summary>رقم واتساب الإدارة. غيّره في appsettings.json.</summary>
     public string WhatsApp { get; set; } = "+200000000000";
 
+    /// <summary>إيميل التواصل المعروض في صفحة التواصل. غيّره في appsettings.json.</summary>
+    public string Email { get; set; } = string.Empty;
+
     /// <summary>رقم واتساب بدون + أو مسافات، جاهز لرابط wa.me.</summary>
     public string WhatsAppDigits =>
         new string((WhatsApp ?? string.Empty).Where(char.IsDigit).ToArray());

@@ -6,6 +6,7 @@
 <p><strong>@listing.Title</strong> - @L.T("AdNumber"): @listing.AdNumber - @L.ListingTypeText(listing.ListingType)</p>
 <p><strong>@L.T("Phone"):</strong> @ViewBag.ContactPhone</p>
 <p><strong>@L.T("WhatsApp"):</strong> @ViewBag.ContactWhatsApp</p>
+<p><strong>@L.T("Email"):</strong> <a href="mailto:@ViewBag.ContactEmail">@ViewBag.ContactEmail</a></p>
 <p>@L.T("Intent"): @L.IntentText(Model.Intent)</p>
 
 <form asp-action="Contact" method="post" class="form">
