@@ -62,7 +62,15 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// إعادة التوجيه إلى HTTPS قابلة للإيقاف من الإعدادات.
+// ملحوظة دقيقة: عند التشغيل على http فقط، لن يحدث تحويل أصلًا لأن الخادم
+// لا يستمع على https (الوسيط يحذّر ويمرّر الطلب)، لكن الإعداد يضمن عدم
+// التحويل حتى لو كان https مفعّلًا في وضع تشغيل آخر. للتجربة على نفس الشبكة
+// من الموبايل، اضبط UseHttpsRedirection على false زيادة أمان.
+if (app.Configuration.GetValue<bool>("UseHttpsRedirection", true))
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
