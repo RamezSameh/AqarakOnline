@@ -7,13 +7,26 @@
     <span class="listing-status @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</span>
 </div>
 
-@if (Model.Photo != null && Model.PhotoContentType != null)
+@{
+    var photos = Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id).ToList();
+    var video = Model.Attachments.FirstOrDefault(a => a.Kind == AttachmentKind.Video);
+}
+@if (photos.Any())
 {
-    <img class="detail-photo" src="data:@Model.PhotoContentType;base64,@Convert.ToBase64String(Model.Photo)" alt="@Model.Title" />
+    <div class="gallery">
+        @foreach (var photo in photos)
+        {
+            <img class="detail-photo" src="/@photo.FilePath" alt="@Model.Title" />
+        }
+    </div>
 }
 else
 {
     <div class="detail-photo placeholder">@L.T("NoPhoto")</div>
+}
+@if (video != null)
+{
+    <video class="detail-video" controls src="/@video.FilePath"></video>
 }
 
 <p><strong>@L.T("Area"):</strong> @Model.Area</p>

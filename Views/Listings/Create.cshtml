@@ -56,8 +56,22 @@
         <label><input asp-for="IsAvailable" type="checkbox" /> @L.T("Available")</label>
     }
 
-    <label>@L.T("Photo")</label>
-    <input asp-for="PhotoFile" type="file" accept="image/*" />
+    <label>صور توضيحية (حتى 5 صور)</label>
+    <input asp-for="PhotoFiles" type="file" accept="image/*" multiple />
+    <label>فيديو (حتى 25 ميجا)</label>
+    <input asp-for="VideoFile" type="file" accept="video/*" />
+
+    @if (isEdit && Model.Attachments.Any())
+    {
+        <h3>المرفقات الحالية</h3>
+        @foreach (var attachment in Model.Attachments.OrderBy(a => a.Kind).ThenBy(a => a.Order))
+        {
+            <label>
+                <input type="checkbox" name="DeleteAttachmentIds" value="@attachment.Id" />
+                حذف: @(attachment.Kind == AttachmentKind.Photo ? "صورة" : "فيديو") - @attachment.OriginalFileName
+            </label>
+        }
+    }
 
     <div class="actions">
         <button type="submit" class="btn btn-primary">@L.T("Save")</button>

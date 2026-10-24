@@ -68,6 +68,40 @@ public enum ListingApproval
     Rejected
 }
 
+public enum AttachmentKind
+{
+    Photo,
+    Video
+}
+
+/// <summary>
+/// مرفق إعلان: صورة توضيحية (حتى 5 صور للإعلان) أو فيديو واحد (حتى 25 ميجا).
+/// الملف نفسه يُحفظ على القرص تحت wwwroot/uploads، وقاعدة البيانات تحتفظ بمساره فقط.
+/// </summary>
+public class ListingAttachment
+{
+    public int Id { get; set; }
+
+    public int ListingId { get; set; }
+    public Listing? Listing { get; set; }
+
+    public AttachmentKind Kind { get; set; }
+
+    /// <summary>المسار النسبي داخل wwwroot، مثل uploads/listings/5/abc.jpg.</summary>
+    [MaxLength(500)]
+    public string FilePath { get; set; } = string.Empty;
+
+    [MaxLength(100)]
+    public string ContentType { get; set; } = string.Empty;
+
+    [MaxLength(200)]
+    public string OriginalFileName { get; set; } = string.Empty;
+
+    public long SizeBytes { get; set; }
+
+    public int Order { get; set; }
+}
+
 public class Listing
 {
     public int Id { get; set; }
@@ -117,11 +151,16 @@ public class Listing
     public string? OwnerId { get; set; }
     public ApplicationUser? Owner { get; set; }
 
-    public byte[]? Photo { get; set; }
-    public string? PhotoContentType { get; set; }
+    public List<ListingAttachment> Attachments { get; set; } = new();
 
     [NotMapped]
-    public IFormFile? PhotoFile { get; set; }
+    public List<IFormFile> PhotoFiles { get; set; } = new();
+
+    [NotMapped]
+    public IFormFile? VideoFile { get; set; }
+
+    [NotMapped]
+    public int[] DeleteAttachmentIds { get; set; } = Array.Empty<int>();
 
     public IEnumerable<string> FeaturesList =>
         (Features ?? string.Empty)

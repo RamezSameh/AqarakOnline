@@ -22,7 +22,7 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var listings = await _context.Listings
+        var listings = await _context.Listings.Include(l => l.Attachments)
             .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
             .OrderByDescending(l => l.CreatedAt)
             .Take(6)
@@ -58,10 +58,12 @@ public class LanguageController : Controller
 public class ListingsController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly IWebHostEnvironment _env;
 
-    public ListingsController(ApplicationDbContext context)
+    public ListingsController(ApplicationDbContext context, IWebHostEnvironment env)
     {
         _context = context;
+        _env = env;
     }
 
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
@@ -71,7 +73,7 @@ public class ListingsController : Controller
         string? search, ListingType? listingType, PropertyType? propertyType,
         decimal? minPrice, decimal? maxPrice, bool onlyAvailable = false)
     {
-        var query = _context.Listings.Include(l => l.Owner)
+        var query = _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.Approval == ListingApproval.Approved).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -113,7 +115,7 @@ public class ListingsController : Controller
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
-        var listing = await _context.Listings.Include(l => l.Owner)
+        var listing = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .FirstOrDefaultAsync(l => l.Id == id);
         if (listing == null)
         {
@@ -144,8 +146,10 @@ public class ListingsController : Controller
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(100_000_000)]
     public async Task<IActionResult> Create(Listing listing)
     {
+        ValidateAttachments(listing.PhotoFiles, listing.VideoFile, existingPhotoCount: 0, existingVideo: false);
         if (!ModelState.IsValid)
         {
             return View(listing);
@@ -156,12 +160,13 @@ public class ListingsController : Controller
         listing.IsAvailable = true;
         listing.Approval = User.IsInRole("Admin") ? ListingApproval.Approved : ListingApproval.Pending;
         listing.AdNumber = "TEMP";
-        await ReadPhotoAsync(listing);
+        listing.Attachments = new List<ListingAttachment>();
         _context.Listings.Add(listing);
         await _context.SaveChangesAsync();
 
         // رقم الإعلان يتولد من الـ Id بعد الحفظ، فيبقى فريدًا ومتسلسلًا.
         listing.AdNumber = $"AQ-{listing.Id:D4}";
+        await SaveAttachmentsAsync(listing);
         await _context.SaveChangesAsync();
 
         if (listing.Approval == ListingApproval.Pending)
@@ -176,7 +181,8 @@ public class ListingsController : Controller
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        var listing = await _context.Listings.FindAsync(id);
+        var listing = await _context.Listings.Include(l => l.Attachments)
+            .FirstOrDefaultAsync(l => l.Id == id);
         if (listing == null)
         {
             return NotFound();
@@ -191,9 +197,11 @@ public class ListingsController : Controller
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(100_000_000)]
     public async Task<IActionResult> Edit(int id, Listing model)
     {
-        var listing = await _context.Listings.FindAsync(id);
+        var listing = await _context.Listings.Include(l => l.Attachments)
+            .FirstOrDefaultAsync(l => l.Id == id);
         if (listing == null)
         {
             return NotFound();
@@ -202,8 +210,14 @@ public class ListingsController : Controller
         {
             return Forbid();
         }
+
+        var deleteIds = model.DeleteAttachmentIds ?? Array.Empty<int>();
+        var existingPhotos = listing.Attachments.Count(a => a.Kind == AttachmentKind.Photo && !deleteIds.Contains(a.Id));
+        var existingVideo = listing.Attachments.Any(a => a.Kind == AttachmentKind.Video && !deleteIds.Contains(a.Id));
+        ValidateAttachments(model.PhotoFiles, model.VideoFile, existingPhotos, existingVideo);
         if (!ModelState.IsValid)
         {
+            model.Attachments = listing.Attachments;
             return View(model);
         }
 
@@ -220,12 +234,13 @@ public class ListingsController : Controller
         {
             listing.Approval = ListingApproval.Pending;
         }
-        if (model.PhotoFile != null)
+
+        foreach (var attachment in listing.Attachments.Where(a => deleteIds.Contains(a.Id)).ToList())
         {
-            await ReadPhotoAsync(model);
-            listing.Photo = model.Photo;
-            listing.PhotoContentType = model.PhotoContentType;
+            AttachmentStorage.DeleteFile(_env.WebRootPath, attachment.FilePath);
+            _context.ListingAttachments.Remove(attachment);
         }
+        await SaveAttachmentsAsync(listing, model.PhotoFiles, model.VideoFile);
 
         await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Details), new { id });
@@ -252,7 +267,8 @@ public class ListingsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var listing = await _context.Listings.FindAsync(id);
+        var listing = await _context.Listings.Include(l => l.Attachments)
+            .FirstOrDefaultAsync(l => l.Id == id);
         if (listing == null)
         {
             return NotFound();
@@ -261,8 +277,17 @@ public class ListingsController : Controller
         {
             return Forbid();
         }
+        var isOwn = listing.OwnerId == CurrentUserId;
+        foreach (var attachment in listing.Attachments.ToList())
+        {
+            AttachmentStorage.DeleteFile(_env.WebRootPath, attachment.FilePath);
+        }
         _context.Listings.Remove(listing);
         await _context.SaveChangesAsync();
+        if (!isOwn && User.IsInRole("Admin"))
+        {
+            return RedirectToAction("Listings", "Admin");
+        }
         return RedirectToAction(nameof(MyListings));
     }
 
@@ -270,7 +295,7 @@ public class ListingsController : Controller
     [HttpGet]
     public async Task<IActionResult> MyListings()
     {
-        var listings = await _context.Listings
+        var listings = await _context.Listings.Include(l => l.Attachments)
             .Where(l => l.OwnerId == CurrentUserId)
             .OrderByDescending(l => l.CreatedAt)
             .ToListAsync();
@@ -307,20 +332,51 @@ public class ListingsController : Controller
         return RedirectToAction("Listings", "Admin");
     }
 
-    private static async Task ReadPhotoAsync(Listing listing)
+    private void ValidateAttachments(
+        List<IFormFile> photoFiles, IFormFile? videoFile, int existingPhotoCount, bool existingVideo)
     {
-        if (listing.PhotoFile == null || listing.PhotoFile.Length == 0)
+        var photos = (photoFiles ?? new List<IFormFile>()).Where(f => f.Length > 0).ToList();
+        if (existingPhotoCount + photos.Count > AttachmentStorage.MaxPhotosPerListing)
         {
-            return;
+            ModelState.AddModelError(string.Empty, "عدد الصور التوضيحية لا يتعدى 5 صور للإعلان.");
         }
-        if (!listing.PhotoFile.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+        foreach (var photo in photos)
         {
-            return;
+            var error = AttachmentStorage.ValidatePhoto(photo);
+            if (error != null)
+            {
+                ModelState.AddModelError(string.Empty, error);
+            }
         }
-        using var stream = new MemoryStream();
-        await listing.PhotoFile.CopyToAsync(stream);
-        listing.Photo = stream.ToArray();
-        listing.PhotoContentType = listing.PhotoFile.ContentType;
+        if (videoFile != null && videoFile.Length > 0)
+        {
+            if (existingVideo)
+            {
+                ModelState.AddModelError(string.Empty, "يوجد فيديو بالفعل للإعلان، احذفه أولًا قبل إضافة فيديو جديد.");
+            }
+            var error = AttachmentStorage.ValidateVideo(videoFile);
+            if (error != null)
+            {
+                ModelState.AddModelError(string.Empty, error);
+            }
+        }
+    }
+
+    private async Task SaveAttachmentsAsync(Listing listing, List<IFormFile>? photoFiles = null, IFormFile? videoFile = null)
+    {
+        var photos = (photoFiles ?? listing.PhotoFiles).Where(f => f.Length > 0).ToList();
+        var order = listing.Attachments.Where(a => a.Kind == AttachmentKind.Photo).Select(a => a.Order).DefaultIfEmpty(-1).Max() + 1;
+        foreach (var photo in photos)
+        {
+            var attachment = await AttachmentStorage.SaveAsync(photo, AttachmentKind.Photo, listing.Id, _env.WebRootPath, order++);
+            _context.ListingAttachments.Add(attachment);
+        }
+        var video = videoFile ?? listing.VideoFile;
+        if (video != null && video.Length > 0)
+        {
+            var attachment = await AttachmentStorage.SaveAsync(video, AttachmentKind.Video, listing.Id, _env.WebRootPath, 0);
+            _context.ListingAttachments.Add(attachment);
+        }
     }
 }
 

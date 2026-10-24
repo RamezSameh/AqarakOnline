@@ -12,6 +12,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Listing> Listings => Set<Listing>();
     public DbSet<ContactRequest> ContactRequests => Set<ContactRequest>();
+    public DbSet<ListingAttachment> ListingAttachments => Set<ListingAttachment>();
     public DbSet<PhoneVerificationCode> PhoneVerificationCodes => Set<PhoneVerificationCode>();
 }
 

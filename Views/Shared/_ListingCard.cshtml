@@ -1,9 +1,12 @@
 @model Listing
+@{
+    var firstPhoto = Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id).FirstOrDefault();
+}
 <article class="listing-card">
     <div class="availability-bar @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</div>
-    @if (Model.Photo != null && Model.PhotoContentType != null)
+    @if (firstPhoto != null)
     {
-        <img class="listing-photo" src="data:@Model.PhotoContentType;base64,@Convert.ToBase64String(Model.Photo)" alt="@Model.Title" />
+        <img class="listing-photo" src="/@firstPhoto.FilePath" alt="@Model.Title" />
     }
     else
     {
