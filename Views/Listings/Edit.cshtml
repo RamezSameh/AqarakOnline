@@ -47,6 +47,10 @@
     <input asp-for="Price" type="number" min="0" step="any" />
     <span asp-validation-for="Price" class="field-error"></span>
 
+    <label>@L.T("AreaSqm")</label>
+    <input asp-for="AreaSqm" type="number" min="1" step="1" />
+    <span asp-validation-for="AreaSqm" class="field-error"></span>
+
     @if (isEdit)
     {
         <label><input asp-for="IsAvailable" type="checkbox" /> @L.T("Available")</label>

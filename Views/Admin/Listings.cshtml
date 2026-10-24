@@ -1,5 +1,6 @@
 @model IEnumerable<Listing>
 <h1>@L.T("AdminListings")</h1>
+<p>بيانات المعلن تظهر هنا للأدمن فقط، ولا تظهر في صفحة الإعلان العامة.</p>
 @if (!Model.Any())
 {
     <p>@L.T("NoResults")</p>
@@ -14,6 +15,7 @@ else
                 <th>@L.T("ListingType")</th>
                 <th>@L.T("Price")</th>
                 <th>@L.T("Owner")</th>
+                <th>@L.T("ApprovalStatus")</th>
                 <th></th>
             </tr>
         </thead>
@@ -25,13 +27,36 @@ else
                     <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></td>
                     <td>@L.ListingTypeText(listing.ListingType)</td>
                     <td>@L.PriceText(listing.Price, listing.ListingType)</td>
-                    <td>@(listing.Owner?.FullName ?? listing.Owner?.UserName ?? L.T("SiteAdmin"))</td>
                     <td>
+                        @(listing.Owner?.FullName ?? listing.Owner?.UserName ?? L.T("SiteAdmin"))<br />
+                        @(listing.Owner?.PhoneNumber ?? "-")<br />
+                        @(listing.Owner?.Address ?? "-")
+                    </td>
+                    <td>@L.ApprovalText(listing.Approval)</td>
+                    <td>
+                        @if (listing.Approval == ListingApproval.Pending)
+                        {
+                            <form asp-action="Approve" method="post" class="inline-form">
+                                <input type="hidden" name="id" value="@listing.Id" />
+                                <button type="submit" class="btn btn-primary">@L.T("Approve")</button>
+                            </form>
+                            <form asp-action="Reject" method="post" class="inline-form">
+                                <input type="hidden" name="id" value="@listing.Id" />
+                                <button type="submit" class="btn btn-ghost">@L.T("Reject")</button>
+                            </form>
+                        }
                         @if (listing.IsAvailable)
                         {
                             <form asp-controller="Listings" asp-action="MarkUnavailable" method="post" class="inline-form">
                                 <input type="hidden" name="id" value="@listing.Id" />
                                 <button type="submit" class="btn btn-ghost">@L.T("MarkUnavailable")</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-controller="Listings" asp-action="MarkAvailable" method="post" class="inline-form">
+                                <input type="hidden" name="id" value="@listing.Id" />
+                                <button type="submit" class="btn btn-ghost">@L.T("MarkAvailable")</button>
                             </form>
                         }
                         <a class="btn btn-ghost" asp-controller="Listings" asp-action="Delete" asp-route-id="@listing.Id">@L.T("Delete")</a>

@@ -46,6 +46,10 @@
         {
             <div class="alert alert-error">@TempData["Error"]</div>
         }
+        @if (TempData["Info"] != null)
+        {
+            <div class="alert alert-info">@TempData["Info"]</div>
+        }
         @RenderBody()
     </main>
     <footer class="site-footer">

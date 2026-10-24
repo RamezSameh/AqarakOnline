@@ -1,5 +1,6 @@
 @model Listing
 <article class="listing-card">
+    <div class="availability-bar @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</div>
     @if (Model.Photo != null && Model.PhotoContentType != null)
     {
         <img class="listing-photo" src="data:@Model.PhotoContentType;base64,@Convert.ToBase64String(Model.Photo)" alt="@Model.Title" />
@@ -16,8 +17,19 @@
         </div>
         <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a></h3>
         <p class="listing-area">@Model.Area</p>
+        <p class="listing-area">@L.T("AreaSqm"): @Model.AreaSqm</p>
         <p class="listing-price">@L.PriceText(Model.Price, Model.ListingType)</p>
-        <p class="listing-status @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</p>
-        <a class="btn btn-primary" asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@L.T("ViewDetails")</a>
+        <p class="listing-views">@L.T("Views"): @Model.ViewCount</p>
+        @if (Model.Approval != ListingApproval.Approved)
+        {
+            <p class="listing-status">@L.T("ApprovalStatus"): @L.ApprovalText(Model.Approval)</p>
+        }
+        <div class="actions">
+            <a class="btn btn-primary" asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@L.T("ViewDetails")</a>
+            @if (Model.IsAvailable && Model.Approval == ListingApproval.Approved)
+            {
+                <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id">@L.T("ContactUs")</a>
+            }
+        </div>
     </div>
 </article>

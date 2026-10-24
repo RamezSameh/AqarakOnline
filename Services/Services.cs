@@ -50,7 +50,7 @@ public class LanguageService
         ["ForSale"] = ("للبيع", "For sale"),
         ["ForRent"] = ("للإيجار", "For rent"),
         ["Available"] = ("متاح", "Available"),
-        ["NotAvailable"] = ("تم البيع / التأجير", "Sold / rented"),
+        ["NotAvailable"] = ("غير متاح", "Not available"),
         ["Price"] = ("السعر المبدئي", "Starting price"),
         ["PerMonth"] = ("شهريًا", "per month"),
         ["Currency"] = ("جنيه", "EGP"),
@@ -103,6 +103,34 @@ public class LanguageService
         ["NoResults"] = ("لا توجد إعلانات مطابقة.", "No matching listings."),
         ["MarkUnavailable"] = ("إغلاق الإعلان (تم البيع / التأجير)", "Close listing (sold / rented)"),
         ["FullName"] = ("الاسم الكامل", "Full name"),
+        ["PhoneNumber"] = ("رقم الموبايل", "Mobile number"),
+        ["Address"] = ("العنوان", "Address"),
+        ["VerifyPhone"] = ("تأكيد رقم الموبايل", "Verify mobile number"),
+        ["VerificationCode"] = ("كود التأكيد", "Verification code"),
+        ["Confirm"] = ("تأكيد", "Confirm"),
+        ["ResendCode"] = ("إرسال كود جديد", "Send a new code"),
+        ["PendingApproval"] = ("بانتظار موافقة الأدمن", "Pending admin approval"),
+        ["Approved"] = ("مقبول ومنشور", "Approved and published"),
+        ["Rejected"] = ("مرفوض", "Rejected"),
+        ["Approve"] = ("موافقة", "Approve"),
+        ["Reject"] = ("رفض", "Reject"),
+        ["ApprovalStatus"] = ("حالة النشر", "Publication status"),
+        ["PendingReviewNote"] = ("تم إرسال إعلانك للمراجعة، وسيظهر للعامة بعد موافقة الأدمن.", "Your listing was sent for review and will appear publicly after admin approval."),
+        ["AdvertiserData"] = ("بيانات المعلن (للأدمن فقط)", "Advertiser data (admin only)"),
+        ["AreaSqm"] = ("المساحة (م²)", "Area (sqm)"),
+        ["Views"] = ("عدد المشاهدات", "Views"),
+        ["MarkAvailable"] = ("إعادة إتاحة الإعلان", "Make listing available again"),
+        ["AboutUs"] = ("من نحن", "About us"),
+        ["AboutText"] = ("عقارك أونلاين منصة إعلانات عقارية تربط بين البائع والمشتري والمستأجر مباشرة عبر الإنترنت، من غير وسيط يفرض عليك شروطه أو عمولة مبالغ فيها.", "Aqarak Online is a real estate ads platform that connects sellers, buyers, and renters directly online, without a middleman imposing terms or an exaggerated commission."),
+        ["WhyChooseUs"] = ("ليه تختارنا؟", "Why choose us?"),
+        ["WhyFastTitle"] = ("أسرع طريقة للبيع والشراء والإيجار", "The fastest way to sell, buy, and rent"),
+        ["WhyFastText"] = ("اعرض عقارك أو ابحث عن عقارك في دقائق، وتابع طلبات التواصل أولًا بأول.", "List your property or find your property in minutes, and follow up on contact requests right away."),
+        ["WhyFollowTitle"] = ("تابع بنفسك واختر الأفضل", "Follow up yourself and choose the best"),
+        ["WhyFollowText"] = ("أنت اللي بتتابع إعلانك وطلباتك وتختار العرض الأنسب لك، من غير ما حد يختار مكانك.", "You follow your own listing and requests and choose the offer that suits you best, without anyone choosing for you."),
+        ["WhyCommissionTitle"] = ("عمولة على قد إيدك", "A commission you can afford"),
+        ["WhyCommissionText"] = ("عمولة مناسبة من غير مبالغة، لأن هدفنا إن الصفقة تتم بسهولة للطرفين.", "A reasonable commission without exaggeration, because our goal is for the deal to close easily for both sides."),
+        ["WhyNoExploitationTitle"] = ("لا لاستغلال السماسرة والبوابين", "No broker or doorman exploitation"),
+        ["WhyNoExploitationText"] = ("تعامل مباشر وواضح، من غير عمولات خفية أو ضغوط من وسطاء.", "Direct and transparent dealing, with no hidden commissions or pressure from middlemen."),
         ["Email"] = ("البريد الإلكتروني", "Email"),
         ["Password"] = ("كلمة المرور", "Password"),
         ["ConfirmPassword"] = ("تأكيد كلمة المرور", "Confirm password"),
@@ -132,6 +160,13 @@ public class LanguageService
         Models.PropertyType.Shop => IsArabic ? "محل" : "Shop",
         Models.PropertyType.Villa => IsArabic ? "فيلا" : "Villa",
         _ => type.ToString()
+    };
+
+    public string ApprovalText(Models.ListingApproval approval) => approval switch
+    {
+        Models.ListingApproval.Approved => T("Approved"),
+        Models.ListingApproval.Rejected => T("Rejected"),
+        _ => T("PendingApproval")
     };
 
     public string IntentText(Models.ContactIntent intent) => intent switch

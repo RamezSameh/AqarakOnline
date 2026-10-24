@@ -17,8 +17,17 @@ else
 }
 
 <p><strong>@L.T("Area"):</strong> @Model.Area</p>
+<p><strong>@L.T("AreaSqm"):</strong> @Model.AreaSqm</p>
 <p><strong>@L.T("Price"):</strong> @L.PriceText(Model.Price, Model.ListingType)</p>
-<p><strong>@L.T("Owner"):</strong> @(Model.Owner?.FullName ?? Model.Owner?.UserName ?? L.T("SiteAdmin"))</p>
+<p><strong>@L.T("Views"):</strong> @Model.ViewCount</p>
+@if (User.IsInRole("Admin"))
+{
+    <h2>@L.T("AdvertiserData")</h2>
+    <p><strong>@L.T("FullName"):</strong> @(Model.Owner?.FullName ?? "-")</p>
+    <p><strong>@L.T("PhoneNumber"):</strong> @(Model.Owner?.PhoneNumber ?? "-")</p>
+    <p><strong>@L.T("Address"):</strong> @(Model.Owner?.Address ?? "-")</p>
+    <p><strong>@L.T("ApprovalStatus"):</strong> @L.ApprovalText(Model.Approval)</p>
+}
 
 <h2>@L.T("Details")</h2>
 <p>@Model.Description</p>

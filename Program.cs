@@ -30,6 +30,16 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.Configure<ContactSettings>(builder.Configuration.GetSection("Contact"));
+builder.Services.Configure<SmsSettings>(builder.Configuration.GetSection("Sms"));
+if (string.Equals(builder.Configuration["Sms:Provider"], "Twilio", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddHttpClient<ISmsSender, TwilioSmsSender>();
+}
+else
+{
+    // الافتراضي: لا يرسل SMS حقيقيًا، بل يكتب كود التأكيد في اللوج للتجربة.
+    builder.Services.AddSingleton<ISmsSender, LogSmsSender>();
+}
 builder.Services.AddScoped<LanguageService>();
 builder.Services.AddControllersWithViews();
 

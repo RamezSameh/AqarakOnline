@@ -9,6 +9,30 @@ public class ApplicationUser : IdentityUser
 {
     [MaxLength(200)]
     public string? FullName { get; set; }
+
+    /// <summary>عنوان المستخدم، مطلوب عند التسجيل.</summary>
+    [MaxLength(500)]
+    public string? Address { get; set; }
+}
+
+/// <summary>
+/// كود تأكيد رقم الموبايل. يُحفظ هاش الكود فقط، وينتهي بعد 10 دقائق،
+/// ويُستخدم مرة واحدة، ويُقفل بعد 5 محاولات خاطئة.
+/// </summary>
+public class PhoneVerificationCode
+{
+    public int Id { get; set; }
+
+    public string UserId { get; set; } = string.Empty;
+    public ApplicationUser? User { get; set; }
+
+    public string CodeHash { get; set; } = string.Empty;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime ExpiresAt { get; set; }
+
+    public bool IsUsed { get; set; }
+    public int Attempts { get; set; }
 }
 
 public enum ListingType
@@ -33,11 +57,24 @@ public enum ContactIntent
     Rent
 }
 
+/// <summary>
+/// حالة نشر الإعلان: معلّق حتى موافقة الأدمن، ثم مقبول (منشور) أو مرفوض.
+/// لا يظهر الإعلان للعامة إلا وهو مقبول.
+/// </summary>
+public enum ListingApproval
+{
+    Pending,
+    Approved,
+    Rejected
+}
+
 public class Listing
 {
     public int Id { get; set; }
 
-    [Required, MaxLength(20)]
+    // رقم الإعلان يتولد من السيرفر بعد الحفظ، فليس حقلًا يدخله المستخدم
+    // ولا يجب أن يكون Required في التحقق من النموذج.
+    [MaxLength(20)]
     public string AdNumber { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "عنوان الإعلان مطلوب")]
@@ -63,7 +100,17 @@ public class Listing
     [Range(0, 1000000000, ErrorMessage = "السعر يجب أن يكون رقمًا موجبًا")]
     public decimal Price { get; set; }
 
+    /// <summary>مساحة العقار بالمتر المربع.</summary>
+    [Range(1, 100000, ErrorMessage = "المساحة يجب أن تكون بالمتر المربع وأكبر من صفر")]
+    public int AreaSqm { get; set; }
+
+    /// <summary>عدد مرات مشاهدة صفحة تفاصيل الإعلان (من غير الأدمن وصاحب الإعلان).</summary>
+    public int ViewCount { get; set; }
+
     public bool IsAvailable { get; set; } = true;
+
+    /// <summary>موافقة الأدمن على النشر. الافتراضي معلّق.</summary>
+    public ListingApproval Approval { get; set; } = ListingApproval.Pending;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

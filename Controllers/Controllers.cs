@@ -11,142 +11,6 @@ using Microsoft.Extensions.Options;
 
 namespace AqarakOnline.Controllers;
 
-public class LoginViewModel
-{
-    [Required(ErrorMessage = "البريد الإلكتروني مطلوب")]
-    [EmailAddress(ErrorMessage = "صيغة البريد الإلكتروني غير صحيحة")]
-    public string Email { get; set; } = string.Empty;
-
-    [Required(ErrorMessage = "كلمة المرور مطلوبة")]
-    [DataType(DataType.Password)]
-    public string Password { get; set; } = string.Empty;
-
-    public bool RememberMe { get; set; }
-    public string? ReturnUrl { get; set; }
-}
-
-public class RegisterViewModel
-{
-    [Required(ErrorMessage = "الاسم الكامل مطلوب")]
-    public string FullName { get; set; } = string.Empty;
-
-    [Required(ErrorMessage = "البريد الإلكتروني مطلوب")]
-    [EmailAddress(ErrorMessage = "صيغة البريد الإلكتروني غير صحيحة")]
-    public string Email { get; set; } = string.Empty;
-
-    [Phone(ErrorMessage = "صيغة رقم الهاتف غير صحيحة")]
-    public string? PhoneNumber { get; set; }
-
-    [Required(ErrorMessage = "كلمة المرور مطلوبة")]
-    [StringLength(100, MinimumLength = 6, ErrorMessage = "كلمة المرور يجب أن تكون 6 أحرف على الأقل")]
-    [DataType(DataType.Password)]
-    public string Password { get; set; } = string.Empty;
-
-    [DataType(DataType.Password)]
-    [Compare("Password", ErrorMessage = "كلمة المرور وتأكيدها غير متطابقين")]
-    public string ConfirmPassword { get; set; } = string.Empty;
-}
-
-public class AccountController : Controller
-{
-    private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IConfiguration _configuration;
-
-    public AccountController(
-        SignInManager<ApplicationUser> signInManager,
-        UserManager<ApplicationUser> userManager,
-        IConfiguration configuration)
-    {
-        _signInManager = signInManager;
-        _userManager = userManager;
-        _configuration = configuration;
-    }
-
-    [HttpGet]
-    public IActionResult Login(string? returnUrl = null)
-    {
-        return View(new LoginViewModel { ReturnUrl = returnUrl });
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginViewModel model)
-    {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
-
-        var result = await _signInManager.PasswordSignInAsync(
-            model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-        if (result.Succeeded)
-        {
-            if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
-            {
-                return Redirect(model.ReturnUrl);
-            }
-            return RedirectToAction("Index", "Home");
-        }
-
-        ModelState.AddModelError(string.Empty, "البريد الإلكتروني أو كلمة المرور غير صحيحة.");
-        return View(model);
-    }
-
-    [HttpGet]
-    public IActionResult Register()
-    {
-        return View(new RegisterViewModel());
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterViewModel model)
-    {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
-
-        var user = new ApplicationUser
-        {
-            UserName = model.Email,
-            Email = model.Email,
-            FullName = model.FullName,
-            PhoneNumber = model.PhoneNumber
-        };
-        var result = await _userManager.CreateAsync(user, model.Password);
-        if (!result.Succeeded)
-        {
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
-            return View(model);
-        }
-
-        // دور الأدمن يُمنح تلقائيًا للحساب المسجل بالإيميل الموجود في AdminEmail
-        // (راجع Program.cs)، وباقي الحسابات تأخذ دور User.
-        var adminEmail = _configuration["AdminEmail"];
-        var role = !string.IsNullOrWhiteSpace(adminEmail)
-            && string.Equals(model.Email, adminEmail, StringComparison.OrdinalIgnoreCase)
-            ? "Admin"
-            : "User";
-        await _userManager.AddToRoleAsync(user, role);
-
-        await _signInManager.SignInAsync(user, isPersistent: false);
-        return RedirectToAction("Index", "Home");
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Logout()
-    {
-        await _signInManager.SignOutAsync();
-        return RedirectToAction("Index", "Home");
-    }
-}
-
 public class HomeController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -159,7 +23,7 @@ public class HomeController : Controller
     public async Task<IActionResult> Index()
     {
         var listings = await _context.Listings
-            .Where(l => l.IsAvailable)
+            .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
             .OrderByDescending(l => l.CreatedAt)
             .Take(6)
             .ToListAsync();
@@ -207,7 +71,8 @@ public class ListingsController : Controller
         string? search, ListingType? listingType, PropertyType? propertyType,
         decimal? minPrice, decimal? maxPrice, bool onlyAvailable = false)
     {
-        var query = _context.Listings.Include(l => l.Owner).AsQueryable();
+        var query = _context.Listings.Include(l => l.Owner)
+            .Where(l => l.Approval == ListingApproval.Approved).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -254,6 +119,18 @@ public class ListingsController : Controller
         {
             return NotFound();
         }
+        if (listing.Approval != ListingApproval.Approved
+            && !User.IsInRole("Admin")
+            && listing.OwnerId != CurrentUserId)
+        {
+            return NotFound();
+        }
+        // عدّ المشاهدة: الزائر العادي فقط، وليس الأدمن ولا صاحب الإعلان.
+        if (!User.IsInRole("Admin") && listing.OwnerId != CurrentUserId)
+        {
+            listing.ViewCount++;
+            await _context.SaveChangesAsync();
+        }
         return View(listing);
     }
 
@@ -277,6 +154,7 @@ public class ListingsController : Controller
         listing.OwnerId = CurrentUserId;
         listing.CreatedAt = DateTime.UtcNow;
         listing.IsAvailable = true;
+        listing.Approval = User.IsInRole("Admin") ? ListingApproval.Approved : ListingApproval.Pending;
         listing.AdNumber = "TEMP";
         await ReadPhotoAsync(listing);
         _context.Listings.Add(listing);
@@ -286,6 +164,11 @@ public class ListingsController : Controller
         listing.AdNumber = $"AQ-{listing.Id:D4}";
         await _context.SaveChangesAsync();
 
+        if (listing.Approval == ListingApproval.Pending)
+        {
+            TempData["Info"] = "تم إرسال إعلانك للمراجعة، وسيظهر للعامة بعد موافقة الأدمن.";
+            return RedirectToAction(nameof(MyListings));
+        }
         return RedirectToAction(nameof(Details), new { id = listing.Id });
     }
 
@@ -331,7 +214,12 @@ public class ListingsController : Controller
         listing.Description = model.Description;
         listing.Features = model.Features;
         listing.Price = model.Price;
+        listing.AreaSqm = model.AreaSqm;
         listing.IsAvailable = model.IsAvailable;
+        if (!User.IsInRole("Admin"))
+        {
+            listing.Approval = ListingApproval.Pending;
+        }
         if (model.PhotoFile != null)
         {
             await ReadPhotoAsync(model);
@@ -387,6 +275,21 @@ public class ListingsController : Controller
             .OrderByDescending(l => l.CreatedAt)
             .ToListAsync();
         return View(listings);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkAvailable(int id)
+    {
+        var listing = await _context.Listings.FindAsync(id);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        listing.IsAvailable = true;
+        await _context.SaveChangesAsync();
+        return RedirectToAction("Listings", "Admin");
     }
 
     [Authorize(Roles = "Admin")]
@@ -449,7 +352,7 @@ public class ContactController : Controller
         {
             return NotFound();
         }
-        if (!listing.IsAvailable)
+        if (!listing.IsAvailable || listing.Approval != ListingApproval.Approved)
         {
             TempData["Error"] = "هذا الإعلان لم يعد متاحًا.";
             return RedirectToAction("Details", "Listings", new { id = listingId });
@@ -483,7 +386,7 @@ public class ContactController : Controller
     public async Task<IActionResult> Contact(ContactRequest request)
     {
         var listing = await _context.Listings.FindAsync(request.ListingId);
-        if (listing == null)
+        if (listing == null || listing.Approval != ListingApproval.Approved || !listing.IsAvailable)
         {
             return NotFound();
         }
@@ -567,6 +470,34 @@ public class AdminController : Controller
         request.RepliedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Requests));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Approve(int id)
+    {
+        var listing = await _context.Listings.FindAsync(id);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        listing.Approval = ListingApproval.Approved;
+        await _context.SaveChangesAsync();
+        return RedirectToAction(nameof(Listings));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Reject(int id)
+    {
+        var listing = await _context.Listings.FindAsync(id);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        listing.Approval = ListingApproval.Rejected;
+        await _context.SaveChangesAsync();
+        return RedirectToAction(nameof(Listings));
     }
 
     [HttpGet]
