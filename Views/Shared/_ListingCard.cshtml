@@ -1,0 +1,23 @@
+@model Listing
+<article class="listing-card">
+    @if (Model.Photo != null && Model.PhotoContentType != null)
+    {
+        <img class="listing-photo" src="data:@Model.PhotoContentType;base64,@Convert.ToBase64String(Model.Photo)" alt="@Model.Title" />
+    }
+    else
+    {
+        <div class="listing-photo placeholder">@L.T("NoPhoto")</div>
+    }
+    <div class="listing-body">
+        <div class="listing-meta">
+            <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
+            <span class="badge">@L.PropertyTypeText(Model.PropertyType)</span>
+            <span class="ad-number">@L.T("AdNumber"): @Model.AdNumber</span>
+        </div>
+        <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a></h3>
+        <p class="listing-area">@Model.Area</p>
+        <p class="listing-price">@L.PriceText(Model.Price, Model.ListingType)</p>
+        <p class="listing-status @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</p>
+        <a class="btn btn-primary" asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@L.T("ViewDetails")</a>
+    </div>
+</article>

@@ -1,0 +1,43 @@
+@model IEnumerable<Listing>
+<h1>@L.T("AdminListings")</h1>
+@if (!Model.Any())
+{
+    <p>@L.T("NoResults")</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@L.T("AdNumber")</th>
+                <th>@L.T("Title")</th>
+                <th>@L.T("ListingType")</th>
+                <th>@L.T("Price")</th>
+                <th>@L.T("Owner")</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var listing in Model)
+            {
+                <tr>
+                    <td>@listing.AdNumber</td>
+                    <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></td>
+                    <td>@L.ListingTypeText(listing.ListingType)</td>
+                    <td>@L.PriceText(listing.Price, listing.ListingType)</td>
+                    <td>@(listing.Owner?.FullName ?? listing.Owner?.UserName ?? L.T("SiteAdmin"))</td>
+                    <td>
+                        @if (listing.IsAvailable)
+                        {
+                            <form asp-controller="Listings" asp-action="MarkUnavailable" method="post" class="inline-form">
+                                <input type="hidden" name="id" value="@listing.Id" />
+                                <button type="submit" class="btn btn-ghost">@L.T("MarkUnavailable")</button>
+                            </form>
+                        }
+                        <a class="btn btn-ghost" asp-controller="Listings" asp-action="Delete" asp-route-id="@listing.Id">@L.T("Delete")</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,8 @@
+@model ContactRequest
+<h1>@L.T("RequestSent")</h1>
+<p>@L.T("RequestSaved")</p>
+<p><strong>@Model.Listing?.Title</strong> - @L.T("AdNumber"): @Model.Listing?.AdNumber</p>
+<p>@L.T("Phone"): @ViewBag.ContactPhone</p>
+<p><a class="btn btn-primary" href="@ViewBag.WhatsAppUrl" target="_blank" rel="noreferrer">@L.T("OpenWhatsApp")</a></p>
+<p>@L.T("WhatsApp"): @ViewBag.ContactWhatsApp</p>
+<a class="btn btn-ghost" asp-controller="Listings" asp-action="Index">@L.T("BackToList")</a>

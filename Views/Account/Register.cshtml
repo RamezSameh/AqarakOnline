@@ -1,0 +1,24 @@
+@model AqarakOnline.Controllers.RegisterViewModel
+<h1>@L.T("Register")</h1>
+<form asp-action="Register" method="post" class="form">
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+    <label>@L.T("FullName")</label>
+    <input asp-for="FullName" />
+    <span asp-validation-for="FullName" class="field-error"></span>
+    <label>@L.T("Email")</label>
+    <input asp-for="Email" type="email" />
+    <span asp-validation-for="Email" class="field-error"></span>
+    <label>@L.T("Phone")</label>
+    <input asp-for="PhoneNumber" />
+    <span asp-validation-for="PhoneNumber" class="field-error"></span>
+    <label>@L.T("Password")</label>
+    <input asp-for="Password" type="password" />
+    <span asp-validation-for="Password" class="field-error"></span>
+    <label>@L.T("ConfirmPassword")</label>
+    <input asp-for="ConfirmPassword" type="password" />
+    <span asp-validation-for="ConfirmPassword" class="field-error"></span>
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">@L.T("Register")</button>
+        <a class="btn btn-ghost" asp-action="Login">@L.T("HasAccount")</a>
+    </div>
+</form>

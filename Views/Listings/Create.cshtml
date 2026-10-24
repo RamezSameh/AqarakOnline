@@ -1,0 +1,62 @@
+@model Listing
+@{
+    var isEdit = Model.Id != 0;
+    var listingTypes = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+    {
+        new(L.T("ForRent"), "Rent", Model.ListingType == ListingType.Rent),
+        new(L.T("ForSale"), "Sale", Model.ListingType == ListingType.Sale)
+    };
+    var propertyTypes = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+    foreach (PropertyType type in Enum.GetValues(typeof(PropertyType)))
+    {
+        propertyTypes.Add(new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(L.PropertyTypeText(type), type.ToString(), Model.PropertyType == type));
+    }
+    var action = isEdit ? "Edit" : "Create";
+}
+<h1>@(isEdit ? L.T("Edit") : L.T("CreateListing"))</h1>
+
+<form asp-action="@action" method="post" enctype="multipart/form-data" class="form">
+    @if (isEdit)
+    {
+        <input type="hidden" asp-for="Id" />
+    }
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+    <label>@L.T("Title")</label>
+    <input asp-for="Title" />
+    <span asp-validation-for="Title" class="field-error"></span>
+
+    <label>@L.T("ListingType")</label>
+    <select asp-for="ListingType" asp-items="listingTypes"></select>
+
+    <label>@L.T("PropertyType")</label>
+    <select asp-for="PropertyType" asp-items="propertyTypes"></select>
+
+    <label>@L.T("Area")</label>
+    <input asp-for="Area" />
+    <span asp-validation-for="Area" class="field-error"></span>
+
+    <label>@L.T("Details")</label>
+    <textarea asp-for="Description" rows="4"></textarea>
+    <span asp-validation-for="Description" class="field-error"></span>
+
+    <label>@L.T("Features")</label>
+    <textarea asp-for="Features" rows="4" placeholder="اكتب كل ميزة في سطر"></textarea>
+
+    <label>@L.T("Price")</label>
+    <input asp-for="Price" type="number" min="0" step="any" />
+    <span asp-validation-for="Price" class="field-error"></span>
+
+    @if (isEdit)
+    {
+        <label><input asp-for="IsAvailable" type="checkbox" /> @L.T("Available")</label>
+    }
+
+    <label>@L.T("Photo")</label>
+    <input asp-for="PhotoFile" type="file" accept="image/*" />
+
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">@L.T("Save")</button>
+        <a class="btn btn-ghost" asp-action="Index">@L.T("Cancel")</a>
+    </div>
+</form>

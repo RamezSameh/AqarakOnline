@@ -1,0 +1,15 @@
+@model IEnumerable<Listing>
+<h1>@L.T("MyListings")</h1>
+@if (!Model.Any())
+{
+    <p>@L.T("NoResults")</p>
+}
+else
+{
+    <div class="cards-grid">
+        @foreach (var listing in Model)
+        {
+            @await Html.PartialAsync("_ListingCard", listing)
+        }
+    </div>
+}

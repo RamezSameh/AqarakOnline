@@ -1,0 +1,17 @@
+@model AqarakOnline.Controllers.LoginViewModel
+<h1>@L.T("Login")</h1>
+<form asp-action="Login" method="post" class="form">
+    <input type="hidden" asp-for="ReturnUrl" />
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+    <label>@L.T("Email")</label>
+    <input asp-for="Email" type="email" />
+    <span asp-validation-for="Email" class="field-error"></span>
+    <label>@L.T("Password")</label>
+    <input asp-for="Password" type="password" />
+    <span asp-validation-for="Password" class="field-error"></span>
+    <label><input asp-for="RememberMe" type="checkbox" /> @L.T("RememberMe")</label>
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">@L.T("Login")</button>
+        <a class="btn btn-ghost" asp-action="Register">@L.T("NoAccount")</a>
+    </div>
+</form>

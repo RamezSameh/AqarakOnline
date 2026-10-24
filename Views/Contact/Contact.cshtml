@@ -1,0 +1,31 @@
+@model ContactRequest
+@{
+    var listing = (Listing)ViewBag.Listing;
+}
+<h1>@L.T("ContactUs")</h1>
+<p><strong>@listing.Title</strong> - @L.T("AdNumber"): @listing.AdNumber - @L.ListingTypeText(listing.ListingType)</p>
+<p><strong>@L.T("Phone"):</strong> @ViewBag.ContactPhone</p>
+<p><strong>@L.T("WhatsApp"):</strong> @ViewBag.ContactWhatsApp</p>
+<p>@L.T("Intent"): @L.IntentText(Model.Intent)</p>
+
+<form asp-action="Contact" method="post" class="form">
+    <input type="hidden" asp-for="ListingId" />
+    <input type="hidden" asp-for="Intent" />
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+    <label>@L.T("BuyerName")</label>
+    <input asp-for="BuyerName" />
+    <span asp-validation-for="BuyerName" class="field-error"></span>
+
+    <label>@L.T("BuyerPhone")</label>
+    <input asp-for="BuyerPhone" />
+    <span asp-validation-for="BuyerPhone" class="field-error"></span>
+
+    <label>@L.T("Message")</label>
+    <textarea asp-for="Message" rows="4"></textarea>
+
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">@L.T("SendRequest")</button>
+        <a class="btn btn-ghost" asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@L.T("Cancel")</a>
+    </div>
+</form>

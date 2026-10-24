@@ -1,0 +1,22 @@
+@model IEnumerable<Listing>
+<section class="hero">
+    <h1>@L.T("Brand")</h1>
+    <p class="hero-tagline">@L.T("Tagline")</p>
+    <form class="hero-search" asp-controller="Listings" asp-action="Index" method="get">
+        <input type="text" name="search" placeholder="@L.T("SearchPlaceholder")" />
+        <button type="submit" class="btn btn-primary">@L.T("Search")</button>
+    </form>
+</section>
+
+<section>
+    <div class="section-head">
+        <h2>@L.T("LatestListings")</h2>
+        <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index">@L.T("SeeAll")</a>
+    </div>
+    <div class="cards-grid">
+        @foreach (var listing in Model)
+        {
+            @await Html.PartialAsync("_ListingCard", listing)
+        }
+    </div>
+</section>

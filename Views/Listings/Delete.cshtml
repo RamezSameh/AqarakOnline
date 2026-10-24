@@ -1,0 +1,9 @@
+@model Listing
+<h1>@L.T("Delete")</h1>
+<p>@L.T("DeleteConfirm")</p>
+<p><strong>@Model.Title</strong> - @L.T("AdNumber"): @Model.AdNumber</p>
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">@L.T("Delete")</button>
+    <a class="btn btn-ghost" asp-action="Details" asp-route-id="@Model.Id">@L.T("Cancel")</a>
+</form>

@@ -1,0 +1,43 @@
+@model IEnumerable<Listing>
+@{
+    var listingTypes = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+    {
+        new(L.T("All"), ""),
+        new(L.T("ForSale"), "Sale", ViewBag.ListingType == ListingType.Sale),
+        new(L.T("ForRent"), "Rent", ViewBag.ListingType == ListingType.Rent)
+    };
+    var propertyTypes = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+    {
+        new(L.T("All"), "")
+    };
+    foreach (PropertyType type in Enum.GetValues(typeof(PropertyType)))
+    {
+        propertyTypes.Add(new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(L.PropertyTypeText(type), type.ToString(), ViewBag.PropertyType == type));
+    }
+}
+<h1>@L.T("Listings")</h1>
+
+<form class="filter-form" asp-action="Index" method="get">
+    <input type="text" name="search" value="@ViewBag.Search" placeholder="@L.T("SearchPlaceholder")" />
+    <select name="listingType" asp-items="listingTypes"></select>
+    <select name="propertyType" asp-items="propertyTypes"></select>
+    <input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="@L.T("MinPrice")" min="0" step="any" />
+    <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" placeholder="@L.T("MaxPrice")" min="0" step="any" />
+    <label><input type="checkbox" name="onlyAvailable" value="true" checked="@(ViewBag.OnlyAvailable == true)" /> @L.T("OnlyAvailable")</label>
+    <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
+    <a class="btn btn-ghost" asp-action="Index">@L.T("ClearFilter")</a>
+</form>
+
+@if (!Model.Any())
+{
+    <p>@L.T("NoResults")</p>
+}
+else
+{
+    <div class="cards-grid">
+        @foreach (var listing in Model)
+        {
+            @await Html.PartialAsync("_ListingCard", listing)
+        }
+    </div>
+}

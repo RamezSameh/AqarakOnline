@@ -1,0 +1,50 @@
+@model IEnumerable<ContactRequest>
+<h1>@L.T("AdminRequests")</h1>
+@if (!Model.Any())
+{
+    <p>@L.T("NoResults")</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@L.T("Date")</th>
+                <th>@L.T("AdNumber")</th>
+                <th>@L.T("Buyer")</th>
+                <th>@L.T("Intent")</th>
+                <th>@L.T("Message")</th>
+                <th>@L.T("WhatsApp")</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var request in Model)
+            {
+                var digits = new string((request.BuyerPhone ?? string.Empty).Where(char.IsDigit).ToArray());
+                var waUrl = $"https://wa.me/{digits}?text={Uri.EscapeDataString($"مرحبًا {request.BuyerName}، بخصوص الإعلان رقم {request.Listing?.AdNumber}")}";
+                <tr>
+                    <td>@request.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>@request.Listing?.AdNumber</td>
+                    <td>@request.BuyerName<br />@request.BuyerPhone</td>
+                    <td>@L.IntentText(request.Intent)</td>
+                    <td>@request.Message</td>
+                    <td><a href="@waUrl" target="_blank" rel="noreferrer">@L.T("OpenWhatsApp")</a></td>
+                    <td>
+                        @if (request.IsReplied)
+                        {
+                            <span>@L.T("Replied")</span>
+                        }
+                        else
+                        {
+                            <form asp-action="MarkReplied" method="post" class="inline-form">
+                                <input type="hidden" name="id" value="@request.Id" />
+                                <button type="submit" class="btn btn-primary">@L.T("MarkReplied")</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

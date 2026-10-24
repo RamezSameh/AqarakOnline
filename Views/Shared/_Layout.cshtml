@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="@L.Culture" dir="@(L.IsArabic ? "rtl" : "ltr")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@L.T("Brand") - @L.T("Tagline")</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" asp-controller="Home" asp-action="Index">@L.T("Brand")</a>
+            <nav class="main-nav">
+                <a asp-controller="Home" asp-action="Index">@L.T("Home")</a>
+                <a asp-controller="Listings" asp-action="Index">@L.T("Listings")</a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Listings" asp-action="MyListings">@L.T("MyListings")</a>
+                    <a asp-controller="Listings" asp-action="Create">@L.T("CreateListing")</a>
+                }
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Admin" asp-action="Requests">@L.T("AdminRequests")</a>
+                    <a asp-controller="Admin" asp-action="Listings">@L.T("AdminListings")</a>
+                }
+            </nav>
+            <div class="header-actions">
+                <a class="lang-switch" asp-controller="Language" asp-action="Set" asp-route-lang="@(L.IsArabic ? "en" : "ar")" asp-route-returnUrl="@Context.Request.Path">@(L.IsArabic ? "English" : "العربية")</a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <span class="user-name">@User.Identity.Name</span>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="inline-form">
+                        <button type="submit" class="btn btn-ghost">@L.T("Logout")</button>
+                    </form>
+                }
+                else
+                {
+                    <a class="btn btn-ghost" asp-controller="Account" asp-action="Login">@L.T("Login")</a>
+                    <a class="btn btn-primary" asp-controller="Account" asp-action="Register">@L.T("Register")</a>
+                }
+            </div>
+        </div>
+    </header>
+    <main class="container main-content">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-error">@TempData["Error"]</div>
+        }
+        @RenderBody()
+    </main>
+    <footer class="site-footer">
+        <div class="container">
+            <p>@L.T("Brand") - @L.T("Tagline")</p>
+            <p>@L.T("Phone"): @ContactOptions.Value.Phone | @L.T("WhatsApp"): @ContactOptions.Value.WhatsApp</p>
+        </div>
+    </footer>
+</body>
+</html>
