@@ -4,6 +4,7 @@ using AqarakOnline.Data;
 using AqarakOnline.Models;
 using AqarakOnline.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -555,11 +556,13 @@ public class AdminController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IWebHostEnvironment _env;
 
-    public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+    public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment env)
     {
         _context = context;
         _userManager = userManager;
+        _env = env;
     }
 
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
@@ -686,6 +689,51 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public Task<IActionResult> UnblockUser(string id) =>
         SetUserStatus(id, AccountStatus.Active, "تم رفع الحظر عن الحساب.");
+
+    // حذف حساب نهائيًا. لا يمكن للأدمن حذف حسابه هو (حتى لا يُحبس خارج
+    // النظام). إعلانات المستخدم وطلبات تواصله تُحذف معه، لأن مفاتيحها
+    // الأجنبية تمنع حذف المستخدم قبلها؛ ملفات مرفقات إعلاناته تُحذف من
+    // القرص أيضًا، مثل حذف الإعلان نفسه.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteUser(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        if (user.Id == CurrentUserId)
+        {
+            TempData["Error"] = "لا يمكنك حذف حسابك أنت.";
+            return RedirectToAction(nameof(Users));
+        }
+        var listings = await _context.Listings
+            .Include(l => l.Attachments)
+            .Where(l => l.OwnerId == user.Id)
+            .ToListAsync();
+        foreach (var listing in listings)
+        {
+            foreach (var attachment in listing.Attachments.ToList())
+            {
+                AttachmentStorage.DeleteFile(_env.WebRootPath, attachment.FilePath);
+            }
+        }
+        var requests = await _context.ContactRequests
+            .Where(r => r.BuyerId == user.Id)
+            .ToListAsync();
+        _context.Listings.RemoveRange(listings);
+        _context.ContactRequests.RemoveRange(requests);
+        await _context.SaveChangesAsync();
+        var result = await _userManager.DeleteAsync(user);
+        if (!result.Succeeded)
+        {
+            TempData["Error"] = "تعذر حذف الحساب.";
+            return RedirectToAction(nameof(Users));
+        }
+        TempData["Info"] = $"تم حذف الحساب نهائيًا (مع {listings.Count} إعلان و{requests.Count} طلب تواصل).";
+        return RedirectToAction(nameof(Users));
+    }
 
     [HttpGet]
     public IActionResult AddUser()

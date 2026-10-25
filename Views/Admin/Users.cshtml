@@ -1,6 +1,6 @@
 @model IEnumerable<AqarakOnline.Controllers.AdminUserRow>
 <h1>المستخدمون</h1>
-<p>الحساب الجديد لا يدخل حتى يوافق عليه الأدمن. من هنا يمكنك الموافقة، أو إيقاف حساب مؤقتًا، أو حظره، أو إضافة حساب جديد، أو تعديل حساب موجود.</p>
+<p>الحساب الجديد لا يدخل حتى يوافق عليه الأدمن. من هنا يمكنك الموافقة، أو إيقاف حساب مؤقتًا، أو حظره، أو إضافة حساب جديد، أو تعديل حساب موجود، أو حذف حساب نهائيًا (مع إعلاناته وطلبات تواصله). لا يمكنك حذف حسابك أنت.</p>
 <div class="actions">
     <a class="btn btn-primary" asp-action="AddUser">إضافة حساب مستخدم</a>
     <a class="btn btn-ghost" asp-action="Dashboard">لوحة التحكم</a>
@@ -71,6 +71,10 @@ else
                             </form>
                         }
                         <a class="btn btn-ghost" asp-action="EditUser" asp-route-id="@row.User.Id">تعديل</a>
+                        <form asp-action="DeleteUser" method="post" class="inline-form" onsubmit="return confirm('حذف هذا الحساب نهائيًا مع إعلاناته وطلبات تواصله؟ لا يمكن التراجع.');">
+                            <input type="hidden" name="id" value="@row.User.Id" />
+                            <button type="submit" class="btn btn-ghost">حذف نهائي</button>
+                        </form>
                     </td>
                 </tr>
             }
