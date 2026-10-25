@@ -199,6 +199,7 @@ public class ListingsController : Controller
             TempData["Info"] = "تم إرسال إعلانك للمراجعة، وسيظهر للعامة بعد موافقة الأدمن.";
             return RedirectToAction(nameof(MyListings));
         }
+        await _hub.Clients.All.SendAsync("listingsChanged");
         return RedirectToAction(nameof(Details), new { id = listing.Id });
     }
 
@@ -269,6 +270,7 @@ public class ListingsController : Controller
         await SaveAttachmentsAsync(listing, model.PhotoFiles, model.VideoFile);
 
         await _context.SaveChangesAsync();
+        await _hub.Clients.All.SendAsync("listingsChanged");
         return RedirectToAction(nameof(Details), new { id });
     }
 
@@ -315,6 +317,7 @@ public class ListingsController : Controller
         {
             await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
         }
+        await _hub.Clients.All.SendAsync("listingsChanged");
         if (!isOwn && User.IsInRole("Admin"))
         {
             return RedirectToAction("Listings", "Admin");
@@ -349,6 +352,7 @@ public class ListingsController : Controller
         }
         listing.IsAvailable = true;
         await _context.SaveChangesAsync();
+        await _hub.Clients.All.SendAsync("listingsChanged");
         return RedirectToAction("Listings", "Admin");
     }
 
@@ -364,6 +368,7 @@ public class ListingsController : Controller
         }
         listing.IsAvailable = false;
         await _context.SaveChangesAsync();
+        await _hub.Clients.All.SendAsync("listingsChanged");
         return RedirectToAction("Listings", "Admin");
     }
 
@@ -988,6 +993,7 @@ public class AdminController : Controller
         listing.Approval = ListingApproval.Approved;
         await _context.SaveChangesAsync();
         await NotifyAdminsAsync();
+        await _hub.Clients.All.SendAsync("listingsChanged");
         return RedirectToAction(nameof(Listings));
     }
 
@@ -1003,6 +1009,7 @@ public class AdminController : Controller
         listing.Approval = ListingApproval.Rejected;
         await _context.SaveChangesAsync();
         await NotifyAdminsAsync();
+        await _hub.Clients.All.SendAsync("listingsChanged");
         return RedirectToAction(nameof(Listings));
     }
 

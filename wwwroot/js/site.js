@@ -94,6 +94,7 @@ document.addEventListener("DOMContentLoaded", function () {
         setInterval(function () {
             refreshBell();
             refreshAdminNav();
+            checkListingsChanged();
         }, 30000);
     }
 
@@ -104,6 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
             .build();
         connection.on("refreshBell", refreshBell);
         connection.on("refreshAdminNav", refreshAdminNav);
+        connection.on("listingsChanged", checkListingsChanged);
         connection.start().catch(function () {
             startPolling();
         });
@@ -112,6 +114,76 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     } else {
         startPolling();
+    }
+
+    // تحديث قائمة الإعلانات لحظيًا: عند إشارة تغيير، قارن معرّفات الإعلانات
+    // المعروضة حاليًا مع النسخة الحديثة من نفس الصفحة (فيحترم الفلاتر)،
+    // ولو اختلفت اعرض شريطًا يضغط عليه المستخدم لتطبيق التحديث — من غير
+    // إزاحة الصفحة فجأة وهو يتصفح. مقارنة المعرّفات فقط حتى لا يظهر الشريط
+    // بسبب تغيّر عدّاد المشاهدات وحده.
+    var pendingGridHtml = null;
+    function gridListingIds(grid) {
+        var ids = [];
+        grid.querySelectorAll("[data-listing-id]").forEach(function (el) {
+            ids.push(el.getAttribute("data-listing-id"));
+        });
+        return ids.join(",");
+    }
+
+    function showListingsBanner() {
+        if (document.getElementById("liveListingsBanner")) {
+            return;
+        }
+        var grid = document.querySelector(".cards-grid");
+        if (!grid) {
+            return;
+        }
+        var banner = document.createElement("div");
+        banner.id = "liveListingsBanner";
+        banner.className = "live-banner";
+        banner.innerHTML = "يوجد تحديث في الإعلانات";
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-primary";
+        button.textContent = "عرض التحديث";
+        button.addEventListener("click", function () {
+            if (pendingGridHtml !== null) {
+                grid.innerHTML = pendingGridHtml;
+            }
+            banner.remove();
+            pendingGridHtml = null;
+        });
+        banner.appendChild(button);
+        grid.parentNode.insertBefore(banner, grid);
+    }
+
+    function checkListingsChanged() {
+        var grid = document.querySelector(".cards-grid");
+        if (!grid) {
+            return;
+        }
+        fetch(window.location.href)
+            .then(function (response) {
+                if (!response.ok) {
+                    return null;
+                }
+                return response.text();
+            })
+            .then(function (html) {
+                if (!html) {
+                    return;
+                }
+                var doc = new DOMParser().parseFromString(html, "text/html");
+                var freshGrid = doc.querySelector(".cards-grid");
+                if (!freshGrid) {
+                    return;
+                }
+                if (gridListingIds(freshGrid) !== gridListingIds(grid)) {
+                    pendingGridHtml = freshGrid.innerHTML;
+                    showListingsBanner();
+                }
+            })
+            .catch(function () { /* يبقى القديم حتى التحديث التالي */ });
     }
 
     // إظهار/إخفاء كلمة المرور أثناء الكتابة.

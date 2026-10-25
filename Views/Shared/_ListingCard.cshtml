@@ -2,7 +2,7 @@
 @{
     var firstPhoto = Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id).FirstOrDefault();
 }
-<article class="listing-card">
+<article class="listing-card" data-listing-id="@Model.Id">
     <div class="availability-bar @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</div>
     @if (firstPhoto != null)
     {
