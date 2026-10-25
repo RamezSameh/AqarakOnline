@@ -28,6 +28,14 @@ public class HomeController : Controller
             .OrderByDescending(l => l.CreatedAt)
             .Take(6)
             .ToListAsync();
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ViewBag.FavoriteListingIds = (await _context.Favorites
+                .Where(f => f.UserId == userId)
+                .Select(f => f.ListingId)
+                .ToListAsync()).ToHashSet();
+        }
         return View(listings);
     }
 
@@ -110,6 +118,13 @@ public class ListingsController : Controller
         ViewBag.OnlyAvailable = onlyAvailable;
 
         var listings = await query.OrderByDescending(l => l.CreatedAt).ToListAsync();
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            ViewBag.FavoriteListingIds = (await _context.Favorites
+                .Where(f => f.UserId == CurrentUserId)
+                .Select(f => f.ListingId)
+                .ToListAsync()).ToHashSet();
+        }
         return View(listings);
     }
 
@@ -133,6 +148,11 @@ public class ListingsController : Controller
         {
             listing.ViewCount++;
             await _context.SaveChangesAsync();
+        }
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            ViewBag.IsFavorite = await _context.Favorites
+                .AnyAsync(f => f.UserId == CurrentUserId && f.ListingId == listing.Id);
         }
         return View(listing);
     }
@@ -301,6 +321,10 @@ public class ListingsController : Controller
             .Where(l => l.OwnerId == CurrentUserId)
             .OrderByDescending(l => l.CreatedAt)
             .ToListAsync();
+        ViewBag.FavoriteListingIds = (await _context.Favorites
+            .Where(f => f.UserId == CurrentUserId)
+            .Select(f => f.ListingId)
+            .ToListAsync()).ToHashSet();
         return View(listings);
     }
 
@@ -520,6 +544,17 @@ public class AdminUserFormViewModel
 
     public string Role { get; set; } = "User";
     public AccountStatus AccountStatus { get; set; } = AccountStatus.Active;
+}
+
+public class AdminNotificationFormViewModel
+{
+    [Required(ErrorMessage = "عنوان التنبيه مطلوب")]
+    [MaxLength(200)]
+    public string Title { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "نص التنبيه مطلوب")]
+    [MaxLength(2000)]
+    public string Message { get; set; } = string.Empty;
 }
 
 public class AdminUserRow
@@ -949,5 +984,271 @@ public class AdminController : Controller
             .OrderByDescending(l => l.CreatedAt)
             .ToListAsync();
         return View(listings);
+    }
+
+    // تنبيهات الأدمن: تظهر لكل المستخدمين على هيئة إشعارات.
+    [HttpGet]
+    public async Task<IActionResult> Notifications()
+    {
+        var notifications = await _context.Notifications
+            .OrderByDescending(n => n.CreatedAt)
+            .ToListAsync();
+        return View(notifications);
+    }
+
+    [HttpGet]
+    public IActionResult CreateNotification()
+    {
+        return View(new AdminNotificationFormViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateNotification(AdminNotificationFormViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+        _context.Notifications.Add(new Notification
+        {
+            Title = model.Title.Trim(),
+            Message = model.Message.Trim(),
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تم نشر التنبيه لكل المستخدمين.";
+        return RedirectToAction(nameof(Notifications));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleNotification(int id)
+    {
+        var notification = await _context.Notifications.FindAsync(id);
+        if (notification == null)
+        {
+            return NotFound();
+        }
+        notification.IsActive = !notification.IsActive;
+        await _context.SaveChangesAsync();
+        TempData["Info"] = notification.IsActive ? "تم تفعيل التنبيه." : "تم إخفاء التنبيه عن المستخدمين.";
+        return RedirectToAction(nameof(Notifications));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteNotification(int id)
+    {
+        var notification = await _context.Notifications.FindAsync(id);
+        if (notification == null)
+        {
+            return NotFound();
+        }
+        _context.Notifications.Remove(notification);
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تم حذف التنبيه نهائيًا.";
+        return RedirectToAction(nameof(Notifications));
+    }
+}
+
+public class UserNotificationRow
+{
+    public Notification Notification { get; set; } = null!;
+    public bool IsRead { get; set; }
+}
+
+public class BellViewModel
+{
+    public int UnreadCount { get; set; }
+    public List<UserNotificationRow> Items { get; set; } = new();
+}
+
+[Authorize]
+public class NotificationsController : Controller
+{
+    private readonly ApplicationDbContext _context;
+
+    public NotificationsController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+
+    [HttpGet]
+    public async Task<IActionResult> Index()
+    {
+        var notifications = await _context.Notifications
+            .Where(n => n.IsActive)
+            .OrderByDescending(n => n.CreatedAt)
+            .ToListAsync();
+        var readIds = await _context.NotificationReads
+            .Where(r => r.UserId == CurrentUserId)
+            .Select(r => r.NotificationId)
+            .ToListAsync();
+        var rows = notifications.Select(n => new UserNotificationRow
+        {
+            Notification = n,
+            IsRead = readIds.Contains(n.Id)
+        }).ToList();
+        return View(rows);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkRead(int id)
+    {
+        var exists = await _context.Notifications.AnyAsync(n => n.Id == id && n.IsActive);
+        var already = await _context.NotificationReads
+            .AnyAsync(r => r.NotificationId == id && r.UserId == CurrentUserId);
+        if (exists && !already)
+        {
+            _context.NotificationReads.Add(new NotificationRead
+            {
+                NotificationId = id,
+                UserId = CurrentUserId,
+                ReadAt = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkAllRead(string? returnUrl = null)
+    {
+        var activeIds = await _context.Notifications
+            .Where(n => n.IsActive)
+            .Select(n => n.Id)
+            .ToListAsync();
+        var readIds = await _context.NotificationReads
+            .Where(r => r.UserId == CurrentUserId)
+            .Select(r => r.NotificationId)
+            .ToListAsync();
+        foreach (var id in activeIds.Where(id => !readIds.Contains(id)))
+        {
+            _context.NotificationReads.Add(new NotificationRead
+            {
+                NotificationId = id,
+                UserId = CurrentUserId,
+                ReadAt = DateTime.UtcNow
+            });
+        }
+        await _context.SaveChangesAsync();
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return Redirect(returnUrl);
+        }
+        return RedirectToAction(nameof(Index));
+    }
+}
+
+[Authorize]
+public class FavoritesController : Controller
+{
+    private readonly ApplicationDbContext _context;
+
+    public FavoritesController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+
+    [HttpGet]
+    public async Task<IActionResult> Index()
+    {
+        var listings = await _context.Favorites
+            .Include(f => f.Listing).ThenInclude(l => l!.Owner)
+            .Include(f => f.Listing).ThenInclude(l => l!.Attachments)
+            .Where(f => f.UserId == CurrentUserId)
+            .OrderByDescending(f => f.CreatedAt)
+            .Select(f => f.Listing!)
+            .ToListAsync();
+        ViewBag.FavoriteListingIds = listings.Select(l => l.Id).ToHashSet();
+        return View(listings);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Toggle(int listingId, string? returnUrl = null)
+    {
+        var listing = await _context.Listings.FindAsync(listingId);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        var existing = await _context.Favorites
+            .FirstOrDefaultAsync(f => f.UserId == CurrentUserId && f.ListingId == listingId);
+        if (existing != null)
+        {
+            _context.Favorites.Remove(existing);
+            TempData["Info"] = "تمت الإزالة من المفضلة.";
+        }
+        else
+        {
+            _context.Favorites.Add(new Favorite
+            {
+                UserId = CurrentUserId,
+                ListingId = listingId,
+                CreatedAt = DateTime.UtcNow
+            });
+            TempData["Info"] = "تمت الإضافة إلى المفضلة.";
+        }
+        await _context.SaveChangesAsync();
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return Redirect(returnUrl);
+        }
+        return RedirectToAction(nameof(Index));
+    }
+}
+
+public class NotificationBellViewComponent : ViewComponent
+{
+    private readonly ApplicationDbContext _context;
+
+    public NotificationBellViewComponent(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<IViewComponentResult> InvokeAsync()
+    {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            return Content(string.Empty);
+        }
+        var userId = ViewContext.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+        var notifications = await _context.Notifications
+            .Where(n => n.IsActive)
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(5)
+            .ToListAsync();
+        var readIds = await _context.NotificationReads
+            .Where(r => r.UserId == userId)
+            .Select(r => r.NotificationId)
+            .ToListAsync();
+        var activeIds = await _context.Notifications
+            .Where(n => n.IsActive)
+            .Select(n => n.Id)
+            .ToListAsync();
+        var model = new BellViewModel
+        {
+            UnreadCount = activeIds.Count(id => !readIds.Contains(id)),
+            Items = notifications.Select(n => new UserNotificationRow
+            {
+                Notification = n,
+                IsRead = readIds.Contains(n.Id)
+            }).ToList()
+        };
+        if (model.UnreadCount < 0)
+        {
+            model.UnreadCount = 0;
+        }
+        return View(model);
     }
 }

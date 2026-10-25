@@ -1,0 +1,16 @@
+@model IEnumerable<Listing>
+<h1>@L.T("Favorites")</h1>
+@if (!Model.Any())
+{
+    <p>@L.T("NoFavorites")</p>
+    <a class="btn btn-primary" asp-controller="Listings" asp-action="Index">@L.T("Listings")</a>
+}
+else
+{
+    <div class="cards-grid">
+        @foreach (var listing in Model)
+        {
+            @await Html.PartialAsync("_ListingCard", listing)
+        }
+    </div>
+}

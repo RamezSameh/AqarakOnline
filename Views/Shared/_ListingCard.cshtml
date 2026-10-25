@@ -34,6 +34,20 @@
         }
         <div class="actions">
             <a class="btn btn-primary" asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@L.T("ViewDetails")</a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                var favoriteIds = ViewBag.FavoriteListingIds as HashSet<int>;
+                var isFavorite = favoriteIds != null && favoriteIds.Contains(Model.Id);
+                <form asp-controller="Favorites" asp-action="Toggle" method="post" class="inline-form">
+                    <input type="hidden" name="listingId" value="@Model.Id" />
+                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                    <button type="submit" class="btn btn-ghost favorite-btn @(isFavorite ? "is-favorite" : "")" title="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")" aria-label="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")">@(isFavorite ? "♥" : "♡")</button>
+                </form>
+            }
+            else
+            {
+                <a class="btn btn-ghost favorite-btn" asp-controller="Account" asp-action="Login" title="إضافة إلى المفضلة">♡</a>
+            }
             @if (Model.IsAvailable && Model.Approval == ListingApproval.Approved)
             {
                 <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id">@L.T("ContactUs")</a>

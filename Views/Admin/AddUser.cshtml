@@ -16,7 +16,10 @@
     <input asp-for="Email" type="email" />
     <span asp-validation-for="Email" class="field-error"></span>
     <label>كلمة المرور (8 أحرف على الأقل، حرف كبير وحرف صغير ورقم)</label>
-    <input asp-for="Password" type="password" />
+    <div class="password-field">
+        <input asp-for="Password" type="password" />
+        <button type="button" class="btn btn-ghost password-toggle" aria-label="إظهار كلمة المرور">إظهار</button>
+    </div>
     <span asp-validation-for="Password" class="field-error"></span>
     <label>الدور</label>
     <select asp-for="Role">

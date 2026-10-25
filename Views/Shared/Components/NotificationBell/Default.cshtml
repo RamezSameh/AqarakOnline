@@ -1,0 +1,44 @@
+@model AqarakOnline.Controllers.BellViewModel
+<div class="bell-wrap">
+    <button type="button" class="bell-btn" id="bellBtn" aria-label="الإشعارات" aria-expanded="false" aria-haspopup="true">
+        🔔
+        @if (Model.UnreadCount > 0)
+        {
+            <span class="bell-badge">@Model.UnreadCount</span>
+        }
+    </button>
+    <div class="bell-dropdown" id="bellDropdown" hidden>
+        <div class="bell-head">
+            <strong>الإشعارات</strong>
+            @if (Model.UnreadCount > 0)
+            {
+                <span>غير مقروء: @Model.UnreadCount</span>
+            }
+        </div>
+        @if (!Model.Items.Any())
+        {
+            <p class="bell-empty">لا توجد إشعارات بعد.</p>
+        }
+        else
+        {
+            @foreach (var row in Model.Items)
+            {
+                <div class="bell-item @(row.IsRead ? "" : "unread")">
+                    <strong>@row.Notification.Title</strong>
+                    <p>@row.Notification.Message</p>
+                    <small>@row.Notification.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                </div>
+            }
+        }
+        <div class="bell-foot">
+            <a asp-controller="Notifications" asp-action="Index">عرض كل الإشعارات</a>
+            @if (Model.UnreadCount > 0)
+            {
+                <form asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="inline-form">
+                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                    <button type="submit" class="btn btn-ghost">تحديد الكل كمقروء</button>
+                </form>
+            }
+        </div>
+    </div>
+</div>

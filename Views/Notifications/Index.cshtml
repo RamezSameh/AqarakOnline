@@ -1,0 +1,31 @@
+@model IEnumerable<AqarakOnline.Controllers.UserNotificationRow>
+<h1>@L.T("Notifications")</h1>
+@if (!Model.Any())
+{
+    <p>@L.T("NoNotifications")</p>
+}
+else
+{
+    <div class="actions">
+        <form asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="inline-form">
+            <button type="submit" class="btn btn-ghost">@L.T("MarkAllAsRead")</button>
+        </form>
+    </div>
+    <div class="notifications-list">
+        @foreach (var row in Model)
+        {
+            <article class="notification-item @(row.IsRead ? "" : "unread")">
+                <h3>@row.Notification.Title</h3>
+                <p>@row.Notification.Message</p>
+                <small>@row.Notification.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                @if (!row.IsRead)
+                {
+                    <form asp-controller="Notifications" asp-action="MarkRead" method="post" class="inline-form">
+                        <input type="hidden" name="id" value="@row.Notification.Id" />
+                        <button type="submit" class="btn btn-ghost">@L.T("MarkAsRead")</button>
+                    </form>
+                }
+            </article>
+        }
+    </div>
+}

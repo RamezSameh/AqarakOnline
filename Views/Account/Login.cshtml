@@ -8,7 +8,10 @@
     <input asp-for="PhoneNumber" type="tel" dir="ltr" placeholder="01xxxxxxxxx" />
     <span asp-validation-for="PhoneNumber" class="field-error"></span>
     <label>@L.T("Password")</label>
-    <input asp-for="Password" type="password" />
+    <div class="password-field">
+        <input asp-for="Password" type="password" />
+        <button type="button" class="btn btn-ghost password-toggle" aria-label="إظهار كلمة المرور">إظهار</button>
+    </div>
     <span asp-validation-for="Password" class="field-error"></span>
     <label><input asp-for="RememberMe" type="checkbox" /> @L.T("RememberMe")</label>
     <div class="actions">

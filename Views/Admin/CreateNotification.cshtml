@@ -1,0 +1,16 @@
+@model AqarakOnline.Controllers.AdminNotificationFormViewModel
+<h1>إضافة تنبيه جديد</h1>
+<p>سيظهر التنبيه فورًا لكل المستخدمين المسجلين في أيقونة الإشعارات.</p>
+<form asp-action="CreateNotification" method="post" class="form">
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+    <label>عنوان التنبيه</label>
+    <input asp-for="Title" />
+    <span asp-validation-for="Title" class="field-error"></span>
+    <label>نص التنبيه</label>
+    <textarea asp-for="Message" rows="4"></textarea>
+    <span asp-validation-for="Message" class="field-error"></span>
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">نشر التنبيه</button>
+        <a class="btn btn-ghost" asp-action="Notifications">إلغاء</a>
+    </div>
+</form>

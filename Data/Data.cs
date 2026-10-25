@@ -16,12 +16,31 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         base.OnModelCreating(builder);
         // السعر بعملة الجنيه: دقة صريحة حتى لا يُقتطع عند الحفظ في SQL Server.
         builder.Entity<Listing>().Property(l => l.Price).HasPrecision(18, 2);
+        // حذف تنبيه يحذف علامات قراءته، وحذف مستخدم يحذف قراءاته ومفضلته.
+        builder.Entity<NotificationRead>()
+            .HasOne(r => r.Notification).WithMany().HasForeignKey(r => r.NotificationId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<NotificationRead>()
+            .HasOne(r => r.User).WithMany().HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // حذف عقار يحذف مفضلته، وحذف مستخدم يحذف مفضلته.
+        builder.Entity<Favorite>()
+            .HasOne(f => f.Listing).WithMany().HasForeignKey(f => f.ListingId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<Favorite>()
+            .HasOne(f => f.User).WithMany().HasForeignKey(f => f.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<Favorite>()
+            .HasIndex(f => new { f.UserId, f.ListingId }).IsUnique();
     }
 
     public DbSet<Listing> Listings => Set<Listing>();
     public DbSet<ContactRequest> ContactRequests => Set<ContactRequest>();
     public DbSet<ListingAttachment> ListingAttachments => Set<ListingAttachment>();
     public DbSet<PhoneVerificationCode> PhoneVerificationCodes => Set<PhoneVerificationCode>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationRead> NotificationReads => Set<NotificationRead>();
+    public DbSet<Favorite> Favorites => Set<Favorite>();
 }
 
 public static class SeedData

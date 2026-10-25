@@ -61,6 +61,19 @@ else
 }
 
 <div class="actions">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        var isFavorite = ViewBag.IsFavorite == true;
+        <form asp-controller="Favorites" asp-action="Toggle" method="post" class="inline-form">
+            <input type="hidden" name="listingId" value="@Model.Id" />
+            <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+            <button type="submit" class="btn btn-ghost favorite-btn @(isFavorite ? "is-favorite" : "")">@(isFavorite ? "♥ في المفضلة" : "♡ إضافة إلى المفضلة")</button>
+        </form>
+    }
+    else
+    {
+        <a class="btn btn-ghost" asp-controller="Account" asp-action="Login">♡ إضافة إلى المفضلة</a>
+    }
     @if (Model.IsAvailable)
     {
         @if (Model.ListingType == ListingType.Sale)

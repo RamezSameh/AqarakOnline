@@ -1,0 +1,46 @@
+@model IEnumerable<Notification>
+<h1>تنبيهات الأدمن</h1>
+<p>التنبيه يظهر لكل المستخدمين على هيئة إشعار (أيقونة الجرس). التنبيه المخفي لا يظهر للمستخدمين ولا يُحتسب في عدد غير المقروء.</p>
+<div class="actions">
+    <a class="btn btn-primary" asp-action="CreateNotification">إضافة تنبيه جديد</a>
+    <a class="btn btn-ghost" asp-action="Dashboard">لوحة التحكم</a>
+</div>
+@if (!Model.Any())
+{
+    <p>لا توجد تنبيهات بعد.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>العنوان</th>
+                <th>النص</th>
+                <th>تاريخ الإنشاء</th>
+                <th>الحالة</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var n in Model)
+            {
+                <tr>
+                    <td>@n.Title</td>
+                    <td>@n.Message</td>
+                    <td>@n.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@(n.IsActive ? "مفعَّل" : "مخفي")</td>
+                    <td>
+                        <form asp-action="ToggleNotification" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@n.Id" />
+                            <button type="submit" class="btn btn-ghost">@(n.IsActive ? "إخفاء" : "تفعيل")</button>
+                        </form>
+                        <form asp-action="DeleteNotification" method="post" class="inline-form" onsubmit="return confirm('حذف هذا التنبيه نهائيًا؟');">
+                            <input type="hidden" name="id" value="@n.Id" />
+                            <button type="submit" class="btn btn-ghost">حذف نهائي</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

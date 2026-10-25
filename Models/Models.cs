@@ -222,3 +222,56 @@ public class ContactRequest
     public bool IsReplied { get; set; }
     public DateTime? RepliedAt { get; set; }
 }
+
+/// <summary>
+/// تنبيه ينشئه الأدمن ويظهر لكل المستخدمين على هيئة إشعار.
+/// IsActive=false يخفيه من غير حذفه.
+/// </summary>
+public class Notification
+{
+    public int Id { get; set; }
+
+    [Required(ErrorMessage = "عنوان التنبيه مطلوب")]
+    [MaxLength(200)]
+    public string Title { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "نص التنبيه مطلوب")]
+    [MaxLength(2000)]
+    public string Message { get; set; } = string.Empty;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public bool IsActive { get; set; } = true;
+}
+
+/// <summary>
+/// علامة قراءة تنبيه لمستخدم معين. غياب الصف يعني أن التنبيه غير مقروء له.
+/// </summary>
+public class NotificationRead
+{
+    public int Id { get; set; }
+
+    public int NotificationId { get; set; }
+    public Notification? Notification { get; set; }
+
+    public string UserId { get; set; } = string.Empty;
+    public ApplicationUser? User { get; set; }
+
+    public DateTime ReadAt { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>
+/// عقار أضافه مستخدم إلى مفضلته. (المستخدم، العقار) فريد.
+/// </summary>
+public class Favorite
+{
+    public int Id { get; set; }
+
+    public string UserId { get; set; } = string.Empty;
+    public ApplicationUser? User { get; set; }
+
+    public int ListingId { get; set; }
+    public Listing? Listing { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
