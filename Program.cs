@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -104,12 +104,13 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 // إنشاء قاعدة البيانات + الأدوار + بيانات تجريبية عند أول تشغيل.
-// ملحوظة: للتجربة السريعة نستخدم EnsureCreated بدل Migrations.
-// قبل الإنتاج: أنشئ Migration بـ dotnet ef ثم استبدل السطر التالي بـ Migrate().
+// Migrations بدل EnsureCreated: تعديلات الجداول تتم من غير مسح البيانات.
+// عند أول تشغيل، Migrate() يطبّق أي Migrations لم تُطبَّق بعد (وينشئ قاعدة
+// البيانات لو لم تكن موجودة)، ثم يعمل الـ seeding.
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    context.Database.EnsureCreated();
+    context.Database.Migrate();
     SeedData.SeedListings(context);
 
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();

@@ -11,6 +11,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
     }
 
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+        // السعر بعملة الجنيه: دقة صريحة حتى لا يُقتطع عند الحفظ في SQL Server.
+        builder.Entity<Listing>().Property(l => l.Price).HasPrecision(18, 2);
+    }
+
     public DbSet<Listing> Listings => Set<Listing>();
     public DbSet<ContactRequest> ContactRequests => Set<ContactRequest>();
     public DbSet<ListingAttachment> ListingAttachments => Set<ListingAttachment>();

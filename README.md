@@ -130,14 +130,51 @@ dotnet run
 
 ثم افتح الرابط الذي يطبعه الأمر (عادة `http://localhost:5000`).
 
-قاعدة البيانات SQLite ملف `aqarak.db` يُنشأ تلقائيًا عند أول تشغيل مع بيانات تجريبية
-(4 إعلانات عربية مقبولة من الأدمن) وأدوار Admin/User. هذا للتجربة السريعة (EnsureCreated)؛
-قبل الإنتاج أنشئ Migration بـ `dotnet ef` واستبدل `EnsureCreated` بـ `Migrate`.
+قاعدة البيانات SQL Server مع Migrations. عند أول تشغيل، يطبّق التطبيق
+أي Migrations لم تُطبَّق بعد (`Migrate()`) فينشئ قاعدة البيانات والجداول
+تلقائيًا، ثم يضيف البيانات التجريبية (4 إعلانات عربية مقبولة من الأدمن)
+وأدوار Admin/User. بعد التحويل إلى SQL Server، لم يعد هناك ملف `aqarak.db`،
+ولا حاجة لحذف قاعدة البيانات عند تغيير شكل الجداول — أنشئ Migration جديدًا
+وستُطبَّق التعديلات مع الحفاظ على البيانات الموجودة.
 
-> مهم عند التحديث: `EnsureCreated` لا يضيف أعمدة جديدة لقاعدة بيانات موجودة.
-> بعد إضافة حقول جديدة (مثل العنوان وكود التأكيد وحالة الموافقة والمساحة وعدد المشاهدات)، احذف ملف `aqarak.db`
-> القديم قبل تشغيل النسخة الجديدة، فيُعاد إنشاؤه بالشكل الجديد مع البيانات التجريبية.
-> هذا آمن في التطوير فقط؛ قاعدة بيانات فيها مستخدمون حقيقيون تحتاج Migration.
+## إعداد SQL Server محليًا (Windows)
+
+سلسلة الاتصال الافتراضية في `appsettings.json` تستخدم LocalDB، وهي النسخة
+الخفيفة المجانية من SQL Server المدمجة مع Visual Studio:
+
+```
+Server=(localdb)\mssqllocaldb;Database=AqarakOnline;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True
+```
+
+- للتأكد أن LocalDB مثبّت عندك: افتح CMD واكتب `sqllocaldb info` — لو ظهر
+  اسم نسخة (مثل `MSSQLLocalDB`) فهي جاهزة. لو ظهر خطأ أنها غير موجودة،
+  ثبّت SQL Server Express مع خيار LocalDB (مجاني من موقع Microsoft).
+- لو عندك نسخة SQL Server Express كاملة بدل LocalDB، غيّر السلسلة إلى:
+  `Server=.\SQLEXPRESS;Database=AqarakOnline;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True`
+- لو عندك SQL Server على سيرفر آخر (محلي أو سحابي)، غيّر `Server` وطريقة
+  المصادقة حسب إعدادات السيرفر، ولا تضع كلمات مرور حقيقية في الملف المرفوع
+  على GitHub — استخدم متغيرات البيئة أو `dotnet user-secrets`.
+- ملحوظة: LocalDB يعمل على Windows فقط، لذلك التطبيق لن يشتغل في بيئة
+  Linux من غير SQL Server حقيقي — وهذا متوقع، وليس خطأ في الكود.
+
+## Migrations: إضافة تعديل جديد في شكل الجداول
+
+بعد تعديل أي Model، من مجلد المشروع:
+
+```bash
+dotnet ef migrations add <اسم_التعديل>
+```
+
+وسيُطبَّق الـ Migration تلقائيًا عند تشغيل التطبيق التالي (عبر `Migrate()`).
+لو أردت تطبيقه يدويًا من غير تشغيل التطبيق:
+
+```bash
+dotnet ef database update
+```
+
+ملحوظة: حذف Migration لم يُطبَّق بعد يتم بـ `dotnet ef migrations remove`،
+أما Migration تم تطبيقه على قاعدة بيانات حقيقية فيحتاج Migration عكسي،
+ولا يُحذف بحذف الملفات فقط.
 
 ## الإعدادات المطلوبة قبل الاستخدام الحقيقي
 
@@ -180,9 +217,11 @@ dotnet run
 
 - ASP.NET Core MVC على .NET 8 (حتى يمكن بناء المشروع والتحقق منه في البيئة المتاحة).
   الترقية إلى .NET 9 أو 10 لاحقًا تتم بتغيير `TargetFramework` وإصدارات الحزم في ملف المشروع.
-- ASP.NET Core Identity (أدوار + كوكيز)، Entity Framework Core مع SQLite.
-- للتحويل إلى SQL Server: غيّر حزمة SQLite إلى SqlServer، وبدّل `UseSqlite` بـ `UseSqlServer`
-  في `Program.cs`، وعدّل سلسلة الاتصال في `appsettings.json`.
+- ASP.NET Core Identity (أدوار + كوكيز)، Entity Framework Core مع SQL Server
+  وحزمة `Microsoft.EntityFrameworkCore.SqlServer`، وMigrations في مجلد `Migrations`
+  (أول Migration هو `InitialCreate` ويشمل كل الجداول الحالية).
+- ملف `aqarak.db` القديم (SQLite) لم يعد مستخدمًا؛ احذفه من جهازك لو موجود،
+  فالبيانات التجريبية ستُعاد إنشاؤها في SQL Server عند أول تشغيل.
 
 
 ## الأمان
@@ -215,6 +254,6 @@ dotnet test tests/AqarakOnline.Tests
 
 ملحوظة: مشروع الاختبارات داخل مجلد `tests`، والمشروع الرئيسي يستثنيه
 من الترجمة (إعداد `Compile Remove` في ملف المشروع) حتى لا تُترجم ملفات
-الاختبارات مع التطبيق. بعد أي تغيير في شكل قاعدة البيانات (مثل إضافة
-`AccountStatus` أو `DetailedAddress`)، احذف ملف `aqarak.db` القديم قبل
-تشغيل النسخة الجديدة، لأن `EnsureCreated` لا يضيف أعمدة جديدة.
+الاختبارات مع التطبيق. بعد أي تغيير في شكل قاعدة البيانات، أنشئ Migration
+جديدًا كما في قسم Migrations أعلاه — لم يعد هناك حاجة لحذف قاعدة البيانات،
+لأن `Migrate()` يطبّق التعديلات مع الحفاظ على البيانات.
