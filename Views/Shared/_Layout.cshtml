@@ -21,14 +21,7 @@
                     <a asp-controller="Listings" asp-action="Create">@L.T("CreateListing")</a>
                     <a asp-controller="Favorites" asp-action="Index">@L.T("Favorites")</a>
                 }
-                @if (User.IsInRole("Admin"))
-                {
-                    <a asp-controller="Admin" asp-action="Dashboard">لوحة التحكم</a>
-                    <a asp-controller="Admin" asp-action="Users">المستخدمون</a>
-                    <a asp-controller="Admin" asp-action="Requests">@L.T("AdminRequests")</a>
-                    <a asp-controller="Admin" asp-action="Listings">@L.T("AdminListings")</a>
-                    <a asp-controller="Admin" asp-action="Notifications">التنبيهات</a>
-                }
+                @await Component.InvokeAsync("AdminNav")
             </nav>
             <div class="header-actions">
                 @await Component.InvokeAsync("NotificationBell")

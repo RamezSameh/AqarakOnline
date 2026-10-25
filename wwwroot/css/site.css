@@ -97,3 +97,5 @@ input, select, textarea { padding: 10px 12px; border: 1px solid #475569; border-
     .table { display: block; overflow-x: auto; }
 }
 @media (max-width: 600px) { .hero h1 { font-size: 34px; } .hero-search input { min-width: 0; flex: 1; } }
+/* رقم مصغر بجانب روابط الأدمن في الـ navbar (يظهر فقط عند وجود جديد). */
+.nav-badge { display: inline-block; min-width: 20px; height: 20px; padding: 0 6px; margin-inline-start: 4px; border-radius: 999px; background: #dc2626; color: #fff; font-size: 12px; line-height: 20px; text-align: center; vertical-align: middle; }

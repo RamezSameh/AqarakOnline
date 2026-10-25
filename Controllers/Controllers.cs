@@ -578,6 +578,7 @@ public class AdminDashboardViewModel
     public int AvailableListings { get; set; }
     public long TotalViews { get; set; }
     public int TotalRequests { get; set; }
+    public int UnrepliedRequests { get; set; }
     public string? FilterUserId { get; set; }
     public string? FilterArea { get; set; }
     public List<string> Areas { get; set; } = new();
@@ -652,6 +653,7 @@ public class AdminController : Controller
             AvailableListings = await _context.Listings.CountAsync(l => l.IsAvailable),
             TotalViews = await _context.Listings.SumAsync(l => (long)l.ViewCount),
             TotalRequests = await _context.ContactRequests.CountAsync(),
+            UnrepliedRequests = await _context.ContactRequests.CountAsync(r => !r.IsReplied),
             FilterUserId = userId,
             FilterArea = area,
             Areas = await _context.Listings.Select(l => l.Area).Distinct().OrderBy(a => a).ToListAsync(),
@@ -1249,6 +1251,40 @@ public class NotificationBellViewComponent : ViewComponent
         {
             model.UnreadCount = 0;
         }
+        return View(model);
+    }
+}
+
+public class AdminBadgeCounts
+{
+    public int PendingUsers { get; set; }
+    public int PendingListings { get; set; }
+    public int UnrepliedRequests { get; set; }
+}
+
+public class AdminNavViewComponent : ViewComponent
+{
+    private readonly ApplicationDbContext _context;
+
+    public AdminNavViewComponent(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<IViewComponentResult> InvokeAsync()
+    {
+        if (!ViewContext.HttpContext.User.IsInRole("Admin"))
+        {
+            return Content(string.Empty);
+        }
+        // أرقام مصغرة للأدمن: حسابات بانتظار الموافقة، إعلانات بانتظار
+        // الموافقة، وطلبات تواصل لم يُرد عليها بعد. تُحسب مع كل تحميل صفحة.
+        var model = new AdminBadgeCounts
+        {
+            PendingUsers = await _context.Users.CountAsync(u => u.AccountStatus == AccountStatus.Pending),
+            PendingListings = await _context.Listings.CountAsync(l => l.Approval == ListingApproval.Pending),
+            UnrepliedRequests = await _context.ContactRequests.CountAsync(r => !r.IsReplied)
+        };
         return View(model);
     }
 }

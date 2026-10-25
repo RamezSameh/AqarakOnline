@@ -1,0 +1,24 @@
+@model AqarakOnline.Controllers.AdminBadgeCounts
+<a asp-controller="Admin" asp-action="Dashboard">لوحة التحكم</a>
+<a asp-controller="Admin" asp-action="Users">
+    المستخدمون
+    @if (Model.PendingUsers > 0)
+    {
+        <span class="nav-badge">@Model.PendingUsers</span>
+    }
+</a>
+<a asp-controller="Admin" asp-action="Requests">
+    @L.T("AdminRequests")
+    @if (Model.UnrepliedRequests > 0)
+    {
+        <span class="nav-badge">@Model.UnrepliedRequests</span>
+    }
+</a>
+<a asp-controller="Admin" asp-action="Listings">
+    @L.T("AdminListings")
+    @if (Model.PendingListings > 0)
+    {
+        <span class="nav-badge">@Model.PendingListings</span>
+    }
+</a>
+<a asp-controller="Admin" asp-action="Notifications">التنبيهات</a>
