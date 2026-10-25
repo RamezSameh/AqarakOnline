@@ -1,12 +1,16 @@
 // سلوكيات واجهة عامة: قائمة الموبايل، قائمة الإشعارات، إظهار كلمة المرور.
 // لا يعتمد على أي مكتبة خارجية، ويعمل مع العربية (RTL) والإنجليزية (LTR).
 document.addEventListener("DOMContentLoaded", function () {
-    // قائمة التنقل في الشاشات الصغيرة.
+    // قائمة التنقل في الشاشات الصغيرة (تشمل قائمتي الأدمن والمستخدم).
     var navToggle = document.getElementById("navToggle");
     var mainNav = document.getElementById("mainNav");
+    var navLists = document.querySelector(".nav-lists");
     if (navToggle && mainNav) {
         navToggle.addEventListener("click", function () {
             var open = mainNav.classList.toggle("open");
+            if (navLists) {
+                navLists.classList.toggle("open", open);
+            }
             navToggle.setAttribute("aria-expanded", open ? "true" : "false");
         });
     }

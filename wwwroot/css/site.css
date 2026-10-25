@@ -5,7 +5,12 @@ a { color: #a5b4fc; }
 .site-header { position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; background: rgba(17, 24, 39, 0.97); }
 .header-inner { display: flex; align-items: center; gap: 20px; min-height: 64px; }
 .brand { font-size: 22px; font-weight: 800; color: #fff; text-decoration: none; white-space: nowrap; }
-.main-nav { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+.main-nav { display: flex; align-items: center; gap: 6px; min-width: 0; }
+/* جنب اليمين: قائمتا الأدمن والمستخدم فوق بعض. */
+.nav-lists { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.profile-link { padding: 8px 12px; border: 1px solid #334155; border-radius: 8px; color: #cbd5e1; text-decoration: none; white-space: nowrap; }
+.profile-link:hover { color: #fff; border-color: #475569; }
+.mobile-only { display: none; }
 .header-actions { display: flex; align-items: center; gap: 10px; margin-inline-start: auto; }
 .nav-link { padding: 8px 12px; border-radius: 8px; color: #cbd5e1; text-decoration: none; white-space: nowrap; }
 .nav-link:hover { color: #fff; background: #1e293b; }
@@ -104,6 +109,12 @@ input, select, textarea { padding: 10px 12px; border: 1px solid #475569; border-
     .header-actions { order: 2; margin-inline-start: 0; }
     .main-nav { display: none; width: 100%; flex-direction: column; align-items: stretch; order: 4; border-top: 1px solid #1e293b; padding-top: 12px; margin-top: 2px; }
     .main-nav.open { display: flex; }
+    .nav-lists { display: none; width: 100%; order: 5; }
+    .nav-lists.open { display: flex; }
+    .desktop-only { display: none; }
+    .mobile-only { display: flex; }
+    .panel-account { flex-direction: column; gap: 8px; border-top: 1px solid #1e293b; padding-top: 12px; margin-top: 6px; }
+    .panel-account .profile-link, .panel-account .btn { text-align: center; }
     .main-nav .nav-link, .main-nav .nav-cta, .main-nav .nav-auth { text-align: center; }
     .main-nav .nav-cta { margin: 4px 0; }
     .nav-dropdown-toggle { width: 100%; justify-content: space-between; }
