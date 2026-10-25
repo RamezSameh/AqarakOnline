@@ -11,29 +11,42 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // قائمة الإشعارات (الجرس): فتح/إغلاق، والإغلاق بالضغط خارجها.
-    // بتفويض الأحداث (delegation) حتى تعمل بعد استبدال HTML الجرس لحظيًا.
-    document.addEventListener("click", function (event) {
-        var bellBtn = event.target.closest("#bellBtn");
+    // نافذة الإشعارات المنبثقة (الجرس): فتح/إغلاق بزر الجرس، أو زر ✕،
+    // أو الضغط على الخلفية، أو زر Escape. بتفويض الأحداث (delegation)
+    // حتى تعمل بعد استبدال HTML الجرس لحظيًا.
+    function setBellOpen(open) {
         var bellDropdown = document.getElementById("bellDropdown");
-        if (bellBtn && bellDropdown) {
-            event.stopPropagation();
-            var hidden = bellDropdown.hasAttribute("hidden");
-            if (hidden) {
-                bellDropdown.removeAttribute("hidden");
-                bellBtn.setAttribute("aria-expanded", "true");
-            } else {
-                bellDropdown.setAttribute("hidden", "");
-                bellBtn.setAttribute("aria-expanded", "false");
-            }
+        var btn = document.getElementById("bellBtn");
+        if (!bellDropdown) {
             return;
         }
-        if (bellDropdown && !event.target.closest(".bell-wrap")) {
+        if (open) {
+            bellDropdown.removeAttribute("hidden");
+            document.body.style.overflow = "hidden";
+        } else {
             bellDropdown.setAttribute("hidden", "");
-            var btn = document.getElementById("bellBtn");
-            if (btn) {
-                btn.setAttribute("aria-expanded", "false");
-            }
+            document.body.style.overflow = "";
+        }
+        if (btn) {
+            btn.setAttribute("aria-expanded", open ? "true" : "false");
+        }
+    }
+    document.addEventListener("click", function (event) {
+        var bellDropdown = document.getElementById("bellDropdown");
+        if (!bellDropdown) {
+            return;
+        }
+        if (event.target.closest("#bellBtn")) {
+            setBellOpen(bellDropdown.hasAttribute("hidden"));
+            return;
+        }
+        if (event.target.closest("#bellClose") || event.target === bellDropdown) {
+            setBellOpen(false);
+        }
+    });
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            setBellOpen(false);
         }
     });
 
@@ -86,6 +99,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 var fresh = tmp.firstElementChild;
                 if (fresh) {
                     wrap.replaceWith(fresh);
+                    // لو كانت النافذة مفتوحة وقت التحديث، الـ HTML الجديد
+                    // يجيء مغلقًا، فلازم نرجّع تمرير الصفحة.
+                    document.body.style.overflow = "";
                 }
             })
             .catch(function () { /* يبقى القديم حتى التحديث التالي */ });

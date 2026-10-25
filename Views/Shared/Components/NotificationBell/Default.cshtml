@@ -8,13 +8,15 @@
         }
     </button>
     <div class="bell-dropdown" id="bellDropdown" hidden>
+      <div class="bell-modal" role="dialog" aria-modal="true" aria-label="الإشعارات">
         <div class="bell-head">
             <strong>الإشعارات</strong>
-            @if (Model.UnreadCount > 0)
-            {
-                <span>غير مقروء: @Model.UnreadCount</span>
-            }
+            <button type="button" class="bell-close" id="bellClose" aria-label="إغلاق">✕</button>
         </div>
+        @if (Model.UnreadCount > 0)
+        {
+            <p class="bell-unread">غير مقروء: @Model.UnreadCount</p>
+        }
         @if (!Model.Items.Any())
         {
             <p class="bell-empty">لا توجد إشعارات بعد.</p>
@@ -40,5 +42,6 @@
                 </form>
             }
         </div>
+      </div>
     </div>
 </div>
