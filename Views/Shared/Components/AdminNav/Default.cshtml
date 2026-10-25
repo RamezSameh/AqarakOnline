@@ -1,24 +1,38 @@
 @model AqarakOnline.Controllers.AdminBadgeCounts
-<a asp-controller="Admin" asp-action="Dashboard">لوحة التحكم</a>
-<a asp-controller="Admin" asp-action="Users">
-    المستخدمون
-    @if (Model.PendingUsers > 0)
-    {
-        <span class="nav-badge">@Model.PendingUsers</span>
-    }
-</a>
-<a asp-controller="Admin" asp-action="Requests">
-    @L.T("AdminRequests")
-    @if (Model.UnrepliedRequests > 0)
-    {
-        <span class="nav-badge">@Model.UnrepliedRequests</span>
-    }
-</a>
-<a asp-controller="Admin" asp-action="Listings">
-    @L.T("AdminListings")
-    @if (Model.PendingListings > 0)
-    {
-        <span class="nav-badge">@Model.PendingListings</span>
-    }
-</a>
-<a asp-controller="Admin" asp-action="Notifications">التنبيهات</a>
+@{
+    var total = Model.PendingUsers + Model.UnrepliedRequests + Model.PendingListings;
+}
+<div class="nav-dropdown">
+    <button type="button" class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+        الإدارة
+        @if (total > 0)
+        {
+            <span class="nav-badge">@total</span>
+        }
+    </button>
+    <div class="nav-dropdown-menu">
+        <a asp-controller="Admin" asp-action="Dashboard">لوحة التحكم</a>
+        <a asp-controller="Admin" asp-action="Users">
+            المستخدمون
+            @if (Model.PendingUsers > 0)
+            {
+                <span class="nav-badge">@Model.PendingUsers</span>
+            }
+        </a>
+        <a asp-controller="Admin" asp-action="Requests">
+            @L.T("AdminRequests")
+            @if (Model.UnrepliedRequests > 0)
+            {
+                <span class="nav-badge">@Model.UnrepliedRequests</span>
+            }
+        </a>
+        <a asp-controller="Admin" asp-action="Listings">
+            @L.T("AdminListings")
+            @if (Model.PendingListings > 0)
+            {
+                <span class="nav-badge">@Model.PendingListings</span>
+            }
+        </a>
+        <a asp-controller="Admin" asp-action="Notifications">التنبيهات</a>
+    </div>
+</div>

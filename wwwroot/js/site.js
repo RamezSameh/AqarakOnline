@@ -37,8 +37,34 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // التحديث اللحظي: عند إشارة من السيرفر، أعد جلب الجرس أو أرقام الأدمن
-    // واستبدلها من غير إعادة تحميل الصفحة.
+    // قائمة الإدارة المنسدلة في الـ navbar: فتح/إغلاق، والإغلاق بالضغط
+    // خارجها. بتفويض الأحداث حتى تعمل بعد استبدال روابط الأدمن لحظيًا.
+    document.addEventListener("click", function (event) {
+        var toggle = event.target.closest(".nav-dropdown-toggle");
+        if (toggle) {
+            var dropdown = toggle.closest(".nav-dropdown");
+            var wasOpen = dropdown.classList.contains("open");
+            document.querySelectorAll(".nav-dropdown.open").forEach(function (d) {
+                d.classList.remove("open");
+            });
+            if (!wasOpen) {
+                dropdown.classList.add("open");
+                toggle.setAttribute("aria-expanded", "true");
+            } else {
+                toggle.setAttribute("aria-expanded", "false");
+            }
+            return;
+        }
+        if (!event.target.closest(".nav-dropdown")) {
+            document.querySelectorAll(".nav-dropdown.open").forEach(function (d) {
+                d.classList.remove("open");
+                var t = d.querySelector(".nav-dropdown-toggle");
+                if (t) {
+                    t.setAttribute("aria-expanded", "false");
+                }
+            });
+        }
+    });
     function refreshBell() {
         var wrap = document.querySelector(".bell-wrap");
         if (!wrap) {

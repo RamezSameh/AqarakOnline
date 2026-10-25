@@ -99,5 +99,19 @@ input, select, textarea { padding: 10px 12px; border: 1px solid #475569; border-
 @media (max-width: 600px) { .hero h1 { font-size: 34px; } .hero-search input { min-width: 0; flex: 1; } }
 /* رقم مصغر بجانب روابط الأدمن في الـ navbar (يظهر فقط عند وجود جديد). */
 .nav-badge { display: inline-block; min-width: 20px; height: 20px; padding: 0 6px; margin-inline-start: 4px; border-radius: 999px; background: #dc2626; color: #fff; font-size: 12px; line-height: 20px; text-align: center; vertical-align: middle; }
+/* قائمة الإدارة المنسدلة في الـ navbar. */
+.nav-dropdown { position: relative; }
+.nav-dropdown-toggle { padding: 4px 0; border: none; background: transparent; color: #cbd5e1; font: inherit; cursor: pointer; }
+.nav-dropdown-toggle:hover { color: #fff; }
+.nav-dropdown-menu { display: none; position: absolute; top: calc(100% + 10px); inset-inline-start: 0; min-width: 220px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 6px; z-index: 50; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); }
+.nav-dropdown.open .nav-dropdown-menu { display: block; }
+.nav-dropdown-menu a { display: flex; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: 6px; }
+.nav-dropdown-menu a:hover { background: #334155; }
 /* شريط التحديث الحي لقائمة الإعلانات. */
 .live-banner { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; margin-bottom: 16px; border: 1px solid #6366f1; border-radius: 10px; background: #1e293b; }
+/* قائمة الإدارة على الموبايل: تفتح داخل القائمة بدل ما تطفو فوق المحتوى. */
+@media (max-width: 860px) {
+    .nav-dropdown { width: 100%; }
+    .nav-dropdown-menu { position: static; box-shadow: none; border: none; padding-inline-start: 12px; }
+    .nav-dropdown-menu a { border-bottom: 1px solid #1e293b; }
+}
