@@ -1,0 +1,19 @@
+# مثال لإعدادات Cloudflare Tunnel (Named Tunnel) لمشروع عقارك أونلاين
+# انسخ هذا الملف إلى:
+#   %USERPROFILE%\.cloudflared\config.yml
+# ثم استبدل القيم بين < > بالقيم الحقيقية من لوحة Cloudflare.
+# ملاحظات:
+# - لا تضع هذا الملف المملوء بالقيم الحقيقية في Git؛ ملف الاعتماد
+#   <Tunnel-ID>.json سري، واحذف التانل من اللوحة لإبطاله لو تسرّب.
+# - الخدمة هنا http داخليًا لأن Cloudflare هي التي توفّر HTTPS للزوار.
+#   لذلك شغّل التطبيق ببيئة Tunnel (انظر README) حتى لا يحوّل http إلى https.
+# - السطر الأخير (http_status:404) إجباري، بدونه cloudflared يرفض التشغيل.
+
+tunnel: <Tunnel-ID>
+credentials-file: C:\Users\<اسم المستخدم>\.cloudflared\<Tunnel-ID>.json
+ingress:
+  - hostname: aqarak.<الدومين الخاص بك>
+    service: http://localhost:5000
+    # لو شغّلت الموقع على IIS كموقع رئيسي بدل Kestrel، استخدم بدل السطر أعلاه:
+    # service: http://localhost:80
+  - service: http_status:404

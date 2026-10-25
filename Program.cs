@@ -90,6 +90,9 @@ if (!app.Environment.IsDevelopment())
 // لا يستمع على https (الوسيط يحذّر ويمرّر الطلب)، لكن الإعداد يضمن عدم
 // التحويل حتى لو كان https مفعّلًا في وضع تشغيل آخر. للتجربة على نفس الشبكة
 // من الموبايل، اضبط UseHttpsRedirection على false زيادة أمان.
+// للتشغيل وراء Cloudflare Tunnel، شغّل ببيئة Tunnel (ملف
+// appsettings.Tunnel.json) حيث UseHttpsRedirection=false، لأن Cloudflare
+// هي التي توفّر HTTPS للزوار والاتصال الداخلي http.
 if (app.Configuration.GetValue<bool>("UseHttpsRedirection", true))
 {
     app.UseHttpsRedirection();

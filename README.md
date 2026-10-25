@@ -124,6 +124,68 @@ Application Pool بتاع IIS — فمع IIS الكامل غالبًا الات�
 SQL Server (اسم مستخدم وكلمة مرور) بدل Windows Authentication.
 مع IIS Express المشكلة دي مش موجودة عادة، لأنه بيشتغل بحسابك أنت.
 
+## النشر على النت من جهازك باستخدام Cloudflare Tunnel
+
+الفكرة: برنامج `cloudflared` على جهازك يفتح اتصالًا خارجًا إلى Cloudflare،
+والزوار يدخلون على لينك عام من Cloudflare، فلا حاجة لفتح بورتات في الراوتر
+ولا لـ IP عام ثابت، ويعمل حتى وراء CGNAT. الـ Tunnel نفسه مجاني في خطة
+Cloudflare Zero Trust المجانية، وHTTPS يأتي تلقائيًا من Cloudflare.
+الجهاز مع ذلك يجب أن يبقى شغالًا (بدون Sleep) طوال فترة النشر.
+
+### قبل أي نشر عام (قائمة تحقق)
+- عطّل حسابات الاختبار: اضبط `SeedTestUsers` على `false` واحذف
+  المستخدمين التجريبيين من قاعدة البيانات.
+- خذ نسخة احتياطية من قاعدة البيانات ومن مجلد `wwwroot/uploads` معًا.
+- ألغِ وضع Sleep/Hibernation للجهاز، وتأكد أن التطبيق و`cloudflared`
+  يعملان معًا طوال الوقت.
+
+### إعداد خاص بالمشروع: بيئة Tunnel
+الاتصال بين Cloudflare وجهازك داخليًا `http`، وCloudflare هي التي توفّر
+HTTPS للزوار. لذلك يجب إيقاف تحويل HTTP إلى HTTPS داخل التطبيق، وإلا
+سيدخل في لوب تحويلات. المشروع جاهز لذلك من غير تعديل `appsettings.json`:
+ملف `appsettings.Tunnel.json` يضبط `UseHttpsRedirection` على `false`،
+ويُحمَّل تلقائيًا عند تشغيل التطبيق ببيئة `Tunnel`.
+
+### 1) Quick Tunnel — تجربة سريعة (دقائق)
+من غير حساب ولا دومين، واللينك مؤقت يتغير كل مرة ويموت بإغلاق البرنامج:
+1. شغّل التطبيق على `http://localhost:5000` (Kestrel):
+   ```powershell
+   $env:ASPNETCORE_ENVIRONMENT="Tunnel"
+   dotnet run --no-launch-profile --urls "http://localhost:5000"
+   ```
+2. نزّل `cloudflared` لويندوز من موقع Cloudflare الرسمي، ثم شغّل السكربت
+   الجاهز من مجلد المشروع (سيتحقق أولًا أن التطبيق يرد على المنفذ 5000):
+   ```powershell
+   .\deploy\start-quick-tunnel.ps1
+   ```
+   أو يدويًا: `cloudflared tunnel --url http://localhost:5000`
+3. انسخ لينك `trycloudflare.com` الظاهر، وجرّبه من الموبايل على باقة
+   الموبايل (وليس الواي فاي) للتأكد أنه طالع على النت فعلًا.
+
+### 2) Named Tunnel — نشر ثابت
+1. أنشئ حسابًا مجانيًا على Cloudflare، وأضف دومينًا خاصًا بك تكون
+   الـ DNS الخاصة به على Cloudflare (التانل مجاني، لكن الدومين نفسه
+   له تكلفة تسجيل).
+2. من لوحة Zero Trust ← Networks ← Tunnels ← Create tunnel، سمِّ التانل
+   (مثلًا `aqarak`)، وأضف Public Hostname يشاور على
+   `http://localhost:5000` (Kestrel) أو `http://localhost:80`
+   (لو شغّلت الموقع على IIS كموقع رئيسي).
+3. انسخ أمر التثبيت من اللوحة وشغّله على جهازك. للتشغيل التلقائي مع
+   الويندوز، ثبّت `cloudflared` كخدمة من PowerShell كمسؤول:
+   ```powershell
+   cloudflared service install
+   ```
+4. البديل اليدوي بملف إعدادات: انسخ `deploy/cloudflared-config.example.yml`
+   إلى `%USERPROFILE%\.cloudflared\config.yml`، واملأ الـ Tunnel ID
+   واسم الدومين، ثم شغّل `cloudflared tunnel run aqarak`.
+   لا ترفع ملف الإعدادات المملوء ولا ملف الاعتماد `<Tunnel-ID>.json`
+   إلى Git أبدًا — الملفان سريّان.
+5. مع IIS: بعد النشر، اضبط متغير البيئة `ASPNETCORE_ENVIRONMENT`
+   على `Tunnel` في `web.config` (عنصر `environmentVariables` داخل
+   `aspNetCore`)، أو من IIS Manager، حتى يُحمَّل `appsettings.Tunnel.json`.
+   ومع IIS الكامل، تذكّر أن قاعدة البيانات يجب أن تكون SQL Server
+   Express خدمية (`SQLEXPRESS`) وليست LocalDB.
+
 ## التشغيل على نفس الشبكة (للتجربة من الموبايل)
 
 الفكرة: تشغّل التطبيق على جهاز الكمبيوتر، وتفتحه من موبايل على نفس شبكة الواي فاي.
