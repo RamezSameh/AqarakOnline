@@ -12,10 +12,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // قائمة الإشعارات (الجرس): فتح/إغلاق، والإغلاق بالضغط خارجها.
-    var bellBtn = document.getElementById("bellBtn");
-    var bellDropdown = document.getElementById("bellDropdown");
-    if (bellBtn && bellDropdown) {
-        bellBtn.addEventListener("click", function (event) {
+    // بتفويض الأحداث (delegation) حتى تعمل بعد استبدال HTML الجرس لحظيًا.
+    document.addEventListener("click", function (event) {
+        var bellBtn = event.target.closest("#bellBtn");
+        var bellDropdown = document.getElementById("bellDropdown");
+        if (bellBtn && bellDropdown) {
             event.stopPropagation();
             var hidden = bellDropdown.hasAttribute("hidden");
             if (hidden) {
@@ -25,13 +26,92 @@ document.addEventListener("DOMContentLoaded", function () {
                 bellDropdown.setAttribute("hidden", "");
                 bellBtn.setAttribute("aria-expanded", "false");
             }
-        });
-        document.addEventListener("click", function (event) {
-            if (!bellDropdown.contains(event.target)) {
-                bellDropdown.setAttribute("hidden", "");
-                bellBtn.setAttribute("aria-expanded", "false");
+            return;
+        }
+        if (bellDropdown && !event.target.closest(".bell-wrap")) {
+            bellDropdown.setAttribute("hidden", "");
+            var btn = document.getElementById("bellBtn");
+            if (btn) {
+                btn.setAttribute("aria-expanded", "false");
             }
+        }
+    });
+
+    // التحديث اللحظي: عند إشارة من السيرفر، أعد جلب الجرس أو أرقام الأدمن
+    // واستبدلها من غير إعادة تحميل الصفحة.
+    function refreshBell() {
+        var wrap = document.querySelector(".bell-wrap");
+        if (!wrap) {
+            return;
+        }
+        fetch("/Notifications/Bell")
+            .then(function (response) {
+                if (!response.ok) {
+                    return null;
+                }
+                return response.text();
+            })
+            .then(function (html) {
+                if (!html) {
+                    return;
+                }
+                var tmp = document.createElement("div");
+                tmp.innerHTML = html.trim();
+                var fresh = tmp.firstElementChild;
+                if (fresh) {
+                    wrap.replaceWith(fresh);
+                }
+            })
+            .catch(function () { /* يبقى القديم حتى التحديث التالي */ });
+    }
+
+    function refreshAdminNav() {
+        var span = document.getElementById("adminNavLinks");
+        if (!span) {
+            return;
+        }
+        fetch("/Admin/NavBadges")
+            .then(function (response) {
+                if (!response.ok) {
+                    return null;
+                }
+                return response.text();
+            })
+            .then(function (html) {
+                if (html !== null) {
+                    span.innerHTML = html;
+                }
+            })
+            .catch(function () { /* يبقى القديم حتى التحديث التالي */ });
+    }
+
+    var pollingStarted = false;
+    function startPolling() {
+        if (pollingStarted) {
+            return;
+        }
+        pollingStarted = true;
+        setInterval(function () {
+            refreshBell();
+            refreshAdminNav();
+        }, 30000);
+    }
+
+    if (window.signalR) {
+        var connection = new signalR.HubConnectionBuilder()
+            .withUrl("/realtimeHub")
+            .withAutomaticReconnect()
+            .build();
+        connection.on("refreshBell", refreshBell);
+        connection.on("refreshAdminNav", refreshAdminNav);
+        connection.start().catch(function () {
+            startPolling();
         });
+        connection.onclose(function () {
+            startPolling();
+        });
+    } else {
+        startPolling();
     }
 
     // إظهار/إخفاء كلمة المرور أثناء الكتابة.

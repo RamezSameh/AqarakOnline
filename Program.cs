@@ -52,6 +52,7 @@ else
 }
 builder.Services.AddScoped<LanguageService>();
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -105,6 +106,8 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHub<AqarakOnline.Services.RealtimeHub>("/realtimeHub");
 
 // إنشاء قاعدة البيانات + الأدوار + بيانات تجريبية عند أول تشغيل.
 // Migrations بدل EnsureCreated: تعديلات الجداول تتم من غير مسح البيانات.

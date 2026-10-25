@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -68,11 +69,13 @@ public class ListingsController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly IWebHostEnvironment _env;
+    private readonly Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> _hub;
 
-    public ListingsController(ApplicationDbContext context, IWebHostEnvironment env)
+    public ListingsController(ApplicationDbContext context, IWebHostEnvironment env, Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub)
     {
         _context = context;
         _env = env;
+        _hub = hub;
     }
 
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
@@ -192,6 +195,7 @@ public class ListingsController : Controller
 
         if (listing.Approval == ListingApproval.Pending)
         {
+            await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
             TempData["Info"] = "تم إرسال إعلانك للمراجعة، وسيظهر للعامة بعد موافقة الأدمن.";
             return RedirectToAction(nameof(MyListings));
         }
@@ -300,12 +304,17 @@ public class ListingsController : Controller
             return Forbid();
         }
         var isOwn = listing.OwnerId == CurrentUserId;
+        var wasPending = listing.Approval == ListingApproval.Pending;
         foreach (var attachment in listing.Attachments.ToList())
         {
             AttachmentStorage.DeleteFile(_env.WebRootPath, attachment.FilePath);
         }
         _context.Listings.Remove(listing);
         await _context.SaveChangesAsync();
+        if (wasPending)
+        {
+            await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
+        }
         if (!isOwn && User.IsInRole("Admin"))
         {
             return RedirectToAction("Listings", "Admin");
@@ -411,15 +420,18 @@ public class ContactController : Controller
     private readonly ApplicationDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ContactSettings _contact;
+    private readonly Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> _hub;
 
     public ContactController(
         ApplicationDbContext context,
         UserManager<ApplicationUser> userManager,
-        IOptions<ContactSettings> contact)
+        IOptions<ContactSettings> contact,
+        Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub)
     {
         _context = context;
         _userManager = userManager;
         _contact = contact.Value;
+        _hub = hub;
     }
 
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
@@ -486,6 +498,7 @@ public class ContactController : Controller
         request.IsReplied = false;
         _context.ContactRequests.Add(request);
         await _context.SaveChangesAsync();
+        await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
         return RedirectToAction(nameof(Success), new { id = request.Id });
     }
 
@@ -593,13 +606,22 @@ public class AdminController : Controller
     private readonly ApplicationDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IWebHostEnvironment _env;
+    private readonly Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> _hub;
 
-    public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment env)
+    public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment env, Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub)
     {
         _context = context;
         _userManager = userManager;
         _env = env;
+        _hub = hub;
     }
+
+    // دفع لحظي: أرقام الأدمن لمجموعة الأدمن، والجرس لكل المتصلين.
+    private Task NotifyAdminsAsync() =>
+        _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
+
+    private Task NotifyBellAsync() =>
+        _hub.Clients.All.SendAsync("refreshBell");
 
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
@@ -698,6 +720,7 @@ public class AdminController : Controller
         }
         user.AccountStatus = status;
         await _userManager.UpdateAsync(user);
+        await NotifyAdminsAsync();
         TempData["Info"] = doneMessage;
         return RedirectToAction(nameof(Users));
     }
@@ -768,6 +791,7 @@ public class AdminController : Controller
             TempData["Error"] = "تعذر حذف الحساب.";
             return RedirectToAction(nameof(Users));
         }
+        await NotifyAdminsAsync();
         TempData["Info"] = $"تم حذف الحساب نهائيًا (مع {listings.Count} إعلان و{requests.Count} طلب تواصل).";
         return RedirectToAction(nameof(Users));
     }
@@ -948,6 +972,7 @@ public class AdminController : Controller
         request.IsReplied = true;
         request.RepliedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+        await NotifyAdminsAsync();
         return RedirectToAction(nameof(Requests));
     }
 
@@ -962,6 +987,7 @@ public class AdminController : Controller
         }
         listing.Approval = ListingApproval.Approved;
         await _context.SaveChangesAsync();
+        await NotifyAdminsAsync();
         return RedirectToAction(nameof(Listings));
     }
 
@@ -976,6 +1002,7 @@ public class AdminController : Controller
         }
         listing.Approval = ListingApproval.Rejected;
         await _context.SaveChangesAsync();
+        await NotifyAdminsAsync();
         return RedirectToAction(nameof(Listings));
     }
 
@@ -997,6 +1024,11 @@ public class AdminController : Controller
             .ToListAsync();
         return View(notifications);
     }
+
+    // نسخة حديثة من روابط الأدمن بالأرقام، يعيد المتصفح جلبها عند إشارة التحديث.
+    [Authorize(Roles = "Admin")]
+    [HttpGet]
+    public IActionResult NavBadges() => ViewComponent("AdminNav");
 
     [HttpGet]
     public IActionResult CreateNotification()
@@ -1020,6 +1052,7 @@ public class AdminController : Controller
             IsActive = true
         });
         await _context.SaveChangesAsync();
+        await NotifyBellAsync();
         TempData["Info"] = "تم نشر التنبيه لكل المستخدمين.";
         return RedirectToAction(nameof(Notifications));
     }
@@ -1035,6 +1068,7 @@ public class AdminController : Controller
         }
         notification.IsActive = !notification.IsActive;
         await _context.SaveChangesAsync();
+        await NotifyBellAsync();
         TempData["Info"] = notification.IsActive ? "تم تفعيل التنبيه." : "تم إخفاء التنبيه عن المستخدمين.";
         return RedirectToAction(nameof(Notifications));
     }
@@ -1050,6 +1084,7 @@ public class AdminController : Controller
         }
         _context.Notifications.Remove(notification);
         await _context.SaveChangesAsync();
+        await NotifyBellAsync();
         TempData["Info"] = "تم حذف التنبيه نهائيًا.";
         return RedirectToAction(nameof(Notifications));
     }
@@ -1097,6 +1132,10 @@ public class NotificationsController : Controller
         }).ToList();
         return View(rows);
     }
+
+    // نسخة حديثة من الجرس، يعيد المتصفح جلبها عند إشارة التحديث.
+    [HttpGet]
+    public IActionResult Bell() => ViewComponent("NotificationBell");
 
     [HttpPost]
     [ValidateAntiForgeryToken]

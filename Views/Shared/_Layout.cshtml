@@ -21,7 +21,8 @@
                     <a asp-controller="Listings" asp-action="Create">@L.T("CreateListing")</a>
                     <a asp-controller="Favorites" asp-action="Index">@L.T("Favorites")</a>
                 }
-                @await Component.InvokeAsync("AdminNav")
+                @* غلاف display:contents حتى تُستبدل روابط الأدمن لحظيًا من غير كسر توزيع الـ flex. *@
+                <span id="adminNavLinks" style="display:contents">@await Component.InvokeAsync("AdminNav")</span>
             </nav>
             <div class="header-actions">
                 @await Component.InvokeAsync("NotificationBell")
@@ -61,6 +62,9 @@
             <p>@L.T("Phone"): @ContactOptions.Value.Phone | @L.T("WhatsApp"): @ContactOptions.Value.WhatsApp | @L.T("Email"): @ContactOptions.Value.Email</p>
         </div>
     </footer>
+    @* مكتبة SignalR من CDN (مطابقة لإصدار .NET 8). لو تعذّر تحميلها،
+       يعود site.js تلقائيًا للتحديث الدوري كل 30 ثانية. *@
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
     <script src="~/js/site.js" defer></script>
 </body>
 </html>

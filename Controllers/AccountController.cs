@@ -3,6 +3,7 @@ using AqarakOnline.Models;
 using AqarakOnline.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AqarakOnline.Controllers;
 
@@ -59,15 +60,18 @@ public class AccountController : Controller
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _configuration;
+    private readonly Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> _hub;
 
     public AccountController(
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _configuration = configuration;
+        _hub = hub;
     }
 
     [HttpGet]
@@ -185,6 +189,12 @@ public class AccountController : Controller
         }
 
         await _userManager.AddToRoleAsync(user, isAdminAccount ? "Admin" : "User");
+
+        // حساب جديد قيد المراجعة = رقم جديد عند الأدمن، لحظيًا.
+        if (!isAdminAccount)
+        {
+            await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
+        }
 
         if (isAdminAccount)
         {
