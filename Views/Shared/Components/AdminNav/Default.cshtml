@@ -3,8 +3,8 @@
     var total = Model.PendingUsers + Model.UnrepliedRequests + Model.PendingListings;
 }
 <div class="nav-dropdown">
-    <button type="button" class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
-        الإدارة
+    <button type="button" class="nav-dropdown-toggle @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" aria-expanded="false" aria-haspopup="true">
+        الإدارة <span aria-hidden="true">▾</span>
         @if (total > 0)
         {
             <span class="nav-badge">@total</span>

@@ -1,4 +1,8 @@
 @inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> HeaderUserManager
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
 <!DOCTYPE html>
 <html lang="@L.Culture" dir="@(L.IsArabic ? "rtl" : "ltr")">
 <head>
@@ -11,38 +15,41 @@
     <header class="site-header">
         <div class="container header-inner">
             <a class="brand" asp-controller="Home" asp-action="Index">@L.T("Brand")</a>
-            <button type="button" class="nav-toggle" id="navToggle" aria-label="القائمة" aria-expanded="false" aria-controls="mainNav">☰</button>
             <nav class="main-nav" id="mainNav">
-                <a asp-controller="Home" asp-action="Index">@L.T("Home")</a>
-                <a asp-controller="Listings" asp-action="Index">@L.T("Listings")</a>
+                <a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">@L.T("Home")</a>
+                <a class="nav-link @(currentController == "Listings" && currentAction == "Index" ? "active" : "")" asp-controller="Listings" asp-action="Index">@L.T("Listings")</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
-                    <a asp-controller="Listings" asp-action="MyListings">@L.T("MyListings")</a>
-                    <a asp-controller="Listings" asp-action="Create">@L.T("CreateListing")</a>
-                    <a asp-controller="Favorites" asp-action="Index">@L.T("Favorites")</a>
+                    <a class="nav-cta" asp-controller="Listings" asp-action="Create">@L.T("CreateListing")</a>
+                    @* غلاف display:contents حتى تُستبدل روابط الأدمن لحظيًا من غير كسر توزيع الـ flex. *@
+                    <span id="adminNavLinks" style="display:contents">@await Component.InvokeAsync("AdminNav")</span>
+                    @* الاسم يظهر في الـ header، وليس رقم الموبايل. *@
+                    var headerUser = await HeaderUserManager.GetUserAsync(User);
+                    var displayName = !string.IsNullOrWhiteSpace(headerUser?.FullName) ? headerUser!.FullName : User.Identity.Name;
+                    <div class="nav-dropdown">
+                        <button type="button" class="nav-dropdown-toggle @(currentController == "Favorites" || (currentController == "Listings" && currentAction == "MyListings") ? "active" : "")" aria-expanded="false" aria-haspopup="true">
+                            @displayName <span aria-hidden="true">▾</span>
+                        </button>
+                        <div class="nav-dropdown-menu">
+                            <a asp-controller="Listings" asp-action="MyListings">@L.T("MyListings")</a>
+                            <a asp-controller="Favorites" asp-action="Index">@L.T("Favorites")</a>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="nav-logout">
+                                <button type="submit" class="nav-menu-btn">@L.T("Logout")</button>
+                            </form>
+                        </div>
+                    </div>
                 }
-                @* غلاف display:contents حتى تُستبدل روابط الأدمن لحظيًا من غير كسر توزيع الـ flex. *@
-                <span id="adminNavLinks" style="display:contents">@await Component.InvokeAsync("AdminNav")</span>
+                else
+                {
+                    <a class="btn btn-ghost nav-auth" asp-controller="Account" asp-action="Login">@L.T("Login")</a>
+                    <a class="btn btn-primary nav-auth" asp-controller="Account" asp-action="Register">@L.T("Register")</a>
+                }
             </nav>
             <div class="header-actions">
                 @await Component.InvokeAsync("NotificationBell")
                 <a class="lang-switch" asp-controller="Language" asp-action="Set" asp-route-lang="@(L.IsArabic ? "en" : "ar")" asp-route-returnUrl="@Context.Request.Path">@(L.IsArabic ? "English" : "العربية")</a>
-                @if (User.Identity?.IsAuthenticated == true)
-                {
-                    @* الاسم يظهر في الـ header، وليس رقم الموبايل. *@
-                    var headerUser = await HeaderUserManager.GetUserAsync(User);
-                    var displayName = !string.IsNullOrWhiteSpace(headerUser?.FullName) ? headerUser!.FullName : User.Identity.Name;
-                    <span class="user-name">@displayName</span>
-                    <form asp-controller="Account" asp-action="Logout" method="post" class="inline-form">
-                        <button type="submit" class="btn btn-ghost">@L.T("Logout")</button>
-                    </form>
-                }
-                else
-                {
-                    <a class="btn btn-ghost" asp-controller="Account" asp-action="Login">@L.T("Login")</a>
-                    <a class="btn btn-primary" asp-controller="Account" asp-action="Register">@L.T("Register")</a>
-                }
             </div>
+            <button type="button" class="nav-toggle" id="navToggle" aria-label="القائمة" aria-expanded="false" aria-controls="mainNav">☰</button>
         </div>
     </header>
     <main class="container main-content">
