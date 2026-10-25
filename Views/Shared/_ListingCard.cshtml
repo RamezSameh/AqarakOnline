@@ -19,6 +19,11 @@
             <span class="ad-number">@L.T("AdNumber"): @Model.AdNumber</span>
         </div>
         <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a></h3>
+        @* صاحب الإعلان يظهر في الكارت للأدمن فقط، ولا يظهر للمستخدمين العاديين. *@
+        @if (User.IsInRole("Admin") && Model.Owner != null)
+        {
+            <p class="listing-area">المعلن: @(Model.Owner.FullName ?? Model.Owner.UserName)</p>
+        }
         <p class="listing-area">@Model.Area</p>
         <p class="listing-area">@L.T("AreaSqm"): @Model.AreaSqm</p>
         <p class="listing-price">@L.PriceText(Model.Price, Model.ListingType)</p>

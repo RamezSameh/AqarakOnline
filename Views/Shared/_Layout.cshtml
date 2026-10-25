@@ -1,3 +1,4 @@
+@inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> HeaderUserManager
 <!DOCTYPE html>
 <html lang="@L.Culture" dir="@(L.IsArabic ? "rtl" : "ltr")">
 <head>
@@ -20,6 +21,8 @@
                 }
                 @if (User.IsInRole("Admin"))
                 {
+                    <a asp-controller="Admin" asp-action="Dashboard">لوحة التحكم</a>
+                    <a asp-controller="Admin" asp-action="Users">المستخدمون</a>
                     <a asp-controller="Admin" asp-action="Requests">@L.T("AdminRequests")</a>
                     <a asp-controller="Admin" asp-action="Listings">@L.T("AdminListings")</a>
                 }
@@ -28,7 +31,10 @@
                 <a class="lang-switch" asp-controller="Language" asp-action="Set" asp-route-lang="@(L.IsArabic ? "en" : "ar")" asp-route-returnUrl="@Context.Request.Path">@(L.IsArabic ? "English" : "العربية")</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
-                    <span class="user-name">@User.Identity.Name</span>
+                    @* الاسم يظهر في الـ header، وليس رقم الموبايل. *@
+                    var headerUser = await HeaderUserManager.GetUserAsync(User);
+                    var displayName = !string.IsNullOrWhiteSpace(headerUser?.FullName) ? headerUser!.FullName : User.Identity.Name;
+                    <span class="user-name">@displayName</span>
                     <form asp-controller="Account" asp-action="Logout" method="post" class="inline-form">
                         <button type="submit" class="btn btn-ghost">@L.T("Logout")</button>
                     </form>

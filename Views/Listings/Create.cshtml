@@ -36,6 +36,11 @@
     <input asp-for="Area" />
     <span asp-validation-for="Area" class="field-error"></span>
 
+
+    <label>العنوان التفصيلي للعقار (يظهر للأدمن فقط، ولا يظهر للعامة)</label>
+    <input asp-for="DetailedAddress" />
+    <span asp-validation-for="DetailedAddress" class="field-error"></span>
+
     <label>@L.T("Details")</label>
     <textarea asp-for="Description" rows="4"></textarea>
     <span asp-validation-for="Description" class="field-error"></span>

@@ -1,0 +1,30 @@
+@model AqarakOnline.Controllers.AdminUserFormViewModel
+<h1>إضافة حساب مستخدم</h1>
+<p>الحساب الذي يضيفه الأدمن مفعَّل فورًا، لأنه موثَّق من الأدمن نفسه.</p>
+<form asp-action="AddUser" method="post" class="form">
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+    <label>الاسم (عربي أو إنجليزي)</label>
+    <input asp-for="FullName" />
+    <span asp-validation-for="FullName" class="field-error"></span>
+    <label>العنوان</label>
+    <input asp-for="Address" />
+    <span asp-validation-for="Address" class="field-error"></span>
+    <label>رقم الموبايل (11 رقمًا بالضبط، يبدأ بـ 01)</label>
+    <input asp-for="PhoneNumber" type="tel" dir="ltr" placeholder="01xxxxxxxxx" />
+    <span asp-validation-for="PhoneNumber" class="field-error"></span>
+    <label>البريد الإلكتروني (اختياري)</label>
+    <input asp-for="Email" type="email" />
+    <span asp-validation-for="Email" class="field-error"></span>
+    <label>كلمة المرور (8 أحرف على الأقل، حرف كبير وحرف صغير ورقم)</label>
+    <input asp-for="Password" type="password" />
+    <span asp-validation-for="Password" class="field-error"></span>
+    <label>الدور</label>
+    <select asp-for="Role">
+        <option value="User">مستخدم</option>
+        <option value="Admin">أدمن</option>
+    </select>
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">إضافة الحساب</button>
+        <a class="btn btn-ghost" asp-action="Users">إلغاء</a>
+    </div>
+</form>

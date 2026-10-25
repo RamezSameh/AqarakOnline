@@ -5,19 +5,36 @@ using Microsoft.AspNetCore.Identity;
 
 namespace AqarakOnline.Models;
 
+/// <summary>
+/// حالة حساب المستخدم. التوثيق الآن عن طريق الأدمن (وليس برسالة موبايل)،
+/// لحين ترتيب إجراءات خدمة SMS مدفوعة: الحساب الجديد يبدأ Pending ولا يدخل
+/// حتى يوافق عليه الأدمن. Suspended إيقاف مؤقت، وBlocked حظر.
+/// </summary>
+public enum AccountStatus
+{
+    Pending,
+    Active,
+    Suspended,
+    Blocked
+}
+
 public class ApplicationUser : IdentityUser
 {
     [MaxLength(200)]
     public string? FullName { get; set; }
 
-    /// <summary>عنوان المستخدم، مطلوب عند التسجيل.</summary>
+    /// <summary>عنوان المستخدم، مطلوب عند التسجيل. يظهر للأدمن فقط، أبدًا للعامة.</summary>
     [MaxLength(500)]
     public string? Address { get; set; }
+
+    public AccountStatus AccountStatus { get; set; } = AccountStatus.Pending;
 }
 
 /// <summary>
 /// كود تأكيد رقم الموبايل. يُحفظ هاش الكود فقط، وينتهي بعد 10 دقائق،
 /// ويُستخدم مرة واحدة، ويُقفل بعد 5 محاولات خاطئة.
+/// ملحوظة: التأكيد بالرسائل موقوف مؤقتًا — التوثيق الآن عن طريق الأدمن
+/// لحين ترتيب خدمة SMS مدفوعة. الكيان والكود محفوظان لإعادة التفعيل لاحقًا.
 /// </summary>
 public class PhoneVerificationCode
 {
@@ -122,6 +139,14 @@ public class Listing
     [Required(ErrorMessage = "المنطقة مطلوبة")]
     [MaxLength(200)]
     public string Area { get; set; } = string.Empty;
+
+    /// <summary>
+    /// العنوان التفصيلي للعقار (شارع/عمارة/دور...). يدخله المعلن، ويظهر
+    /// للأدمن فقط (ولصاحب الإعلان في إعلاناته) — ولا يظهر أبدًا في الكارت
+    /// العام ولا في صفحة التفاصيل العامة. العامة يرون المنطقة فقط.
+    /// </summary>
+    [MaxLength(500)]
+    public string? DetailedAddress { get; set; }
 
     [Required(ErrorMessage = "التفاصيل مطلوبة")]
     [MaxLength(2000)]

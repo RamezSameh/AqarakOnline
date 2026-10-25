@@ -12,13 +12,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    // إعدادات مناسبة لمشروع تجريبي؛ شدّدها قبل الإنتاج.
-    options.Password.RequiredLength = 6;
-    options.Password.RequireDigit = false;
-    options.Password.RequireLowercase = false;
-    options.Password.RequireUppercase = false;
+    // سياسة كلمات مرور مشددة: 8 أحرف على الأقل، حرف كبير + حرف صغير + رقم.
+    // قفل الحساب: 5 محاولات خاطئة → قفل 15 دقيقة (حماية من التخمين).
+    options.Password.RequiredLength = 8;
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = false;
     options.SignIn.RequireConfirmedAccount = false;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -27,6 +31,12 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/Login";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    // SameAsRequest: آمنة على https في الإنتاج، وتعمل على http في تجربة الشبكة المحلية.
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.SlidingExpiration = true;
 });
 
 builder.Services.Configure<ContactSettings>(builder.Configuration.GetSection("Contact"));
@@ -44,6 +54,19 @@ builder.Services.AddScoped<LanguageService>();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+// رؤوس أمان أساسية على كل رد: منع sniffing لنوع المحتوى، منع التضمين
+// في إطارات (حماية من clickjacking)، وسياسة referrer وصلاحيات محافظة.
+// ملحوظة: لا يوجد CSP صارم هنا عمدًا، لأن الواجهة تستخدم أنماطًا مضمّنة؛
+// إضافة CSP صارم لاحقًا تتطلب فصل الأنماط والسكربتات في ملفات خارجية أولًا.
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    await next();
+});
 
 // اللغة: عربي افتراضيًا، وتُحفظ في كوكي aqarak-lang.
 app.Use(async (context, next) =>
@@ -107,15 +130,24 @@ using (var scope = app.Services.CreateScope())
     }
 
     // الأدمن الأول: سجّل حسابًا بالإيميل الموجود في AdminEmail ثم أعد تشغيل التطبيق،
-    // وسيُمنح دور Admin تلقائيًا. لا يوجد مستخدم أدمن مُنشأ بكلمة مرور داخل الكود.
+    // وسيُمنح دور Admin ويُفعَّل تلقائيًا (حتى لا يُحبس خارج النظام بانتظار موافقة).
+    // لا يوجد مستخدم أدمن مُنشأ بكلمة مرور داخل الكود.
     var adminEmail = builder.Configuration["AdminEmail"];
     if (!string.IsNullOrWhiteSpace(adminEmail))
     {
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var admin = await userManager.FindByEmailAsync(adminEmail);
-        if (admin != null && !await userManager.IsInRoleAsync(admin, "Admin"))
+        if (admin != null)
         {
-            await userManager.AddToRoleAsync(admin, "Admin");
+            if (!await userManager.IsInRoleAsync(admin, "Admin"))
+            {
+                await userManager.AddToRoleAsync(admin, "Admin");
+            }
+            if (admin.AccountStatus != AccountStatus.Active)
+            {
+                admin.AccountStatus = AccountStatus.Active;
+                await userManager.UpdateAsync(admin);
+            }
         }
     }
 }

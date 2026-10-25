@@ -22,7 +22,7 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var listings = await _context.Listings.Include(l => l.Attachments)
+        var listings = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
             .OrderByDescending(l => l.CreatedAt)
             .Take(6)
@@ -225,6 +225,7 @@ public class ListingsController : Controller
         listing.ListingType = model.ListingType;
         listing.PropertyType = model.PropertyType;
         listing.Area = model.Area;
+        listing.DetailedAddress = model.DetailedAddress;
         listing.Description = model.Description;
         listing.Features = model.Features;
         listing.Price = model.Price;
@@ -493,14 +494,351 @@ public class ContactController : Controller
     }
 }
 
+public class AdminUserFormViewModel
+{
+    public string? Id { get; set; }
+
+    [Required(ErrorMessage = "الاسم مطلوب")]
+    [RegularExpression(@"^[\u0600-\u06FFa-zA-Z\s\-']{2,100}$", ErrorMessage = "الاسم يجب أن يكون بالعربي أو الإنجليزي فقط")]
+    public string FullName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "العنوان مطلوب")]
+    public string Address { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "رقم الموبايل مطلوب")]
+    [RegularExpression(@"^01[0-9]{9}$", ErrorMessage = "رقم الموبايل يجب أن يكون 11 رقمًا بالضبط ويبدأ بـ 01")]
+    public string PhoneNumber { get; set; } = string.Empty;
+
+    [EmailAddress(ErrorMessage = "صيغة البريد الإلكتروني غير صحيحة")]
+    public string? Email { get; set; }
+
+    // مطلوبة عند الإضافة، واختيارية عند التعديل (فراغ = الإبقاء على الحالية).
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "كلمة المرور يجب أن تكون 8 أحرف على الأقل، وتحتوي على حرف كبير وحرف صغير ورقم")]
+    [DataType(DataType.Password)]
+    public string? Password { get; set; }
+
+    public string Role { get; set; } = "User";
+    public AccountStatus AccountStatus { get; set; } = AccountStatus.Active;
+}
+
+public class AdminUserRow
+{
+    public ApplicationUser User { get; set; } = null!;
+    public string Role { get; set; } = "User";
+    public int ListingsCount { get; set; }
+    public int ApprovedListingsCount { get; set; }
+    public int PendingListingsCount { get; set; }
+}
+
+public class AdminDashboardViewModel
+{
+    public int TotalUsers { get; set; }
+    public int PendingUsers { get; set; }
+    public int ActiveUsers { get; set; }
+    public int SuspendedOrBlockedUsers { get; set; }
+    public int TotalListings { get; set; }
+    public int ApprovedListings { get; set; }
+    public int PendingListings { get; set; }
+    public int AvailableListings { get; set; }
+    public long TotalViews { get; set; }
+    public int TotalRequests { get; set; }
+    public string? FilterUserId { get; set; }
+    public string? FilterArea { get; set; }
+    public List<string> Areas { get; set; } = new();
+    public List<ApplicationUser> Users { get; set; } = new();
+    public List<AdminUserRow> UserRows { get; set; } = new();
+    public List<Listing> FilteredListings { get; set; } = new();
+}
+
 [Authorize(Roles = "Admin")]
 public class AdminController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public AdminController(ApplicationDbContext context)
+    public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
     {
         _context = context;
+        _userManager = userManager;
+    }
+
+    private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+
+    [HttpGet]
+    public async Task<IActionResult> Dashboard(string? userId = null, string? area = null)
+    {
+        var users = await _userManager.Users.OrderBy(u => u.FullName).ToListAsync();
+        var listingsQuery = _context.Listings.Include(l => l.Owner).AsQueryable();
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            listingsQuery = listingsQuery.Where(l => l.OwnerId == userId);
+        }
+        if (!string.IsNullOrWhiteSpace(area))
+        {
+            listingsQuery = listingsQuery.Where(l => l.Area == area);
+        }
+        var filteredListings = await listingsQuery.OrderByDescending(l => l.CreatedAt).ToListAsync();
+
+        var rows = new List<AdminUserRow>();
+        foreach (var user in users)
+        {
+            if (!string.IsNullOrWhiteSpace(userId) && user.Id != userId)
+            {
+                continue;
+            }
+            var userListings = _context.Listings.Where(l => l.OwnerId == user.Id);
+            if (!string.IsNullOrWhiteSpace(area))
+            {
+                userListings = userListings.Where(l => l.Area == area);
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            rows.Add(new AdminUserRow
+            {
+                User = user,
+                Role = roles.FirstOrDefault() ?? "User",
+                ListingsCount = await userListings.CountAsync(),
+                ApprovedListingsCount = await userListings.CountAsync(l => l.Approval == ListingApproval.Approved),
+                PendingListingsCount = await userListings.CountAsync(l => l.Approval == ListingApproval.Pending)
+            });
+        }
+
+        var model = new AdminDashboardViewModel
+        {
+            TotalUsers = users.Count,
+            PendingUsers = users.Count(u => u.AccountStatus == AccountStatus.Pending),
+            ActiveUsers = users.Count(u => u.AccountStatus == AccountStatus.Active),
+            SuspendedOrBlockedUsers = users.Count(u => u.AccountStatus == AccountStatus.Suspended || u.AccountStatus == AccountStatus.Blocked),
+            TotalListings = await _context.Listings.CountAsync(),
+            ApprovedListings = await _context.Listings.CountAsync(l => l.Approval == ListingApproval.Approved),
+            PendingListings = await _context.Listings.CountAsync(l => l.Approval == ListingApproval.Pending),
+            AvailableListings = await _context.Listings.CountAsync(l => l.IsAvailable),
+            TotalViews = await _context.Listings.SumAsync(l => (long)l.ViewCount),
+            TotalRequests = await _context.ContactRequests.CountAsync(),
+            FilterUserId = userId,
+            FilterArea = area,
+            Areas = await _context.Listings.Select(l => l.Area).Distinct().OrderBy(a => a).ToListAsync(),
+            Users = users,
+            UserRows = rows,
+            FilteredListings = filteredListings
+        };
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Users()
+    {
+        var users = await _userManager.Users.OrderBy(u => u.FullName).ToListAsync();
+        var rows = new List<AdminUserRow>();
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            rows.Add(new AdminUserRow
+            {
+                User = user,
+                Role = roles.FirstOrDefault() ?? "User",
+                ListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == user.Id),
+                ApprovedListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == user.Id && l.Approval == ListingApproval.Approved),
+                PendingListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == user.Id && l.Approval == ListingApproval.Pending)
+            });
+        }
+        return View(rows);
+    }
+
+    private async Task<IActionResult> SetUserStatus(string id, AccountStatus status, string doneMessage)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        if (user.Id == CurrentUserId && (status == AccountStatus.Suspended || status == AccountStatus.Blocked))
+        {
+            TempData["Error"] = "لا يمكنك إيقاف أو حظر حسابك أنت.";
+            return RedirectToAction(nameof(Users));
+        }
+        user.AccountStatus = status;
+        await _userManager.UpdateAsync(user);
+        TempData["Info"] = doneMessage;
+        return RedirectToAction(nameof(Users));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> ApproveUser(string id) =>
+        SetUserStatus(id, AccountStatus.Active, "تم تفعيل الحساب.");
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> SuspendUser(string id) =>
+        SetUserStatus(id, AccountStatus.Suspended, "تم إيقاف الحساب مؤقتًا.");
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> UnsuspendUser(string id) =>
+        SetUserStatus(id, AccountStatus.Active, "تم إعادة تفعيل الحساب.");
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> BlockUser(string id) =>
+        SetUserStatus(id, AccountStatus.Blocked, "تم حظر الحساب.");
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> UnblockUser(string id) =>
+        SetUserStatus(id, AccountStatus.Active, "تم رفع الحظر عن الحساب.");
+
+    [HttpGet]
+    public IActionResult AddUser()
+    {
+        return View(new AdminUserFormViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddUser(AdminUserFormViewModel model)
+    {
+        if (string.IsNullOrWhiteSpace(model.Password))
+        {
+            ModelState.AddModelError(nameof(model.Password), "كلمة المرور مطلوبة عند إضافة حساب جديد.");
+        }
+        if (!NameHelper.IsValidName(model.FullName))
+        {
+            ModelState.AddModelError(nameof(model.FullName), "الاسم يجب أن يكون بالعربي أو الإنجليزي فقط");
+        }
+        var phone = PhoneHelper.Normalize(model.PhoneNumber);
+        if (!PhoneHelper.IsValidEgyptianMobile(phone))
+        {
+            ModelState.AddModelError(nameof(model.PhoneNumber), "رقم الموبايل يجب أن يكون 11 رقمًا بالضبط ويبدأ بـ 01");
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+        if (await _userManager.FindByNameAsync(phone) != null)
+        {
+            ModelState.AddModelError(nameof(model.PhoneNumber), "رقم الموبايل هذا مسجَّل بالفعل.");
+            return View(model);
+        }
+
+        var role = model.Role == "Admin" ? "Admin" : "User";
+        var user = new ApplicationUser
+        {
+            UserName = phone,
+            PhoneNumber = phone,
+            PhoneNumberConfirmed = false,
+            FullName = model.FullName.Trim(),
+            Address = model.Address,
+            Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim(),
+            // الحساب الذي يضيفه الأدمن مفعَّل فورًا، لأنه موثَّق من الأدمن نفسه.
+            AccountStatus = AccountStatus.Active
+        };
+        var result = await _userManager.CreateAsync(user, model.Password!);
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View(model);
+        }
+        await _userManager.AddToRoleAsync(user, role);
+        TempData["Info"] = "تم إضافة الحساب وتفعيله.";
+        return RedirectToAction(nameof(Users));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EditUser(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        var roles = await _userManager.GetRolesAsync(user);
+        return View(new AdminUserFormViewModel
+        {
+            Id = user.Id,
+            FullName = user.FullName ?? string.Empty,
+            Address = user.Address ?? string.Empty,
+            PhoneNumber = user.PhoneNumber ?? string.Empty,
+            Email = user.Email,
+            Role = roles.FirstOrDefault() ?? "User",
+            AccountStatus = user.AccountStatus
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditUser(AdminUserFormViewModel model)
+    {
+        var user = string.IsNullOrWhiteSpace(model.Id) ? null : await _userManager.FindByIdAsync(model.Id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        if (!NameHelper.IsValidName(model.FullName))
+        {
+            ModelState.AddModelError(nameof(model.FullName), "الاسم يجب أن يكون بالعربي أو الإنجليزي فقط");
+        }
+        var phone = PhoneHelper.Normalize(model.PhoneNumber);
+        if (!PhoneHelper.IsValidEgyptianMobile(phone))
+        {
+            ModelState.AddModelError(nameof(model.PhoneNumber), "رقم الموبايل يجب أن يكون 11 رقمًا بالضبط ويبدأ بـ 01");
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+        var other = await _userManager.FindByNameAsync(phone);
+        if (other != null && other.Id != user.Id)
+        {
+            ModelState.AddModelError(nameof(model.PhoneNumber), "رقم الموبايل هذا مسجَّل لحساب آخر.");
+            return View(model);
+        }
+
+        var isSelf = user.Id == CurrentUserId;
+        if (isSelf && (model.AccountStatus == AccountStatus.Suspended || model.AccountStatus == AccountStatus.Blocked))
+        {
+            ModelState.AddModelError(string.Empty, "لا يمكنك إيقاف أو حظر حسابك أنت.");
+            return View(model);
+        }
+
+        user.FullName = model.FullName.Trim();
+        user.Address = model.Address;
+        user.UserName = phone;
+        user.PhoneNumber = phone;
+        user.Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim();
+        user.AccountStatus = model.AccountStatus;
+        await _userManager.UpdateAsync(user);
+
+        // الدور: الأدمن لا يزيل دور Admin عن نفسه حتى لا يُحبس خارج لوحة الأدمن.
+        var newRole = model.Role == "Admin" ? "Admin" : "User";
+        var roles = await _userManager.GetRolesAsync(user);
+        if (!(isSelf && newRole != "Admin" && roles.Contains("Admin")))
+        {
+            if (!roles.Contains(newRole))
+            {
+                await _userManager.RemoveFromRolesAsync(user, roles);
+                await _userManager.AddToRoleAsync(user, newRole);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(model.Password))
+        {
+            await _userManager.RemovePasswordAsync(user);
+            var pwResult = await _userManager.AddPasswordAsync(user, model.Password);
+            if (!pwResult.Succeeded)
+            {
+                foreach (var error in pwResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return View(model);
+            }
+        }
+
+        TempData["Info"] = "تم حفظ تعديلات الحساب.";
+        return RedirectToAction(nameof(Users));
     }
 
     [HttpGet]

@@ -1,0 +1,103 @@
+@model AqarakOnline.Controllers.AdminDashboardViewModel
+<h1>لوحة التحكم</h1>
+<p>تحليل بيانات المنصة: المستخدمون، وعدد الإعلانات لكل مستخدم، مع فلترة حسب المستخدم أو المنطقة.</p>
+
+<div class="cards-grid">
+    <div class="listing-card"><div class="listing-body"><h3>المستخدمون</h3><p>@Model.TotalUsers</p><p>قيد المراجعة: @Model.PendingUsers | مفعّلون: @Model.ActiveUsers | موقوفون/محظورون: @Model.SuspendedOrBlockedUsers</p></div></div>
+    <div class="listing-card"><div class="listing-body"><h3>الإعلانات</h3><p>@Model.TotalListings</p><p>مقبول: @Model.ApprovedListings | قيد المراجعة: @Model.PendingListings | متاح: @Model.AvailableListings</p></div></div>
+    <div class="listing-card"><div class="listing-body"><h3>المشاهدات وطلبات التواصل</h3><p>مشاهدات: @Model.TotalViews</p><p>طلبات تواصل: @Model.TotalRequests</p></div></div>
+</div>
+
+<h2>فلترة</h2>
+<form asp-action="Dashboard" method="get" class="form">
+    <label>المستخدم</label>
+    <select name="userId">
+        <option value="">كل المستخدمين</option>
+        @foreach (var user in Model.Users)
+        {
+            <option value="@user.Id" selected="@(Model.FilterUserId == user.Id ? "selected" : null)">@(user.FullName ?? user.UserName) (@user.PhoneNumber)</option>
+        }
+    </select>
+    <label>المنطقة</label>
+    <select name="area">
+        <option value="">كل المناطق</option>
+        @foreach (var area in Model.Areas)
+        {
+            <option value="@area" selected="@(Model.FilterArea == area ? "selected" : null)">@area</option>
+        }
+    </select>
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">فلترة</button>
+        <a class="btn btn-ghost" asp-action="Dashboard">مسح الفلترة</a>
+    </div>
+</form>
+
+<h2>عدد الإعلانات لكل مستخدم</h2>
+@if (!Model.UserRows.Any())
+{
+    <p>لا توجد نتائج مطابقة للفلترة.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>المستخدم</th>
+                <th>رقم الموبايل</th>
+                <th>حالة الحساب</th>
+                <th>عدد الإعلانات</th>
+                <th>مقبول</th>
+                <th>قيد المراجعة</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model.UserRows)
+            {
+                <tr>
+                    <td>@(row.User.FullName ?? row.User.UserName)</td>
+                    <td>@row.User.PhoneNumber</td>
+                    <td>@row.User.AccountStatus</td>
+                    <td>@row.ListingsCount</td>
+                    <td>@row.ApprovedListingsCount</td>
+                    <td>@row.PendingListingsCount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<h2>الإعلانات المطابقة للفلترة</h2>
+@if (!Model.FilteredListings.Any())
+{
+    <p>لا توجد إعلانات مطابقة للفلترة.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>رقم الإعلان</th>
+                <th>العنوان</th>
+                <th>المعلن</th>
+                <th>المنطقة</th>
+                <th>حالة النشر</th>
+                <th>السعر</th>
+                <th>المشاهدات</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var listing in Model.FilteredListings)
+            {
+                <tr>
+                    <td>@listing.AdNumber</td>
+                    <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></td>
+                    <td>@(listing.Owner?.FullName ?? listing.Owner?.UserName ?? "إدارة الموقع")</td>
+                    <td>@listing.Area</td>
+                    <td>@listing.Approval</td>
+                    <td>@listing.Price</td>
+                    <td>@listing.ViewCount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

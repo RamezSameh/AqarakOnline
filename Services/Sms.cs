@@ -5,7 +5,12 @@ using Microsoft.Extensions.Options;
 
 namespace AqarakOnline.Services;
 
-/// <summary>تطبيع رقم موبايل مصري إلى الصيغة 01xxxxxxxxx (11 رقمًا).</summary>
+/// <summary>
+/// رقم موبايل مصري: 11 رقمًا بالضبط، يبدأ بـ 01، لا يقل ولا يزيد.
+/// لا تُقبل صيغ +20 أو 0020 بعد الآن؛ الإدخال نفسه يجب أن يكون 11 رقمًا.
+/// Normalize هنا يستخرج الأرقام فقط (لإزالة مسافات/شرطات عرضية)،
+/// لكن IsValid يرفض أي شيء ليس 11 رقمًا يبدأ بـ 01.
+/// </summary>
 public static class PhoneHelper
 {
     public static string Normalize(string? phone)
@@ -14,17 +19,7 @@ public static class PhoneHelper
         {
             return string.Empty;
         }
-        var digits = new string(phone.Where(char.IsDigit).ToArray());
-        // +20 أو 0020 أو 20 ثم 10 أرقام → 0 ثم 10 أرقام.
-        if (digits.StartsWith("0020") && digits.Length == 14)
-        {
-            return "0" + digits[4..];
-        }
-        if (digits.StartsWith("20") && digits.Length == 12)
-        {
-            return "0" + digits[2..];
-        }
-        return digits;
+        return new string(phone.Where(char.IsDigit).ToArray());
     }
 
     public static bool IsValidEgyptianMobile(string? phone)

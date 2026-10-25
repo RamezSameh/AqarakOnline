@@ -96,15 +96,15 @@ public static class SeedData
     /// تحذير أمني: كلمات المرور هنا معروفة ومنشورة مع الكود، فلا تنشر التطبيق
     /// بهذه الإعدادات أبدًا. قبل أي نشر عام، اضبط SeedTestUsers على false
     /// واحذف هؤلاء المستخدمين من قاعدة البيانات، وغيّر كلمات المرور.
-    /// المستخدم غير الموثَّق ليس له دور بعد، لأنه يأخذ دوره عند التأكيد فقط.
+    /// المستخدم الثالث قيد المراجعة (Pending) لاختبار موافقة الأدمن عليه.
     /// </summary>
     public static async Task SeedTestUsersAsync(UserManager<ApplicationUser> userManager)
     {
         var testUsers = new[]
         {
-            new { Phone = "01000000001", FullName = "أدمن تجريبي", Address = "القاهرة", Email = "Admin@Aqarak.com", Password = "Admin123456", Role = "Admin", Confirmed = true },
-            new { Phone = "01000000002", FullName = "مستخدم تجريبي", Address = "الجيزة", Email = "user@aqarak.test", Password = "User123456", Role = "User", Confirmed = true },
-            new { Phone = "01000000003", FullName = "مستخدم غير موثق (للتجربة)", Address = "القاهرة", Email = "unverified@aqarak.test", Password = "User123456", Role = "", Confirmed = false },
+            new { Phone = "01000000001", FullName = "أدمن تجريبي", Address = "القاهرة", Email = "Admin@Aqarak.com", Password = "Admin123456", Role = "Admin", Status = AccountStatus.Active },
+            new { Phone = "01000000002", FullName = "مستخدم تجريبي", Address = "الجيزة", Email = "user@aqarak.test", Password = "User123456", Role = "User", Status = AccountStatus.Active },
+            new { Phone = "01000000003", FullName = "مستخدم قيد المراجعة (للتجربة)", Address = "القاهرة", Email = "pending@aqarak.test", Password = "User123456", Role = "User", Status = AccountStatus.Pending },
         };
 
         foreach (var test in testUsers)
@@ -118,20 +118,18 @@ public static class SeedData
             {
                 UserName = test.Phone,
                 PhoneNumber = test.Phone,
-                PhoneNumberConfirmed = test.Confirmed,
+                PhoneNumberConfirmed = false,
                 FullName = test.FullName,
                 Address = test.Address,
-                Email = test.Email
+                Email = test.Email,
+                AccountStatus = test.Status
             };
             var result = await userManager.CreateAsync(user, test.Password);
             if (!result.Succeeded)
             {
                 continue;
             }
-            if (!string.IsNullOrEmpty(test.Role))
-            {
-                await userManager.AddToRoleAsync(user, test.Role);
-            }
+            await userManager.AddToRoleAsync(user, test.Role);
         }
     }
 }

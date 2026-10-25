@@ -1,6 +1,6 @@
 @model AqarakOnline.Controllers.LoginViewModel
 <h1>@L.T("Login")</h1>
-<p>الدخول برقم الموبايل الموثَّق.</p>
+<p>الدخول برقم الموبايل (11 رقمًا بالضبط). الحساب الجديد لا يدخل حتى يوافق عليه الأدمن.</p>
 <form asp-action="Login" method="post" class="form">
     <input type="hidden" asp-for="ReturnUrl" />
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>

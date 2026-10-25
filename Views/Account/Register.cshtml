@@ -1,6 +1,6 @@
 @model AqarakOnline.Controllers.RegisterViewModel
 <h1>@L.T("Register")</h1>
-<p>التسجيل يتطلب الاسم والعنوان ورقم الموبايل، ثم تأكيد رقم الموبايل بكود يُرسل برسالة.</p>
+<p>التسجيل يتطلب الاسم والعنوان ورقم موبايل مكوّن من 11 رقمًا بالضبط. بعد التسجيل، سيتم تفعيل حسابك بعد موافقة الأدمن.</p>
 <form asp-action="Register" method="post" class="form">
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
     <label>@L.T("FullName")</label>
