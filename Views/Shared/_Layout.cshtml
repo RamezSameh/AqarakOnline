@@ -19,7 +19,7 @@
             <a class="brand" asp-controller="Home" asp-action="Index">@L.T("Brand")</a>
             @if (User.Identity?.IsAuthenticated == true)
             {
-                @* جنب اليمين: زرار الإدارة (يفتح نافذة) وقائمة المستخدم تحته. *@
+                @* جنب اليمين: زرار الإدارة (يفتح لوحة جانبية) وقائمة المستخدم تحته. *@
                 <div class="nav-lists">
                     @* غلاف display:contents حتى تُستبدل روابط الأدمن لحظيًا من غير كسر التوزيع. *@
                     <span id="adminNavLinks" style="display:contents">@await Component.InvokeAsync("AdminNav")</span>

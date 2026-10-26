@@ -55,41 +55,37 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // نافذة الإدارة المنبثقة: زرار واحد يفتح نافذة بكل خصائص الأدمن.
-    // فتحها يقفل قائمة "حسابي" ونافذة الجرس، وفتح "حسابي" يقفلها
-    // (عبر تفويض القوائم المنسدلة الذي يقفل أي قائمة مفتوحة).
-    // بتفويض الأحداث حتى تعمل بعد استبدال HTML الإدارة لحظيًا.
+    // اللوحة الجانبية للإدارة (Side Navbar): زرار واحد يفتح لوحة
+    // منزلقة من الجنب بكل خصائص الأدمن. فتحها يقفل قائمة "حسابي"
+    // ونافذة الجرس، وفتح "حسابي" يقفلها (عبر تفويض القوائم المنسدلة
+    // الذي يقفل أي قائمة مفتوحة). بتفويض الأحداث حتى تعمل بعد
+    // استبدال HTML الإدارة لحظيًا.
     function setAdminOpen(open) {
-        var modal = document.getElementById("adminModal");
-        var btn = document.getElementById("adminModalBtn");
-        if (!modal) {
+        var side = document.getElementById("adminSide");
+        var btn = document.getElementById("adminSideBtn");
+        if (!side) {
             return;
         }
-        if (open) {
-            modal.removeAttribute("hidden");
-            document.body.style.overflow = "hidden";
-        } else {
-            modal.setAttribute("hidden", "");
-            document.body.style.overflow = "";
-        }
+        side.classList.toggle("open", open);
+        document.body.style.overflow = open ? "hidden" : "";
         if (btn) {
             btn.setAttribute("aria-expanded", open ? "true" : "false");
         }
     }
     document.addEventListener("click", function (event) {
-        var modal = document.getElementById("adminModal");
-        if (!modal) {
+        var side = document.getElementById("adminSide");
+        if (!side) {
             return;
         }
-        if (event.target.closest("#adminModalBtn")) {
+        if (event.target.closest("#adminSideBtn")) {
             document.querySelectorAll(".nav-dropdown.open").forEach(function (d) {
                 d.classList.remove("open");
             });
             setBellOpen(false);
-            setAdminOpen(modal.hasAttribute("hidden"));
+            setAdminOpen(!side.classList.contains("open"));
             return;
         }
-        if (event.target.closest("#adminModalClose") || event.target === modal) {
+        if (event.target.closest("#adminSideClose") || event.target.closest("#adminSideBackdrop")) {
             setAdminOpen(false);
         }
     });

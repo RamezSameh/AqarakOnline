@@ -1,44 +1,46 @@
 @model AqarakOnline.Controllers.AdminBadgeCounts
 @{
     var total = Model.PendingUsers + Model.UnrepliedRequests + Model.PendingListings;
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
-@* زرار واحد للإدارة يفتح نافذة منبثقة بكل خصائص الأدمن. *@
-<button type="button" class="admin-nav-btn @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" id="adminModalBtn" aria-haspopup="true" aria-expanded="false">
+@* زرار واحد للإدارة يفتح لوحة جانبية بكل خصائص الأدمن. *@
+<button type="button" class="admin-nav-btn @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" id="adminSideBtn" aria-haspopup="true" aria-expanded="false">
     الإدارة
     @if (total > 0)
     {
         <span class="nav-badge">@total</span>
     }
 </button>
-<div class="admin-modal-overlay" id="adminModal" hidden>
-    <div class="admin-modal" role="dialog" aria-modal="true" aria-label="الإدارة">
-        <div class="admin-modal-head">
+<div class="admin-side" id="adminSide">
+    <div class="admin-side-backdrop" id="adminSideBackdrop"></div>
+    <aside class="admin-side-panel" aria-label="الإدارة">
+        <div class="admin-side-head">
             <strong>الإدارة</strong>
-            <button type="button" class="modal-close" id="adminModalClose" aria-label="إغلاق">✕</button>
+            <button type="button" class="modal-close" id="adminSideClose" aria-label="إغلاق">✕</button>
         </div>
-        <p class="admin-modal-sub">اختر من خصائص الإدارة:</p>
-        <a class="admin-feature" asp-controller="Admin" asp-action="Dashboard">لوحة التحكم</a>
-        <a class="admin-feature" asp-controller="Admin" asp-action="Users">
+        <p class="admin-side-sub">اختر من خصائص الإدارة:</p>
+        <a class="admin-feature @(currentAction == "Dashboard" ? "active" : "")" asp-controller="Admin" asp-action="Dashboard">لوحة التحكم</a>
+        <a class="admin-feature @(currentAction == "Users" ? "active" : "")" asp-controller="Admin" asp-action="Users">
             <span>المستخدمون</span>
             @if (Model.PendingUsers > 0)
             {
                 <span class="nav-badge">@Model.PendingUsers</span>
             }
         </a>
-        <a class="admin-feature" asp-controller="Admin" asp-action="Requests">
+        <a class="admin-feature @(currentAction == "Requests" ? "active" : "")" asp-controller="Admin" asp-action="Requests">
             <span>@L.T("AdminRequests")</span>
             @if (Model.UnrepliedRequests > 0)
             {
                 <span class="nav-badge">@Model.UnrepliedRequests</span>
             }
         </a>
-        <a class="admin-feature" asp-controller="Admin" asp-action="Listings">
+        <a class="admin-feature @(currentAction == "Listings" ? "active" : "")" asp-controller="Admin" asp-action="Listings">
             <span>@L.T("AdminListings")</span>
             @if (Model.PendingListings > 0)
             {
                 <span class="nav-badge">@Model.PendingListings</span>
             }
         </a>
-        <a class="admin-feature" asp-controller="Admin" asp-action="Notifications">التنبيهات</a>
-    </div>
+        <a class="admin-feature @(currentAction == "Notifications" ? "active" : "")" asp-controller="Admin" asp-action="Notifications">التنبيهات</a>
+    </aside>
 </div>
