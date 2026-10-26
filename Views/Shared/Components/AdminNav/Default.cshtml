@@ -2,37 +2,43 @@
 @{
     var total = Model.PendingUsers + Model.UnrepliedRequests + Model.PendingListings;
 }
-<div class="nav-dropdown">
-    <button type="button" class="nav-dropdown-toggle @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" aria-expanded="false" aria-haspopup="true">
-        الإدارة <span aria-hidden="true">▾</span>
-        @if (total > 0)
-        {
-            <span class="nav-badge">@total</span>
-        }
-    </button>
-    <div class="nav-dropdown-menu">
-        <a asp-controller="Admin" asp-action="Dashboard">لوحة التحكم</a>
-        <a asp-controller="Admin" asp-action="Users">
-            المستخدمون
+@* زرار واحد للإدارة يفتح نافذة منبثقة بكل خصائص الأدمن. *@
+<button type="button" class="admin-nav-btn @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" id="adminModalBtn" aria-haspopup="true" aria-expanded="false">
+    الإدارة
+    @if (total > 0)
+    {
+        <span class="nav-badge">@total</span>
+    }
+</button>
+<div class="admin-modal-overlay" id="adminModal" hidden>
+    <div class="admin-modal" role="dialog" aria-modal="true" aria-label="الإدارة">
+        <div class="admin-modal-head">
+            <strong>الإدارة</strong>
+            <button type="button" class="modal-close" id="adminModalClose" aria-label="إغلاق">✕</button>
+        </div>
+        <p class="admin-modal-sub">اختر من خصائص الإدارة:</p>
+        <a class="admin-feature" asp-controller="Admin" asp-action="Dashboard">لوحة التحكم</a>
+        <a class="admin-feature" asp-controller="Admin" asp-action="Users">
+            <span>المستخدمون</span>
             @if (Model.PendingUsers > 0)
             {
                 <span class="nav-badge">@Model.PendingUsers</span>
             }
         </a>
-        <a asp-controller="Admin" asp-action="Requests">
-            @L.T("AdminRequests")
+        <a class="admin-feature" asp-controller="Admin" asp-action="Requests">
+            <span>@L.T("AdminRequests")</span>
             @if (Model.UnrepliedRequests > 0)
             {
                 <span class="nav-badge">@Model.UnrepliedRequests</span>
             }
         </a>
-        <a asp-controller="Admin" asp-action="Listings">
-            @L.T("AdminListings")
+        <a class="admin-feature" asp-controller="Admin" asp-action="Listings">
+            <span>@L.T("AdminListings")</span>
             @if (Model.PendingListings > 0)
             {
                 <span class="nav-badge">@Model.PendingListings</span>
             }
         </a>
-        <a asp-controller="Admin" asp-action="Notifications">التنبيهات</a>
+        <a class="admin-feature" asp-controller="Admin" asp-action="Notifications">التنبيهات</a>
     </div>
 </div>

@@ -51,6 +51,46 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("keydown", function (event) {
         if (event.key === "Escape") {
             setBellOpen(false);
+            setAdminOpen(false);
+        }
+    });
+
+    // نافذة الإدارة المنبثقة: زرار واحد يفتح نافذة بكل خصائص الأدمن.
+    // فتحها يقفل قائمة "حسابي" ونافذة الجرس، وفتح "حسابي" يقفلها
+    // (عبر تفويض القوائم المنسدلة الذي يقفل أي قائمة مفتوحة).
+    // بتفويض الأحداث حتى تعمل بعد استبدال HTML الإدارة لحظيًا.
+    function setAdminOpen(open) {
+        var modal = document.getElementById("adminModal");
+        var btn = document.getElementById("adminModalBtn");
+        if (!modal) {
+            return;
+        }
+        if (open) {
+            modal.removeAttribute("hidden");
+            document.body.style.overflow = "hidden";
+        } else {
+            modal.setAttribute("hidden", "");
+            document.body.style.overflow = "";
+        }
+        if (btn) {
+            btn.setAttribute("aria-expanded", open ? "true" : "false");
+        }
+    }
+    document.addEventListener("click", function (event) {
+        var modal = document.getElementById("adminModal");
+        if (!modal) {
+            return;
+        }
+        if (event.target.closest("#adminModalBtn")) {
+            document.querySelectorAll(".nav-dropdown.open").forEach(function (d) {
+                d.classList.remove("open");
+            });
+            setBellOpen(false);
+            setAdminOpen(modal.hasAttribute("hidden"));
+            return;
+        }
+        if (event.target.closest("#adminModalClose") || event.target === modal) {
+            setAdminOpen(false);
         }
     });
 
@@ -59,6 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("click", function (event) {
         var toggle = event.target.closest(".nav-dropdown-toggle");
         if (toggle) {
+            setAdminOpen(false);
             var dropdown = toggle.closest(".nav-dropdown");
             var wasOpen = dropdown.classList.contains("open");
             document.querySelectorAll(".nav-dropdown.open").forEach(function (d) {
