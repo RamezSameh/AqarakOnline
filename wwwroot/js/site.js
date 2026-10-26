@@ -1,16 +1,12 @@
 // سلوكيات واجهة عامة: قائمة الموبايل، قائمة الإشعارات، إظهار كلمة المرور.
 // لا يعتمد على أي مكتبة خارجية، ويعمل مع العربية (RTL) والإنجليزية (LTR).
 document.addEventListener("DOMContentLoaded", function () {
-    // قائمة التنقل في الشاشات الصغيرة (تشمل قائمتي الأدمن والمستخدم).
+    // قائمة التنقل في الشاشات الصغيرة.
     var navToggle = document.getElementById("navToggle");
     var mainNav = document.getElementById("mainNav");
-    var navLists = document.querySelector(".nav-lists");
     if (navToggle && mainNav) {
         navToggle.addEventListener("click", function () {
             var open = mainNav.classList.toggle("open");
-            if (navLists) {
-                navLists.classList.toggle("open", open);
-            }
             navToggle.setAttribute("aria-expanded", open ? "true" : "false");
         });
     }
@@ -56,10 +52,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // اللوحة الجانبية للإدارة (Side Navbar): زرار واحد يفتح لوحة
-    // منزلقة من الجنب بكل خصائص الأدمن. فتحها يقفل قائمة "حسابي"
-    // ونافذة الجرس، وفتح "حسابي" يقفلها (عبر تفويض القوائم المنسدلة
-    // الذي يقفل أي قائمة مفتوحة). بتفويض الأحداث حتى تعمل بعد
-    // استبدال HTML الإدارة لحظيًا.
+    // منزلقة من الجنب بكل خصائص الأدمن. فتحها يقفل نافذة الجرس.
+    // بتفويض الأحداث حتى تعمل بعد استبدال HTML الإدارة لحظيًا.
     function setAdminOpen(open) {
         var side = document.getElementById("adminSide");
         var btn = document.getElementById("adminSideBtn");
@@ -78,9 +72,6 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         if (event.target.closest("#adminSideBtn")) {
-            document.querySelectorAll(".nav-dropdown.open").forEach(function (d) {
-                d.classList.remove("open");
-            });
             setBellOpen(false);
             setAdminOpen(!side.classList.contains("open"));
             return;
@@ -90,35 +81,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // قائمة الإدارة المنسدلة في الـ navbar: فتح/إغلاق، والإغلاق بالضغط
-    // خارجها. بتفويض الأحداث حتى تعمل بعد استبدال روابط الأدمن لحظيًا.
-    document.addEventListener("click", function (event) {
-        var toggle = event.target.closest(".nav-dropdown-toggle");
-        if (toggle) {
-            setAdminOpen(false);
-            var dropdown = toggle.closest(".nav-dropdown");
-            var wasOpen = dropdown.classList.contains("open");
-            document.querySelectorAll(".nav-dropdown.open").forEach(function (d) {
-                d.classList.remove("open");
-            });
-            if (!wasOpen) {
-                dropdown.classList.add("open");
-                toggle.setAttribute("aria-expanded", "true");
-            } else {
-                toggle.setAttribute("aria-expanded", "false");
-            }
-            return;
-        }
-        if (!event.target.closest(".nav-dropdown")) {
-            document.querySelectorAll(".nav-dropdown.open").forEach(function (d) {
-                d.classList.remove("open");
-                var t = d.querySelector(".nav-dropdown-toggle");
-                if (t) {
-                    t.setAttribute("aria-expanded", "false");
-                }
-            });
-        }
-    });
     function refreshBell() {
         var wrap = document.querySelector(".bell-wrap");
         if (!wrap) {
