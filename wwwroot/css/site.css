@@ -3,13 +3,15 @@ body { margin: 0; font-family: "Segoe UI", Tahoma, Arial, sans-serif; background
 a { color: #a5b4fc; }
 .container { width: min(1100px, 92%); margin: 0 auto; }
 .site-header { position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; background: rgba(17, 24, 39, 0.97); }
-.header-inner { display: flex; align-items: center; gap: 28px; min-height: 68px; }
+.site-header .container { width: min(1400px, 96%); }
+.header-inner { display: flex; align-items: center; gap: 28px; min-height: 68px; flex-wrap: wrap; }
 .brand { font-size: 22px; font-weight: 800; color: #fff; text-decoration: none; white-space: nowrap; }
-.main-nav { display: flex; align-items: center; gap: 20px; min-width: 0; }
+.main-nav { display: flex; align-items: center; gap: 20px; min-width: 0; flex: 1; flex-wrap: wrap; }
+.header-actions .btn { white-space: nowrap; }
 .profile-link { padding: 10px 14px; border: 1px solid #334155; border-radius: 8px; color: #cbd5e1; text-decoration: none; white-space: nowrap; }
 .profile-link:hover { color: #fff; border-color: #475569; }
 .mobile-only { display: none; }
-.header-actions { display: flex; align-items: center; gap: 16px; margin-inline-start: auto; }
+.header-actions { display: flex; align-items: center; gap: 16px; margin-inline-start: auto; flex-wrap: wrap; }
 .nav-link { padding: 10px 16px; border-radius: 8px; color: #cbd5e1; text-decoration: none; white-space: nowrap; font-weight: 600; }
 .nav-link:hover { color: #fff; background: #1e293b; }
 .nav-link.active { color: #fff; background: #6366f1; }
