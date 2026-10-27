@@ -146,22 +146,40 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function refreshAdminNav() {
         var span = document.getElementById("adminNavLinks");
-        if (!span) {
-            return;
+        var panelSpan = document.getElementById("adminSidePanel");
+        if (span) {
+            fetch("/Admin/NavBadges")
+                .then(function (response) {
+                    if (!response.ok) {
+                        return null;
+                    }
+                    return response.text();
+                })
+                .then(function (html) {
+                    if (html !== null) {
+                        span.innerHTML = html;
+                    }
+                })
+                .catch(function () { /* يبقى القديم حتى التحديث التالي */ });
         }
-        fetch("/Admin/NavBadges")
-            .then(function (response) {
-                if (!response.ok) {
-                    return null;
-                }
-                return response.text();
-            })
-            .then(function (html) {
-                if (html !== null) {
-                    span.innerHTML = html;
-                }
-            })
-            .catch(function () { /* يبقى القديم حتى التحديث التالي */ });
+        if (panelSpan) {
+            fetch("/Admin/NavBadges?panelOnly=true")
+                .then(function (response) {
+                    if (!response.ok) {
+                        return null;
+                    }
+                    return response.text();
+                })
+                .then(function (html) {
+                    if (html !== null) {
+                        panelSpan.innerHTML = html;
+                        // لو كانت اللوحة مفتوحة وقت التحديث، الـ HTML الجديد
+                        // يجيء مغلقًا، فلازم نرجّع تمرير الصفحة.
+                        document.body.style.overflow = "";
+                    }
+                })
+                .catch(function () { /* يبقى القديم حتى التحديث التالي */ });
+        }
     }
 
     var pollingStarted = false;

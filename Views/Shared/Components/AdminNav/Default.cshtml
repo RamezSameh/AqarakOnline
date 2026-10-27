@@ -2,15 +2,14 @@
 @{
     var total = Model.PendingUsers + Model.UnrepliedRequests + Model.PendingListings;
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var panelOnly = ViewData["PanelOnly"] as bool? == true;
 }
-@* زرار واحد للإدارة يفتح لوحة جانبية بكل خصائص الأدمن. *@
-<button type="button" class="admin-nav-btn @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" id="adminSideBtn" aria-haspopup="true" aria-expanded="false">
-    الإدارة
-    @if (total > 0)
-    {
-        <span class="nav-badge">@total</span>
-    }
-</button>
+@* اللوحة الجانبية يجب أن تعيش خارج قائمة الموبايل: أي عنصر fixed داخل
+   عنصر display:none لا يظهر أبدًا، وقفل القائمة كان يخفي اللوحة مع
+   قفل تمرير الصفحة فيعلق المتصفح. لذا المكوّن يُستدعى مرتين: مرة
+   للزرار داخل الـ nav، ومرة للوحة بعد الـ header مباشرة. *@
+@if (panelOnly)
+{
 <div class="admin-side" id="adminSide">
     <div class="admin-side-backdrop" id="adminSideBackdrop"></div>
     <aside class="admin-side-panel" aria-label="الإدارة">
@@ -44,3 +43,15 @@
         <a class="admin-feature @(currentAction == "Notifications" ? "active" : "")" asp-controller="Admin" asp-action="Notifications">التنبيهات</a>
     </aside>
 </div>
+}
+else
+{
+@* زرار واحد للإدارة يفتح لوحة جانبية بكل خصائص الأدمن. *@
+<button type="button" class="admin-nav-btn @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" id="adminSideBtn" aria-haspopup="true" aria-expanded="false">
+    الإدارة
+    @if (total > 0)
+    {
+        <span class="nav-badge">@total</span>
+    }
+</button>
+}

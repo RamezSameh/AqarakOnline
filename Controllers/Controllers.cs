@@ -1035,7 +1035,7 @@ public class AdminController : Controller
     // نسخة حديثة من روابط الأدمن بالأرقام، يعيد المتصفح جلبها عند إشارة التحديث.
     [Authorize(Roles = "Admin")]
     [HttpGet]
-    public IActionResult NavBadges() => ViewComponent("AdminNav");
+    public IActionResult NavBadges(bool panelOnly = false) => ViewComponent("AdminNav", new { panelOnly });
 
     [HttpGet]
     public IActionResult CreateNotification()
@@ -1317,12 +1317,13 @@ public class AdminNavViewComponent : ViewComponent
         _context = context;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync()
+    public async Task<IViewComponentResult> InvokeAsync(bool panelOnly = false)
     {
         if (!ViewContext.HttpContext.User.IsInRole("Admin"))
         {
             return Content(string.Empty);
         }
+        ViewData["PanelOnly"] = panelOnly;
         // أرقام مصغرة للأدمن: حسابات بانتظار الموافقة، إعلانات بانتظار
         // الموافقة، وطلبات تواصل لم يُرد عليها بعد. تُحسب مع كل تحميل صفحة.
         var model = new AdminBadgeCounts
