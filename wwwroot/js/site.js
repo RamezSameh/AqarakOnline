@@ -2,12 +2,42 @@
 // لا يعتمد على أي مكتبة خارجية، ويعمل مع العربية (RTL) والإنجليزية (LTR).
 document.addEventListener("DOMContentLoaded", function () {
     // قائمة التنقل في الشاشات الصغيرة.
+    // كانت المشكلة: القائمة بتتفتح بزرار ☰ بس مفيش طريقة واضحة
+    // لقفلها غير دوسة تانية على نفس الزرار (من غير أي علامة قفل)،
+    // على عكس نافذة الجرس واللوحة الجانبية اللي ليهم ✕ وخلفية وEscape.
+    // فبقى للقائمة نفس مسارات القفل: ✕ على الزرار، ضغطة خارج الـ header،
+    // زر Escape، أو دوسة على أي رابط جواها.
     var navToggle = document.getElementById("navToggle");
     var mainNav = document.getElementById("mainNav");
+    function setNavOpen(open) {
+        if (!mainNav) {
+            return;
+        }
+        mainNav.classList.toggle("open", open);
+        if (navToggle) {
+            navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+            navToggle.textContent = open ? "✕" : "☰";
+        }
+    }
     if (navToggle && mainNav) {
         navToggle.addEventListener("click", function () {
-            var open = mainNav.classList.toggle("open");
-            navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+            setNavOpen(!mainNav.classList.contains("open"));
+        });
+        mainNav.addEventListener("click", function (event) {
+            if (event.target.closest("a")) {
+                setNavOpen(false);
+            }
+        });
+        document.addEventListener("click", function (event) {
+            if (mainNav.classList.contains("open") &&
+                !event.target.closest(".site-header")) {
+                setNavOpen(false);
+            }
+        });
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                setNavOpen(false);
+            }
         });
     }
 
@@ -23,6 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (open) {
             bellDropdown.removeAttribute("hidden");
             document.body.style.overflow = "hidden";
+            setNavOpen(false);
         } else {
             bellDropdown.setAttribute("hidden", "");
             document.body.style.overflow = "";
@@ -62,6 +93,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         side.classList.toggle("open", open);
         document.body.style.overflow = open ? "hidden" : "";
+        if (open) {
+            setNavOpen(false);
+        }
         if (btn) {
             btn.setAttribute("aria-expanded", open ? "true" : "false");
         }
