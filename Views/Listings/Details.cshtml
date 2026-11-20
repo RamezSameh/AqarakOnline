@@ -2,6 +2,19 @@
 @{
     var detailsUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
     var isOwnListing = !string.IsNullOrEmpty(detailsUserId) && Model.OwnerId == detailsUserId;
+    var pageUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/Listings/Details/{Model.Id}";
+    var firstPhoto = Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id).FirstOrDefault();
+    var shareText = $"{Model.Title} - {L.PriceText(Model.Price, Model.ListingType)} - {pageUrl}";
+}
+@section Meta {
+    <meta property="og:title" content="@Model.Title" />
+    <meta property="og:description" content="@Model.Description" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@pageUrl" />
+    @if (firstPhoto != null)
+    {
+        <meta property="og:image" content="@($"{Context.Request.Scheme}://{Context.Request.Host}/{firstPhoto.FilePath}")" />
+    }
 }
 <h1>@Model.Title</h1>
 <div class="listing-meta">
@@ -74,6 +87,7 @@ else
 }
 <p><strong>@L.T("Price"):</strong> @L.PriceText(Model.Price, Model.ListingType)</p>
 <p><strong>@L.T("Views"):</strong> @Model.ViewCount</p>
+<p><strong>@L.T("PublishedAt"):</strong> @L.RelativeTime(Model.CreatedAt)</p>
 @if (User.IsInRole("Admin"))
 {
     <h2>@L.T("AdvertiserData")</h2>
@@ -138,3 +152,45 @@ else
     }
     <a class="btn btn-ghost" asp-action="Index">@L.T("BackToList")</a>
 </div>
+
+<div class="share-row">
+    <span>@L.T("Share"):</span>
+    <a class="btn btn-ghost" href="https://wa.me/?text=@Uri.EscapeDataString(shareText)" target="_blank" rel="noopener">واتساب</a>
+    <a class="btn btn-ghost" href="https://www.facebook.com/sharer/sharer.php?u=@Uri.EscapeDataString(pageUrl)" target="_blank" rel="noopener">فيسبوك</a>
+    <button type="button" class="btn btn-ghost share-copy" data-url="@pageUrl">@L.T("CopyLink")</button>
+</div>
+
+@if (Model.ListingType == ListingType.Sale)
+{
+    <section class="calculator" id="calculator">
+        <h2>@L.T("Calculator")</h2>
+        <div class="form">
+            <label>@L.T("Price")</label>
+            <input id="calcPrice" type="number" min="0" step="any" value="@Model.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+            <label>@L.T("DownPayment")</label>
+            <input id="calcDown" type="number" min="0" step="any" value="@((Model.Price * 0.2m).ToString("0", System.Globalization.CultureInfo.InvariantCulture))" />
+            <label>@L.T("Years")</label>
+            <input id="calcYears" type="number" min="1" max="30" step="1" value="10" />
+            <label>@L.T("InterestRate")</label>
+            <input id="calcRate" type="number" min="0" max="100" step="any" value="18" />
+            <p><strong>@L.T("MonthlyInstallment"):</strong> <span id="calcResult">-</span></p>
+            <small>@L.T("CalculatorNote")</small>
+        </div>
+    </section>
+}
+
+@{
+    var similar = ViewBag.SimilarListings as List<Listing>;
+}
+@if (similar != null && similar.Any())
+{
+    <section>
+        <h2>@L.T("SimilarListings")</h2>
+        <div class="cards-grid">
+            @foreach (var item in similar)
+            {
+                @await Html.PartialAsync("_ListingCard", item)
+            }
+        </div>
+    </section>
+}

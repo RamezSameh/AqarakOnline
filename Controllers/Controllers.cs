@@ -207,6 +207,14 @@ public class ListingsController : Controller
             ViewBag.IsFavorite = await _context.Favorites
                 .AnyAsync(f => f.UserId == CurrentUserId && f.ListingId == listing.Id);
         }
+        // إعلانات مشابهة: نفس المنطقة أولًا، ثم نفس النوع، وبسعر قريب.
+        ViewBag.SimilarListings = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
+            .Where(l => l.Approval == ListingApproval.Approved && l.Id != listing.Id
+                && (l.Area == listing.Area || l.PropertyType == listing.PropertyType))
+            .OrderByDescending(l => l.Area == listing.Area)
+            .ThenBy(l => Math.Abs(l.Price - listing.Price))
+            .Take(4)
+            .ToListAsync();
         return View(listing);
     }
 
@@ -682,6 +690,8 @@ public class AdminDashboardViewModel
     public List<ApplicationUser> Users { get; set; } = new();
     public List<AdminUserRow> UserRows { get; set; } = new();
     public List<Listing> FilteredListings { get; set; } = new();
+    /// <summary>إعلانات مقبولة ومتاحة بقالها أكثر من 30 يومًا — تحتاج مراجعة/تحديث.</summary>
+    public List<Listing> StaleListings { get; set; } = new();
 }
 
 [Authorize(Roles = "Admin")]
@@ -765,7 +775,12 @@ public class AdminController : Controller
             Areas = await _context.Listings.Select(l => l.Area).Distinct().OrderBy(a => a).ToListAsync(),
             Users = users,
             UserRows = rows,
-            FilteredListings = filteredListings
+            FilteredListings = filteredListings,
+            StaleListings = await _context.Listings.Include(l => l.Owner)
+                .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable
+                    && l.CreatedAt <= DateTime.UtcNow.AddDays(-30))
+                .OrderBy(l => l.CreatedAt)
+                .ToListAsync()
         };
         return View(model);
     }

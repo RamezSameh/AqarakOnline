@@ -101,3 +101,38 @@ else
         </tbody>
     </table>
 }
+
+<h2>إعلانات قديمة (أكثر من 30 يومًا، مقبولة ومتاحة)</h2>
+@if (!Model.StaleListings.Any())
+{
+    <p>لا توجد إعلانات قديمة.</p>
+}
+else
+{
+    <p>عددها: @Model.StaleListings.Count — راجعها مع أصحابها: حدّث السعر أو أغلقها لو اتباعت.</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>رقم الإعلان</th>
+                <th>العنوان</th>
+                <th>المعلن</th>
+                <th>المنطقة</th>
+                <th>تاريخ النشر</th>
+                <th>المشاهدات</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var listing in Model.StaleListings)
+            {
+                <tr>
+                    <td>@listing.AdNumber</td>
+                    <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></td>
+                    <td>@(listing.Owner?.FullName ?? listing.Owner?.UserName ?? "إدارة الموقع")</td>
+                    <td>@listing.Area</td>
+                    <td>@L.RelativeTime(listing.CreatedAt)</td>
+                    <td>@listing.ViewCount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

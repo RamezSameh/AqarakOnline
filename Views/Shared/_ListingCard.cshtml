@@ -39,7 +39,7 @@
             <p class="listing-facts">@string.Join(" • ", facts)</p>
         }
         <p class="listing-price">@L.PriceText(Model.Price, Model.ListingType)</p>
-        <p class="listing-views">@L.T("Views"): @Model.ViewCount</p>
+        <p class="listing-views">@L.T("Views"): @Model.ViewCount • @L.RelativeTime(Model.CreatedAt)</p>
         @if (Model.Approval != ListingApproval.Approved)
         {
             <p class="listing-status">@L.T("ApprovalStatus"): @L.ApprovalText(Model.Approval)</p>
@@ -64,6 +64,7 @@
             {
                 <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id">@L.T("ContactUs")</a>
             }
+            <button type="button" class="btn btn-ghost share-copy" data-url="@($"{Context.Request.Scheme}://{Context.Request.Host}/Listings/Details/{Model.Id}")" title="@L.T("Share")">↗ @L.T("Share")</button>
         </div>
     </div>
 </article>

@@ -166,6 +166,19 @@ public class LanguageService
         ["OwnListingNote"] = ("هذا إعلانك، فلا يمكنك شراؤه أو استئجاره.", "This is your listing, so you cannot buy or rent it."),
         ["SearchUsersPlaceholder"] = ("ابحث بالاسم أو رقم الموبايل...", "Search by name or phone..."),
         ["Close"] = ("إغلاق", "Close"),
+        ["SimilarListings"] = ("إعلانات مشابهة", "Similar listings"),
+        ["Share"] = ("مشاركة", "Share"),
+        ["CopyLink"] = ("نسخ الرابط", "Copy link"),
+        ["Copied"] = ("تم النسخ ✓", "Copied ✓"),
+        ["Calculator"] = ("حاسبة القسط", "Installment calculator"),
+        ["DownPayment"] = ("المقدمة", "Down payment"),
+        ["Years"] = ("عدد السنين", "Years"),
+        ["InterestRate"] = ("الفائدة السنوية %", "Annual interest %"),
+        ["MonthlyInstallment"] = ("القسط الشهري", "Monthly installment"),
+        ["CalculatorNote"] = ("النتيجة تقريبية، واسأل البنك عن الشروط الفعلية.", "Result is approximate; ask the bank for the actual terms."),
+        ["PublishedAt"] = ("تاريخ النشر", "Published"),
+        ["GoogleLogin"] = ("الدخول بجوجل", "Continue with Google"),
+        ["GoogleLoginNote"] = ("أو ادخل بحساب جوجل — حساب جديد من جوجل يحتاج موافقة الأدمن أولًا.", "Or sign in with Google — a new Google account needs admin approval first."),
         ["Email"] = ("البريد الإلكتروني", "Email"),
         ["Password"] = ("كلمة المرور", "Password"),
         ["ConfirmPassword"] = ("تأكيد كلمة المرور", "Confirm password"),
@@ -206,6 +219,66 @@ public class LanguageService
 
     public string AdvertiserTypeText(Models.AdvertiserType type) =>
         type == Models.AdvertiserType.Broker ? T("FromBroker") : T("FromOwner");
+
+    /// <summary>تاريخ نسبي: «منذ يومين» / «منذ 3 ساعات». التاريخ المخزّن UTC.</summary>
+    public string RelativeTime(DateTime utc)
+    {
+        var diff = DateTime.UtcNow - utc;
+        if (diff.TotalMinutes < 1)
+        {
+            return IsArabic ? "الآن" : "Just now";
+        }
+        if (diff.TotalHours < 1)
+        {
+            return FormatUnit((int)diff.TotalMinutes,
+                ("دقيقة", "دقيقتين", "دقائق", "دقيقة"),
+                ("minute", "minutes"));
+        }
+        if (diff.TotalDays < 1)
+        {
+            return FormatUnit((int)diff.TotalHours,
+                ("ساعة", "ساعتين", "ساعات", "ساعة"),
+                ("hour", "hours"));
+        }
+        if (diff.TotalDays < 7)
+        {
+            return FormatUnit((int)diff.TotalDays,
+                ("يوم", "يومين", "أيام", "يوم"),
+                ("day", "days"));
+        }
+        if (diff.TotalDays < 30)
+        {
+            return FormatUnit((int)(diff.TotalDays / 7),
+                ("أسبوع", "أسبوعين", "أسابيع", "أسبوع"),
+                ("week", "weeks"));
+        }
+        if (diff.TotalDays < 365)
+        {
+            return FormatUnit((int)(diff.TotalDays / 30),
+                ("شهر", "شهرين", "أشهر", "شهر"),
+                ("month", "months"));
+        }
+        return FormatUnit((int)(diff.TotalDays / 365),
+            ("سنة", "سنتين", "سنوات", "سنة"),
+            ("year", "years"));
+    }
+
+    private string FormatUnit(int value, (string One, string Two, string Few, string Many) ar, (string One, string Many) en)
+    {
+        if (IsArabic)
+        {
+            var word = value switch
+            {
+                1 => ar.One,
+                2 => ar.Two,
+                >= 3 and <= 10 => ar.Few,
+                _ => ar.Many
+            };
+            var number = value is 1 or 2 ? string.Empty : $"{value} ";
+            return $"منذ {number}{word}";
+        }
+        return value == 1 ? $"1 {en.One} ago" : $"{value} {en.Many} ago";
+    }
 
     public string IntentText(Models.ContactIntent intent) => intent switch
     {

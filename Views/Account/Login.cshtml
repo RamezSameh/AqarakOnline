@@ -19,3 +19,9 @@
         <a class="btn btn-ghost" asp-action="Register">@L.T("NoAccount")</a>
     </div>
 </form>
+<p>@L.T("GoogleLoginNote")</p>
+<form asp-action="ExternalLogin" method="post" class="inline-form">
+    <input type="hidden" name="provider" value="Google" />
+    <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+    <button type="submit" class="btn btn-ghost">@L.T("GoogleLogin")</button>
+</form>

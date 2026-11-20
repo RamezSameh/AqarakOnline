@@ -430,6 +430,79 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // نسخ رابط الإعلان: زر "نسخ الرابط" في الكارت والتفاصيل.
+    // بتفويض الأحداث حتى يعمل بعد استبدال شبكة الكروت لحظيًا.
+    document.addEventListener("click", function (event) {
+        var btn = event.target.closest(".share-copy");
+        if (!btn) {
+            return;
+        }
+        var url = btn.getAttribute("data-url");
+        if (!url) {
+            return;
+        }
+        var done = function () {
+            var original = btn.textContent;
+            btn.textContent = "تم النسخ ✓";
+            btn.disabled = true;
+            setTimeout(function () {
+                btn.textContent = original;
+                btn.disabled = false;
+            }, 2000);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(done).catch(function () { fallbackCopy(url, done); });
+        } else {
+            fallbackCopy(url, done);
+        }
+    });
+    function fallbackCopy(text, done) {
+        var tmp = document.createElement("textarea");
+        tmp.value = text;
+        tmp.style.position = "fixed";
+        tmp.style.opacity = "0";
+        document.body.appendChild(tmp);
+        tmp.select();
+        try {
+            document.execCommand("copy");
+            done();
+        } catch (e) { /* يبقى الرابط في الزر نفسه للنسخ اليدوي */ }
+        document.body.removeChild(tmp);
+    }
+
+    // حاسبة القسط في صفحة التفاصيل (للبيع): تحديث لحظي أثناء الكتابة.
+    var calc = document.getElementById("calculator");
+    if (calc) {
+        var priceInput = document.getElementById("calcPrice");
+        var downInput = document.getElementById("calcDown");
+        var yearsInput = document.getElementById("calcYears");
+        var rateInput = document.getElementById("calcRate");
+        var result = document.getElementById("calcResult");
+        var fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+        function recalc() {
+            var price = parseFloat(priceInput.value) || 0;
+            var down = parseFloat(downInput.value) || 0;
+            var years = parseFloat(yearsInput.value) || 0;
+            var rate = parseFloat(rateInput.value) || 0;
+            var loan = Math.max(0, price - down);
+            var months = years * 12;
+            var pay = 0;
+            if (months > 0 && loan > 0) {
+                if (rate <= 0) {
+                    pay = loan / months;
+                } else {
+                    var r = rate / 100 / 12;
+                    pay = loan * r / (1 - Math.pow(1 + r, -months));
+                }
+            }
+            result.textContent = fmt.format(Math.round(pay)) + " جنيه شهريًا";
+        }
+        [priceInput, downInput, yearsInput, rateInput].forEach(function (input) {
+            input.addEventListener("input", recalc);
+        });
+        recalc();
+    }
+
     // إظهار/إخفاء كلمة المرور أثناء الكتابة.
     document.querySelectorAll(".password-toggle").forEach(function (button) {
         button.addEventListener("click", function () {

@@ -78,7 +78,13 @@ input, select, textarea { padding: 10px 12px; border: 1px solid #475569; border-
 .listing-area, .listing-price { margin: 6px 0; }
 .listing-price { font-size: 20px; font-weight: 800; color: #fff; }
 .listing-views { color: #94a3b8; font-size: 13px; margin: 6px 0; }
-/* الدفعة الأولى لتحسين البحث والتصميم: صندوق فلاتر قابل للطي، شريط نتائج، ترقيم صفحات. */
+/* مشاركة الإعلان وحاسبة القسط في صفحة التفاصيل. */
+.share-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 20px; padding: 12px 16px; border: 1px solid #334155; border-radius: 10px; background: #1e293b; }
+.share-row span { font-weight: 700; }
+.calculator { margin-top: 28px; padding: 16px; border: 1px solid #334155; border-radius: 10px; background: #1e293b; }
+.calculator h2 { margin-top: 0; }
+.calculator .form { max-width: 420px; }
+.calculator small { color: #94a3b8; }
 .filters-box { border: 1px solid #334155; border-radius: 10px; padding: 12px 16px; background: #1e293b; margin: 20px 0 0; }
 .filters-box summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
 .filters-box .filter-form { margin: 12px 0 0; }
