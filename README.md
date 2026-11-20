@@ -403,19 +403,6 @@ dotnet ef database update
   ويفضَّل تمريرها كمتغيرات بيئة (`Sms__TwilioAuthToken` مثلًا) لا كقيم في الملف المرفوع.
   ملحوظة: التوثيق بالرسائل موقوف حاليًا، والتوثيق يتم عن طريق الأدمن،
   فإعدادات Twilio هنا للاستخدام المستقبلي عند ترتيب خدمة مدفوعة.
-- الدخول بجوجل (اختياري): الكود جاهز، لكنه لا يعمل إلا بعد إنشاء OAuth client:
-  1. افتح Google Cloud Console، وأنشئ مشروعًا، ثم APIs & Services ← Credentials ←
-     Create Credentials ← OAuth client ID ← نوعه Web application.
-  2. في Authorized redirect URIs أضف الرابط العام للموقع مع `/signin-google`،
-     مثال: `https://aqarak.example.com/signin-google` — لازم يطابق الدومين/التانل
-     اللي المستخدمين بيدخلوا منه، وإلا جوجل يرفض الرجوع للتطبيق.
-  3. ضع الـ Client ID والـ Client Secret في `appsettings.json` (أو كمتغيرات بيئة
-     `Google__ClientId` و`Google__ClientSecret` — الأفضل للنشر العام):
-     ```json
-     { "Google": { "ClientId": "...", "ClientSecret": "..." } }
-     ```
-  4. أعد تشغيل التطبيق. حساب جوجل الجديد يبدأ قيد المراجعة مثل التسجيل العادي،
-     ولو إيميل جوجل مطابق لحساب مسجَّل برقم موبايل يُربط به بدل إنشاء حساب جديد.
 
 ## التقنية
 

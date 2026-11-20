@@ -42,29 +42,6 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.Configure<ContactSettings>(builder.Configuration.GetSection("Contact"));
 builder.Services.Configure<SmsSettings>(builder.Configuration.GetSection("Sms"));
 
-// الدخول بجوجل: يعمل فقط لو ClientId وClientSecret متعبّيين في الإعدادات
-// (Google:ClientId وGoogle:ClientSecret). من غيرهم زرار جوجل يظهر في صفحة
-// الدخول لكن الضغطة عليه ترجع رسالة إن الخدمة غير مفعّلة. خطوات الإنشاء
-// في README.md — وتذكّر تضيف رابط الـ redirect العام (https://الدومين/signin-google).
-var googleClientId = builder.Configuration["Google:ClientId"];
-var googleClientSecret = builder.Configuration["Google:ClientSecret"];
-if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
-{
-    builder.Services.AddAuthentication().AddGoogle(options =>
-    {
-        options.ClientId = googleClientId;
-        options.ClientSecret = googleClientSecret;
-    });
-}
-if (string.Equals(builder.Configuration["Sms:Provider"], "Twilio", StringComparison.OrdinalIgnoreCase))
-{
-    builder.Services.AddHttpClient<ISmsSender, TwilioSmsSender>();
-}
-else
-{
-    // الافتراضي: لا يرسل SMS حقيقيًا، بل يكتب كود التأكيد في اللوج للتجربة.
-    builder.Services.AddSingleton<ISmsSender, LogSmsSender>();
-}
 builder.Services.AddScoped<LanguageService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();

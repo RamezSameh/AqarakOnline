@@ -177,8 +177,6 @@ public class LanguageService
         ["MonthlyInstallment"] = ("القسط الشهري", "Monthly installment"),
         ["CalculatorNote"] = ("النتيجة تقريبية، واسأل البنك عن الشروط الفعلية.", "Result is approximate; ask the bank for the actual terms."),
         ["PublishedAt"] = ("تاريخ النشر", "Published"),
-        ["GoogleLogin"] = ("الدخول بجوجل", "Continue with Google"),
-        ["GoogleLoginNote"] = ("أو ادخل بحساب جوجل — حساب جديد من جوجل يحتاج موافقة الأدمن أولًا.", "Or sign in with Google — a new Google account needs admin approval first."),
         ["Email"] = ("البريد الإلكتروني", "Email"),
         ["Password"] = ("كلمة المرور", "Password"),
         ["ConfirmPassword"] = ("تأكيد كلمة المرور", "Confirm password"),
