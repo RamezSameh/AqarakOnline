@@ -148,8 +148,23 @@ public class LanguageService
         ["WhyFollowText"] = ("أنت اللي بتتابع إعلانك وطلباتك وتختار العرض الأنسب لك، من غير ما حد يختار مكانك.", "You follow your own listing and requests and choose the offer that suits you best, without anyone choosing for you."),
         ["WhyCommissionTitle"] = ("عمولة على قد إيدك", "A commission you can afford"),
         ["WhyCommissionText"] = ("عمولة مناسبة من غير مبالغة، لأن هدفنا إن الصفقة تتم بسهولة للطرفين.", "A reasonable commission without exaggeration, because our goal is for the deal to close easily for both sides."),
-        ["WhyNoExploitationTitle"] = ("لا لاستغلال السماسرة والبوابين", "No broker or doorman exploitation"),
-        ["WhyNoExploitationText"] = ("تعامل مباشر وواضح، من غير عمولات خفية أو ضغوط من وسطاء.", "Direct and transparent dealing, with no hidden commissions or pressure from middlemen."),
+        ["WhyNoExploitationTitle"] = ("كل حاجة واضحة من الأول", "Everything is clear from the start"),
+        ["WhyNoExploitationText"] = ("السعر والمساحة والتفاصيل ظاهرة من الأول، من غير مفاجآت بعد كده.", "Price, area and details are clear from the start, with no surprises later."),
+        ["AdvertiserType"] = ("نوع المعلن", "Advertiser type"),
+        ["FromOwner"] = ("من المالك", "From owner"),
+        ["FromBroker"] = ("من سمسار", "From broker"),
+        ["Rooms"] = ("عدد الغرف", "Rooms"),
+        ["Bathrooms"] = ("عدد الحمامات", "Bathrooms"),
+        ["Floor"] = ("الدور", "Floor"),
+        ["Furnished"] = ("مفروش", "Furnished"),
+        ["NotFurnished"] = ("غير مفروش", "Unfurnished"),
+        ["MinRooms"] = ("أقل عدد غرف", "Min rooms"),
+        ["FurnishedOnly"] = ("مفروش فقط", "Furnished only"),
+        ["FloorRequiredForApartment"] = ("الدور مطلوب عند إضافة شقة.", "Floor is required for an apartment."),
+        ["UploadingListing"] = ("جاري رفع الإعلان...", "Uploading listing..."),
+        ["OwnListingError"] = ("لا يمكنك شراء أو استئجار إعلانك الخاص.", "You cannot buy or rent your own listing."),
+        ["OwnListingNote"] = ("هذا إعلانك، فلا يمكنك شراؤه أو استئجاره.", "This is your listing, so you cannot buy or rent it."),
+        ["SearchUsersPlaceholder"] = ("ابحث بالاسم أو رقم الموبايل...", "Search by name or phone..."),
         ["Email"] = ("البريد الإلكتروني", "Email"),
         ["Password"] = ("كلمة المرور", "Password"),
         ["ConfirmPassword"] = ("تأكيد كلمة المرور", "Confirm password"),
@@ -187,6 +202,9 @@ public class LanguageService
         Models.ListingApproval.Rejected => T("Rejected"),
         _ => T("PendingApproval")
     };
+
+    public string AdvertiserTypeText(Models.AdvertiserType type) =>
+        type == Models.AdvertiserType.Broker ? T("FromBroker") : T("FromOwner");
 
     public string IntentText(Models.ContactIntent intent) => intent switch
     {

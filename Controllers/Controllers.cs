@@ -84,7 +84,8 @@ public class ListingsController : Controller
     public async Task<IActionResult> Index(
         string? search, ListingType? listingType, PropertyType? propertyType,
         decimal? minPrice, decimal? maxPrice, bool onlyAvailable = false,
-        int? minArea = null, int? maxArea = null, string? sort = null, int page = 1)
+        int? minArea = null, int? maxArea = null, string? sort = null, int page = 1,
+        int? minRooms = null, bool furnishedOnly = false)
     {
         var query = _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.Approval == ListingApproval.Approved).AsQueryable();
@@ -121,6 +122,14 @@ public class ListingsController : Controller
         {
             query = query.Where(l => l.AreaSqm <= maxArea.Value);
         }
+        if (minRooms.HasValue)
+        {
+            query = query.Where(l => l.Rooms >= minRooms.Value);
+        }
+        if (furnishedOnly)
+        {
+            query = query.Where(l => l.IsFurnished);
+        }
 
         // الترتيب: الافتراضي الأحدث. القيم المقبولة فقط هي المعرّفة هنا،
         // وأي قيمة غير معروفة تعود للأحدث بدل ما تكسر الاستعلام.
@@ -154,6 +163,8 @@ public class ListingsController : Controller
         ViewBag.OnlyAvailable = onlyAvailable;
         ViewBag.MinArea = minArea;
         ViewBag.MaxArea = maxArea;
+        ViewBag.MinRooms = minRooms;
+        ViewBag.FurnishedOnly = furnishedOnly;
         ViewBag.Sort = sortKey;
         ViewBag.Page = page;
         ViewBag.TotalPages = totalPages;
@@ -213,6 +224,10 @@ public class ListingsController : Controller
     public async Task<IActionResult> Create(Listing listing)
     {
         ValidateAttachments(listing.PhotoFiles, listing.VideoFile, existingPhotoCount: 0, existingVideo: false);
+        if (listing.PropertyType == PropertyType.Apartment && !listing.Floor.HasValue)
+        {
+            ModelState.AddModelError(nameof(Listing.Floor), "الدور مطلوب عند إضافة شقة.");
+        }
         if (!ModelState.IsValid)
         {
             return View(listing);
@@ -221,6 +236,11 @@ public class ListingsController : Controller
         listing.OwnerId = CurrentUserId;
         listing.CreatedAt = DateTime.UtcNow;
         listing.IsAvailable = true;
+        // الدور خاص بالشقة فقط؛ أي قيمة مرسلة مع نوع آخر تُتجاهل.
+        if (listing.PropertyType != PropertyType.Apartment)
+        {
+            listing.Floor = null;
+        }
         listing.Approval = User.IsInRole("Admin") ? ListingApproval.Approved : ListingApproval.Pending;
         listing.AdNumber = "TEMP";
         listing.Attachments = new List<ListingAttachment>();
@@ -280,6 +300,10 @@ public class ListingsController : Controller
         var existingPhotos = listing.Attachments.Count(a => a.Kind == AttachmentKind.Photo && !deleteIds.Contains(a.Id));
         var existingVideo = listing.Attachments.Any(a => a.Kind == AttachmentKind.Video && !deleteIds.Contains(a.Id));
         ValidateAttachments(model.PhotoFiles, model.VideoFile, existingPhotos, existingVideo);
+        if (model.PropertyType == PropertyType.Apartment && !model.Floor.HasValue)
+        {
+            ModelState.AddModelError(nameof(Listing.Floor), "الدور مطلوب عند إضافة شقة.");
+        }
         if (!ModelState.IsValid)
         {
             model.Attachments = listing.Attachments;
@@ -295,6 +319,11 @@ public class ListingsController : Controller
         listing.Features = model.Features;
         listing.Price = model.Price;
         listing.AreaSqm = model.AreaSqm;
+        listing.AdvertiserType = model.AdvertiserType;
+        listing.Rooms = model.Rooms;
+        listing.Bathrooms = model.Bathrooms;
+        listing.Floor = model.PropertyType == PropertyType.Apartment ? model.Floor : null;
+        listing.IsFurnished = model.IsFurnished;
         listing.IsAvailable = model.IsAvailable;
         if (!User.IsInRole("Admin"))
         {
@@ -495,6 +524,11 @@ public class ContactController : Controller
             TempData["Error"] = "هذا الإعلان لم يعد متاحًا.";
             return RedirectToAction("Details", "Listings", new { id = listingId });
         }
+        if (listing.OwnerId == CurrentUserId)
+        {
+            TempData["Error"] = "لا يمكنك شراء أو استئجار إعلانك الخاص.";
+            return RedirectToAction("Details", "Listings", new { id = listingId });
+        }
 
         var user = await _userManager.GetUserAsync(User);
         var parsedIntent = intent?.ToLowerInvariant() switch
@@ -527,6 +561,12 @@ public class ContactController : Controller
         if (listing == null || listing.Approval != ListingApproval.Approved || !listing.IsAvailable)
         {
             return NotFound();
+        }
+        // صاحب الإعلان لا يشتري/يستأجر إعلانه الخاص — يُمنع من السيرفر أيضًا،
+        // حتى لو وصل للصفحة برابط مباشر بعد إخفاء الأزرار في الواجهة.
+        if (listing.OwnerId == CurrentUserId)
+        {
+            return Forbid();
         }
         if (!ModelState.IsValid)
         {
@@ -731,9 +771,18 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Users()
+    public async Task<IActionResult> Users(string? search = null)
     {
-        var users = await _userManager.Users.OrderBy(u => u.FullName).ToListAsync();
+        var usersQuery = _userManager.Users.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            usersQuery = usersQuery.Where(u =>
+                (u.FullName != null && u.FullName.Contains(term)) ||
+                (u.PhoneNumber != null && u.PhoneNumber.Contains(term)));
+        }
+        var users = await usersQuery.OrderBy(u => u.FullName).ToListAsync();
+        ViewBag.Search = search;
         var rows = new List<AdminUserRow>();
         foreach (var user in users)
         {

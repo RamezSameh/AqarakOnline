@@ -15,7 +15,7 @@
 }
 <h1>@(isEdit ? L.T("Edit") : L.T("CreateListing"))</h1>
 
-<form asp-action="@action" method="post" enctype="multipart/form-data" class="form">
+<form asp-action="@action" id="listingForm" method="post" enctype="multipart/form-data" class="form">
     @if (isEdit)
     {
         <input type="hidden" asp-for="Id" />
@@ -32,8 +32,23 @@
     <label>@L.T("PropertyType")</label>
     <select asp-for="PropertyType" asp-items="propertyTypes"></select>
 
+    <label>@L.T("AdvertiserType")</label>
+    <select asp-for="AdvertiserType">
+        <option value="Owner" selected="@(Model.AdvertiserType == AdvertiserType.Owner)">@L.T("FromOwner")</option>
+        <option value="Broker" selected="@(Model.AdvertiserType == AdvertiserType.Broker)">@L.T("FromBroker")</option>
+    </select>
+
     <label>@L.T("Area")</label>
-    <input asp-for="Area" />
+    <select asp-for="Area">
+        @if (!string.IsNullOrWhiteSpace(Model.Area) && !ListingAreas.All.Contains(Model.Area))
+        {
+            <option value="@Model.Area" selected>@Model.Area</option>
+        }
+        @foreach (var area in ListingAreas.All)
+        {
+            <option value="@area" selected="@(Model.Area == area)">@area</option>
+        }
+    </select>
     <span asp-validation-for="Area" class="field-error"></span>
 
 
@@ -56,6 +71,22 @@
     <input asp-for="AreaSqm" type="number" min="1" step="1" />
     <span asp-validation-for="AreaSqm" class="field-error"></span>
 
+    <label>@L.T("Rooms")</label>
+    <input asp-for="Rooms" type="number" min="0" max="50" step="1" />
+    <span asp-validation-for="Rooms" class="field-error"></span>
+
+    <label>@L.T("Bathrooms")</label>
+    <input asp-for="Bathrooms" type="number" min="0" max="20" step="1" />
+    <span asp-validation-for="Bathrooms" class="field-error"></span>
+
+    <div id="floorField" style="@(Model.PropertyType != PropertyType.Apartment ? "display:none;" : "")">
+        <label>@L.T("Floor")</label>
+        <input asp-for="Floor" type="number" min="0" max="60" step="1" />
+        <span asp-validation-for="Floor" class="field-error"></span>
+    </div>
+
+    <label><input asp-for="IsFurnished" type="checkbox" /> @L.T("Furnished")</label>
+
     @if (isEdit)
     {
         <label><input asp-for="IsAvailable" type="checkbox" /> @L.T("Available")</label>
@@ -77,6 +108,8 @@
             </label>
         }
     }
+
+    <p id="uploadStatus" class="alert-info" hidden>@L.T("UploadingListing")</p>
 
     <div class="actions">
         <button type="submit" class="btn btn-primary">@L.T("Save")</button>

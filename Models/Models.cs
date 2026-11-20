@@ -67,6 +67,47 @@ public enum PropertyType
     Villa
 }
 
+/// <summary>مصدر الإعلان: من المالك مباشرة أم من سمسار. يظهر للعامة في الكارت والتفاصيل.</summary>
+public enum AdvertiserType
+{
+    Owner,
+    Broker
+}
+
+/// <summary>قائمة جاهزة للمناطق (القاهرة والجيزة). تُستخدم في نماذج إضافة/تعديل الإعلان بدل الكتابة الحرة.</summary>
+public static class ListingAreas
+{
+    public static readonly string[] All =
+    {
+        "مدينة نصر، القاهرة",
+        "التجمع الخامس، القاهرة الجديدة",
+        "التجمع الأول، القاهرة الجديدة",
+        "التجمع الثالث، القاهرة الجديدة",
+        "المعادي، القاهرة",
+        "وسط البلد، القاهرة",
+        "مصر الجديدة، القاهرة",
+        "مدينة قباء، القاهرة",
+        "جسر السويس، القاهرة",
+        "الزمالك، القاهرة",
+        "المقطم، القاهرة",
+        "شبرا، القاهرة",
+        "عين شمس، القاهرة",
+        "حلوان، القاهرة",
+        "الرحاب، القاهرة",
+        "مدينتي، القاهرة",
+        "العبور، القليوبية",
+        "الشروق، القاهرة",
+        "المهندسين، الجيزة",
+        "الدقي، الجيزة",
+        "فيصل، الجيزة",
+        "الهرم، الجيزة",
+        "أكتوبر، الجيزة",
+        "الشيخ زايد، الجيزة",
+        "حدائق الأهرام، الجيزة",
+        "إمبابة، الجيزة"
+    };
+}
+
 public enum ContactIntent
 {
     Inquiry,
@@ -162,6 +203,24 @@ public class Listing
     /// <summary>مساحة العقار بالمتر المربع.</summary>
     [Range(1, 100000, ErrorMessage = "المساحة يجب أن تكون بالمتر المربع وأكبر من صفر")]
     public int AreaSqm { get; set; }
+
+    /// <summary>الإعلان من المالك أم من سمسار. الافتراضي مالك.</summary>
+    public AdvertiserType AdvertiserType { get; set; } = AdvertiserType.Owner;
+
+    /// <summary>عدد الغرف (اختياري).</summary>
+    [Range(0, 50, ErrorMessage = "عدد الغرف يجب أن يكون بين 0 و 50")]
+    public int? Rooms { get; set; }
+
+    /// <summary>عدد الحمامات (اختياري).</summary>
+    [Range(0, 20, ErrorMessage = "عدد الحمامات يجب أن يكون بين 0 و 20")]
+    public int? Bathrooms { get; set; }
+
+    /// <summary>الدور (مطلوب عند إضافة شقة). 0 = أرضي.</summary>
+    [Range(0, 60, ErrorMessage = "الدور يجب أن يكون بين 0 و 60")]
+    public int? Floor { get; set; }
+
+    /// <summary>مفروش أم لا.</summary>
+    public bool IsFurnished { get; set; }
 
     /// <summary>عدد مرات مشاهدة صفحة تفاصيل الإعلان (من غير الأدمن وصاحب الإعلان).</summary>
     public int ViewCount { get; set; }

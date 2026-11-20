@@ -1,6 +1,13 @@
 @model Listing
 @{
     var firstPhoto = Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id).FirstOrDefault();
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var isOwner = !string.IsNullOrEmpty(currentUserId) && Model.OwnerId == currentUserId;
+    var facts = new List<string>();
+    if (Model.Rooms.HasValue) { facts.Add($"{L.T("Rooms")}: {Model.Rooms}"); }
+    if (Model.Bathrooms.HasValue) { facts.Add($"{L.T("Bathrooms")}: {Model.Bathrooms}"); }
+    if (Model.Floor.HasValue) { facts.Add($"{L.T("Floor")}: {Model.Floor}"); }
+    if (Model.IsFurnished) { facts.Add(L.T("Furnished")); }
 }
 <article class="listing-card" data-listing-id="@Model.Id">
     <div class="availability-bar @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</div>
@@ -16,6 +23,7 @@
         <div class="listing-meta">
             <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
             <span class="badge">@L.PropertyTypeText(Model.PropertyType)</span>
+            <span class="badge">@L.AdvertiserTypeText(Model.AdvertiserType)</span>
             <span class="ad-number">@L.T("AdNumber"): @Model.AdNumber</span>
         </div>
         <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a></h3>
@@ -26,6 +34,10 @@
         }
         <p class="listing-area">@Model.Area</p>
         <p class="listing-area">@L.T("AreaSqm"): @Model.AreaSqm</p>
+        @if (facts.Any())
+        {
+            <p class="listing-facts">@string.Join(" • ", facts)</p>
+        }
         <p class="listing-price">@L.PriceText(Model.Price, Model.ListingType)</p>
         <p class="listing-views">@L.T("Views"): @Model.ViewCount</p>
         @if (Model.Approval != ListingApproval.Approved)
@@ -48,7 +60,7 @@
             {
                 <a class="btn btn-ghost favorite-btn" asp-controller="Account" asp-action="Login" title="إضافة إلى المفضلة">♡</a>
             }
-            @if (Model.IsAvailable && Model.Approval == ListingApproval.Approved)
+            @if (Model.IsAvailable && Model.Approval == ListingApproval.Approved && !isOwner)
             {
                 <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id">@L.T("ContactUs")</a>
             }

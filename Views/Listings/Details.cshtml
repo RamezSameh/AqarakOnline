@@ -1,4 +1,8 @@
 @model Listing
+@{
+    var detailsUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var isOwnListing = !string.IsNullOrEmpty(detailsUserId) && Model.OwnerId == detailsUserId;
+}
 <h1>@Model.Title</h1>
 <div class="listing-meta">
     <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
@@ -31,6 +35,23 @@ else
 
 <p><strong>@L.T("Area"):</strong> @Model.Area</p>
 <p><strong>@L.T("AreaSqm"):</strong> @Model.AreaSqm</p>
+<p><strong>@L.T("AdvertiserType"):</strong> @L.AdvertiserTypeText(Model.AdvertiserType)</p>
+@if (Model.Rooms.HasValue)
+{
+    <p><strong>@L.T("Rooms"):</strong> @Model.Rooms</p>
+}
+@if (Model.Bathrooms.HasValue)
+{
+    <p><strong>@L.T("Bathrooms"):</strong> @Model.Bathrooms</p>
+}
+@if (Model.Floor.HasValue)
+{
+    <p><strong>@L.T("Floor"):</strong> @Model.Floor</p>
+}
+@if (Model.IsFurnished)
+{
+    <p><strong>@L.T("Furnished"):</strong> @L.T("Furnished")</p>
+}
 <p><strong>@L.T("Price"):</strong> @L.PriceText(Model.Price, Model.ListingType)</p>
 <p><strong>@L.T("Views"):</strong> @Model.ViewCount</p>
 @if (User.IsInRole("Admin"))
@@ -74,7 +95,11 @@ else
     {
         <a class="btn btn-ghost" asp-controller="Account" asp-action="Login">♡ إضافة إلى المفضلة</a>
     }
-    @if (Model.IsAvailable)
+    @if (isOwnListing)
+    {
+        <p class="alert-info">@L.T("OwnListingNote")</p>
+    }
+    else if (Model.IsAvailable)
     {
         @if (Model.ListingType == ListingType.Sale)
         {

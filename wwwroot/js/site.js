@@ -283,6 +283,54 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(function () { /* يبقى القديم حتى التحديث التالي */ });
     }
 
+    // ضغطة على أي مكان في كارت الإعلان تفتح التفاصيل، إلا على زرار
+    // أو رابط أو نموذج جواه (المفضلة، التواصل، عرض التفاصيل).
+    // بتفويض الأحداث حتى تعمل بعد استبدال شبكة الكروت لحظيًا.
+    document.addEventListener("click", function (event) {
+        var card = event.target.closest(".listing-card");
+        if (!card) {
+            return;
+        }
+        if (event.target.closest("a, button, form, input, select, textarea, label")) {
+            return;
+        }
+        var link = card.querySelector("h3 a");
+        if (link && link.href) {
+            window.location.href = link.href;
+        }
+    });
+
+    // حقل الدور يظهر في نموذج الإعلان للشقة بس، ويتخفي لغيرها.
+    var propertyTypeSelect = document.getElementById("PropertyType");
+    var floorField = document.getElementById("floorField");
+    function toggleFloorField() {
+        if (!propertyTypeSelect || !floorField) {
+            return;
+        }
+        floorField.style.display = propertyTypeSelect.value === "Apartment" ? "" : "none";
+    }
+    if (propertyTypeSelect && floorField) {
+        propertyTypeSelect.addEventListener("change", toggleFloorField);
+        toggleFloorField();
+    }
+
+    // عند إرسال نموذج الإعلان (رفع صور/فيديو ممكن يبطّأ)، اظهر
+    // "جاري رفع الإعلان..." وعطّل زرار الحفظ لمنع الإرسال مرتين.
+    var listingForm = document.getElementById("listingForm");
+    if (listingForm) {
+        listingForm.addEventListener("submit", function () {
+            var status = document.getElementById("uploadStatus");
+            if (status) {
+                status.hidden = false;
+            }
+            var submitBtn = listingForm.querySelector("button[type=submit]");
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "جاري رفع الإعلان...";
+            }
+        });
+    }
+
     // إظهار/إخفاء كلمة المرور أثناء الكتابة.
     document.querySelectorAll(".password-toggle").forEach(function (button) {
         button.addEventListener("click", function () {

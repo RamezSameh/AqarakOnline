@@ -40,6 +40,8 @@
         <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" placeholder="@L.T("MaxPrice")" min="0" step="any" />
         <input type="number" name="minArea" value="@ViewBag.MinArea" placeholder="@L.T("MinArea")" min="1" step="1" />
         <input type="number" name="maxArea" value="@ViewBag.MaxArea" placeholder="@L.T("MaxArea")" min="1" step="1" />
+        <input type="number" name="minRooms" value="@ViewBag.MinRooms" placeholder="@L.T("MinRooms")" min="0" step="1" />
+        <label><input type="checkbox" name="furnishedOnly" value="true" checked="@(ViewBag.FurnishedOnly == true)" /> @L.T("FurnishedOnly")</label>
         <label class="sort-label">
             @L.T("SortBy")
             <select name="sort" asp-items="sortOptions"></select>
@@ -76,18 +78,18 @@ else
             <a class="btn btn-ghost @(currentPage <= 1 ? "disabled" : "")"
                asp-action="Index" asp-route-search="@ViewBag.Search" asp-route-listingType="@listingTypeValue" asp-route-propertyType="@propertyTypeValue"
                asp-route-minPrice="@ViewBag.MinPrice" asp-route-maxPrice="@ViewBag.MaxPrice" asp-route-minArea="@ViewBag.MinArea" asp-route-maxArea="@ViewBag.MaxArea"
-               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-page="@(currentPage - 1)">@L.T("Previous")</a>
+               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-page="@(currentPage - 1)">@L.T("Previous")</a>
             @for (var p = 1; p <= totalPages; p++)
             {
                 <a class="btn btn-ghost" aria-current="@(p == currentPage ? "page" : null)"
                    asp-action="Index" asp-route-search="@ViewBag.Search" asp-route-listingType="@listingTypeValue" asp-route-propertyType="@propertyTypeValue"
                    asp-route-minPrice="@ViewBag.MinPrice" asp-route-maxPrice="@ViewBag.MaxPrice" asp-route-minArea="@ViewBag.MinArea" asp-route-maxArea="@ViewBag.MaxArea"
-                   asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-page="@p">@p</a>
+                   asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-page="@p">@p</a>
             }
             <a class="btn btn-ghost @(currentPage >= totalPages ? "disabled" : "")"
                asp-action="Index" asp-route-search="@ViewBag.Search" asp-route-listingType="@listingTypeValue" asp-route-propertyType="@propertyTypeValue"
                asp-route-minPrice="@ViewBag.MinPrice" asp-route-maxPrice="@ViewBag.MaxPrice" asp-route-minArea="@ViewBag.MinArea" asp-route-maxArea="@ViewBag.MaxArea"
-               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-page="@(currentPage + 1)">@L.T("Next")</a>
+               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-page="@(currentPage + 1)">@L.T("Next")</a>
         </nav>
     }
 }

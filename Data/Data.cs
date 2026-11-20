@@ -65,6 +65,8 @@ public static class SeedData
                 Features = "3 غرف\n2 حمام\nتشطيب سوبر لوكس\nمصعد",
                 Price = 2500000,
                 AreaSqm = 150,
+                Rooms = 3,
+                Bathrooms = 2,
                 IsAvailable = true,
                 Approval = ListingApproval.Approved,
                 CreatedAt = seedDate
@@ -80,6 +82,9 @@ public static class SeedData
                 Features = "2 غرفة\nحمام\nمفروشة\nأمن وحراسة",
                 Price = 12000,
                 AreaSqm = 110,
+                Rooms = 2,
+                Bathrooms = 1,
+                IsFurnished = true,
                 IsAvailable = true,
                 Approval = ListingApproval.Approved,
                 CreatedAt = seedDate
@@ -95,6 +100,8 @@ public static class SeedData
                 Features = "4 غرف\n3 حمامات\nحديقة خاصة\nموقف سيارات",
                 Price = 8500000,
                 AreaSqm = 320,
+                Rooms = 4,
+                Bathrooms = 3,
                 IsAvailable = true,
                 Approval = ListingApproval.Approved,
                 CreatedAt = seedDate
