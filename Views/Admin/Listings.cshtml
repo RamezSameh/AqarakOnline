@@ -16,6 +16,7 @@ else
                 <th>@L.T("Price")</th>
                 <th>@L.T("Owner")</th>
                 <th>@L.T("ApprovalStatus")</th>
+                <th>@L.T("Featured")</th>
                 <th></th>
             </tr>
         </thead>
@@ -33,7 +34,12 @@ else
                         @(listing.Owner?.Address ?? "-")
                     </td>
                     <td>@L.ApprovalText(listing.Approval)</td>
+                    <td>@(listing.IsFeatured ? "⭐" : "-")</td>
                     <td>
+                        <form asp-action="ToggleFeatured" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@listing.Id" />
+                            <button type="submit" class="btn btn-ghost">@(listing.IsFeatured ? L.T("UnmarkFeatured") : L.T("MarkFeatured"))</button>
+                        </form>
                         @if (listing.Approval == ListingApproval.Pending)
                         {
                             <form asp-action="Approve" method="post" class="inline-form">

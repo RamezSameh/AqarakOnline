@@ -26,6 +26,7 @@
                     @* باقي الخصائص ظاهرة عادي في الـ header على اليمين. *@
                     <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">@L.T("MyListings")</a>
                     <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">@L.T("Favorites")</a>
+                    <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">@L.T("SavedSearches")</a>
                     <a class="nav-cta @(currentController == "Listings" && currentAction == "Create" ? "active" : "")" asp-controller="Listings" asp-action="Create">@L.T("CreateListing")</a>
                     @* غلاف display:contents حتى تُستبدل الإدارة لحظيًا من غير كسر توزيع الـ flex. *@
                     <span id="adminNavLinks" style="display:contents">@await Component.InvokeAsync("AdminNav")</span>
@@ -78,6 +79,12 @@
             <p>@L.T("Phone"): @ContactOptions.Value.Phone | @L.T("WhatsApp"): @ContactOptions.Value.WhatsApp | @L.T("Email"): @ContactOptions.Value.Email</p>
         </div>
     </footer>
+    @* شريط المقارنة: يظهر لما تختار إعلانات للمقارنة من الكروت أو التفاصيل. *@
+    <div id="compareBar" class="compare-bar" hidden>
+        <span id="compareCount"></span>
+        <a id="compareLink" class="btn btn-primary" href="#">@L.T("CompareNow")</a>
+        <button type="button" id="compareClear" class="btn btn-ghost">@L.T("ClearCompare")</button>
+    </div>
     @* مكتبة SignalR من CDN (مطابقة لإصدار .NET 8). لو تعذّر تحميلها،
        يعود site.js تلقائيًا للتحديث الدوري كل 30 ثانية. *@
     <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>

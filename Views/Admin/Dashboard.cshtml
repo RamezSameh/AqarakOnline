@@ -136,3 +136,60 @@ else
         </tbody>
     </table>
 }
+
+<h2>إحصائيات</h2>
+@{
+    var maxMonthly = Model.MonthlyListings.Any() ? Model.MonthlyListings.Max(p => p.Count) : 0;
+    var maxArea = Model.ListingsByArea.Any() ? Model.ListingsByArea.Max(p => p.Count) : 0;
+}
+<h3>إعلانات جديدة — آخر 6 شهور</h3>
+<div class="chart">
+    @foreach (var point in Model.MonthlyListings)
+    {
+        var pct = maxMonthly > 0 ? point.Count * 100 / maxMonthly : 0;
+        <div class="chart-row">
+            <span class="chart-label">@point.Label</span>
+            <div class="chart-track"><div class="chart-bar" style="width:@pct%"></div></div>
+            <span class="chart-count">@point.Count</span>
+        </div>
+    }
+</div>
+<h3>الإعلانات حسب المنطقة (أعلى 8)</h3>
+<div class="chart">
+    @foreach (var point in Model.ListingsByArea)
+    {
+        var pct = maxArea > 0 ? point.Count * 100 / maxArea : 0;
+        <div class="chart-row">
+            <span class="chart-label">@point.Label</span>
+            <div class="chart-track"><div class="chart-bar" style="width:@pct%"></div></div>
+            <span class="chart-count">@point.Count</span>
+        </div>
+    }
+</div>
+<h3>أكثر الإعلانات مشاهدة</h3>
+@if (!Model.TopViewed.Any())
+{
+    <p>لا توجد مشاهدات بعد.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>العنوان</th>
+                <th>المنطقة</th>
+                <th>المشاهدات</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var listing in Model.TopViewed)
+            {
+                <tr>
+                    <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></td>
+                    <td>@listing.Area</td>
+                    <td>@listing.ViewCount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

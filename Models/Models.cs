@@ -225,6 +225,9 @@ public class Listing
     /// <summary>عدد مرات مشاهدة صفحة تفاصيل الإعلان (من غير الأدمن وصاحب الإعلان).</summary>
     public int ViewCount { get; set; }
 
+    /// <summary>إعلان مميز يثبّته الأدمن: يظهر أولًا في نتائج البحث وبشارة «مميز».</summary>
+    public bool IsFeatured { get; set; }
+
     public bool IsAvailable { get; set; } = true;
 
     /// <summary>موافقة الأدمن على النشر. الافتراضي معلّق.</summary>
@@ -285,6 +288,9 @@ public class ContactRequest
 /// <summary>
 /// تنبيه ينشئه الأدمن ويظهر لكل المستخدمين على هيئة إشعار.
 /// IsActive=false يخفيه من غير حذفه.
+/// TargetUserId فارغ يعني التنبيه عام لكل المستخدمين؛ ولو متعبّي يظهر
+/// لذلك المستخدم فقط (مثل تنبيه «إعلان جديد مطابق لبحثك المحفوظ»).
+/// Url اختياري: رابط يفتحه المستخدم من التنبيه (مثل صفحة الإعلان).
 /// </summary>
 public class Notification
 {
@@ -298,9 +304,45 @@ public class Notification
     [MaxLength(2000)]
     public string Message { get; set; } = string.Empty;
 
+    public string? TargetUserId { get; set; }
+
+    [MaxLength(500)]
+    public string? Url { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public bool IsActive { get; set; } = true;
+}
+
+/// <summary>
+/// بحث محفوظ لمستخدم: نفس شروط صفحة الإعلانات. عند نشر إعلان جديد مطابق
+/// يوصله تنبيه (راجع SavedSearchesController.NotifyMatchingSearchesAsync).
+/// الحقول الفارغة تعني «أي قيمة».
+/// </summary>
+public class SavedSearch
+{
+    public int Id { get; set; }
+
+    public string UserId { get; set; } = string.Empty;
+    public ApplicationUser? User { get; set; }
+
+    [MaxLength(200)]
+    public string? Search { get; set; }
+
+    [MaxLength(200)]
+    public string? Area { get; set; }
+
+    public ListingType? ListingType { get; set; }
+    public PropertyType? PropertyType { get; set; }
+
+    public decimal? MinPrice { get; set; }
+    public decimal? MaxPrice { get; set; }
+    public int? MinAreaSqm { get; set; }
+    public int? MaxAreaSqm { get; set; }
+    public int? MinRooms { get; set; }
+    public bool FurnishedOnly { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
 /// <summary>

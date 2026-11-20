@@ -1,0 +1,65 @@
+@model List<SavedSearch>
+@{
+    var matchCounts = ViewBag.MatchCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+}
+<h1>@L.T("SavedSearches")</h1>
+@if (!Model.Any())
+{
+    <p>@L.T("NoSavedSearches")</p>
+    <a class="btn btn-primary" asp-controller="Listings" asp-action="Index">@L.T("Listings")</a>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@L.T("Search")</th>
+                <th>@L.T("Area")</th>
+                <th>@L.T("ListingType")</th>
+                <th>@L.T("Price")</th>
+                <th>@L.T("AreaSqm")</th>
+                <th>@L.T("MatchingNow")</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var saved in Model)
+            {
+                <tr>
+                    <td>@(string.IsNullOrWhiteSpace(saved.Search) ? "-" : saved.Search)</td>
+                    <td>@(saved.Area ?? "-")</td>
+                    <td>@(saved.ListingType.HasValue ? L.ListingTypeText(saved.ListingType.Value) : "-")</td>
+                    <td>
+                        @if (saved.MinPrice.HasValue || saved.MaxPrice.HasValue)
+                        {
+                            @($"{saved.MinPrice?.ToString("N0") ?? "…"} - {saved.MaxPrice?.ToString("N0") ?? "…"}")
+                        }
+                        else
+                        {
+                            @("-")
+                        }
+                    </td>
+                    <td>
+                        @if (saved.MinAreaSqm.HasValue || saved.MaxAreaSqm.HasValue)
+                        {
+                            @($"{saved.MinAreaSqm?.ToString() ?? "…"} - {saved.MaxAreaSqm?.ToString() ?? "…"}")
+                        }
+                        else
+                        {
+                            @("-")
+                        }
+                    </td>
+                    <td>@(matchCounts.TryGetValue(saved.Id, out var count) ? count : 0)</td>
+                    <td>
+                        <a class="btn btn-primary" asp-action="Run" asp-route-id="@saved.Id">@L.T("RunSearch")</a>
+                        <form asp-action="Delete" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@saved.Id" />
+                            <button type="submit" class="btn btn-ghost">@L.T("Delete")</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p><small>لما ينزل إعلان جديد مطابق لأي بحث محفوظ، بيوصلك تنبيه في الجرس.</small></p>
+}

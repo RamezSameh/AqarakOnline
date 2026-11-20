@@ -1,0 +1,116 @@
+@model List<Listing>
+<h1>@L.T("CompareTitle")</h1>
+@if (Model.Count < 2)
+{
+    <p>@L.T("CompareEmpty")</p>
+    <a class="btn btn-primary" asp-action="Index">@L.T("Listings")</a>
+}
+else
+{
+    <table class="table compare-table">
+        <thead>
+            <tr>
+                <th></th>
+                @foreach (var listing in Model)
+                {
+                    var photo = listing.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id).FirstOrDefault();
+                    <th>
+                        @if (photo != null)
+                        {
+                            <img class="compare-photo" src="/@photo.FilePath" alt="@listing.Title" loading="lazy" />
+                        }
+                        <a asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a>
+                        <br />
+                        <a class="btn btn-ghost" asp-action="Compare" asp-route-ids="@string.Join(",", Model.Where(l => l.Id != listing.Id).Select(l => l.Id))">@L.T("RemoveFromCompare")</a>
+                    </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th>@L.T("Price")</th>
+                @foreach (var listing in Model)
+                {
+                    <td><strong>@L.PriceText(listing.Price, listing.ListingType)</strong></td>
+                }
+            </tr>
+            <tr>
+                <th>@L.T("Area")</th>
+                @foreach (var listing in Model)
+                {
+                    <td>@listing.Area</td>
+                }
+            </tr>
+            <tr>
+                <th>@L.T("AreaSqm")</th>
+                @foreach (var listing in Model)
+                {
+                    <td>@listing.AreaSqm</td>
+                }
+            </tr>
+            <tr>
+                <th>@L.T("Rooms")</th>
+                @foreach (var listing in Model)
+                {
+                    <td>@(listing.Rooms?.ToString() ?? "-")</td>
+                }
+            </tr>
+            <tr>
+                <th>@L.T("Bathrooms")</th>
+                @foreach (var listing in Model)
+                {
+                    <td>@(listing.Bathrooms?.ToString() ?? "-")</td>
+                }
+            </tr>
+            <tr>
+                <th>@L.T("Floor")</th>
+                @foreach (var listing in Model)
+                {
+                    <td>@(listing.Floor?.ToString() ?? "-")</td>
+                }
+            </tr>
+            <tr>
+                <th>@L.T("Furnished")</th>
+                @foreach (var listing in Model)
+                {
+                    <td>@(listing.IsFurnished ? "✓" : "-")</td>
+                }
+            </tr>
+            <tr>
+                <th>@L.T("AdvertiserType")</th>
+                @foreach (var listing in Model)
+                {
+                    <td>@L.AdvertiserTypeText(listing.AdvertiserType)</td>
+                }
+            </tr>
+            <tr>
+                <th>@L.T("ListingType")</th>
+                @foreach (var listing in Model)
+                {
+                    <td>@L.ListingTypeText(listing.ListingType)</td>
+                }
+            </tr>
+            <tr>
+                <th>@L.T("PropertyType")</th>
+                @foreach (var listing in Model)
+                {
+                    <td>@L.PropertyTypeText(listing.PropertyType)</td>
+                }
+            </tr>
+            <tr>
+                <th>@L.T("Views")</th>
+                @foreach (var listing in Model)
+                {
+                    <td>@listing.ViewCount</td>
+                }
+            </tr>
+            <tr>
+                <th>@L.T("PublishedAt")</th>
+                @foreach (var listing in Model)
+                {
+                    <td>@L.RelativeTime(listing.CreatedAt)</td>
+                }
+            </tr>
+        </tbody>
+    </table>
+}

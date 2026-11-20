@@ -16,6 +16,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         base.OnModelCreating(builder);
         // السعر بعملة الجنيه: دقة صريحة حتى لا يُقتطع عند الحفظ في SQL Server.
         builder.Entity<Listing>().Property(l => l.Price).HasPrecision(18, 2);
+        builder.Entity<SavedSearch>().Property(s => s.MinPrice).HasPrecision(18, 2);
+        builder.Entity<SavedSearch>().Property(s => s.MaxPrice).HasPrecision(18, 2);
+        // حذف مستخدم يحذف بحثه المحفوظ.
+        builder.Entity<SavedSearch>()
+            .HasOne(s => s.User).WithMany().HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
         // حذف تنبيه يحذف علامات قراءته، وحذف مستخدم يحذف قراءاته ومفضلته.
         builder.Entity<NotificationRead>()
             .HasOne(r => r.Notification).WithMany().HasForeignKey(r => r.NotificationId)
@@ -41,6 +47,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationRead> NotificationReads => Set<NotificationRead>();
     public DbSet<Favorite> Favorites => Set<Favorite>();
+    public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
 }
 
 public static class SeedData
@@ -67,6 +74,7 @@ public static class SeedData
                 AreaSqm = 150,
                 Rooms = 3,
                 Bathrooms = 2,
+                IsFeatured = true,
                 IsAvailable = true,
                 Approval = ListingApproval.Approved,
                 CreatedAt = seedDate

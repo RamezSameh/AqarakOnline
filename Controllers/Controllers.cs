@@ -85,7 +85,7 @@ public class ListingsController : Controller
         string? search, ListingType? listingType, PropertyType? propertyType,
         decimal? minPrice, decimal? maxPrice, bool onlyAvailable = false,
         int? minArea = null, int? maxArea = null, string? sort = null, int page = 1,
-        int? minRooms = null, bool furnishedOnly = false)
+        int? minRooms = null, bool furnishedOnly = false, string? area = null)
     {
         var query = _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.Approval == ListingApproval.Approved).AsQueryable();
@@ -97,6 +97,10 @@ public class ListingsController : Controller
         if (listingType.HasValue)
         {
             query = query.Where(l => l.ListingType == listingType.Value);
+        }
+        if (!string.IsNullOrWhiteSpace(area))
+        {
+            query = query.Where(l => l.Area == area);
         }
         if (propertyType.HasValue)
         {
@@ -141,13 +145,14 @@ public class ListingsController : Controller
             "viewsdesc" => "viewsDesc",
             _ => "newest"
         };
+        // الإعلانات المميزة أولًا دائمًا، ثم الترتيب المختار.
         query = sortKey switch
         {
-            "priceAsc" => query.OrderBy(l => l.Price).ThenByDescending(l => l.CreatedAt),
-            "priceDesc" => query.OrderByDescending(l => l.Price).ThenByDescending(l => l.CreatedAt),
-            "areaDesc" => query.OrderByDescending(l => l.AreaSqm).ThenByDescending(l => l.CreatedAt),
-            "viewsDesc" => query.OrderByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt),
-            _ => query.OrderByDescending(l => l.CreatedAt)
+            "priceAsc" => query.OrderByDescending(l => l.IsFeatured).ThenBy(l => l.Price).ThenByDescending(l => l.CreatedAt),
+            "priceDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.Price).ThenByDescending(l => l.CreatedAt),
+            "areaDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.AreaSqm).ThenByDescending(l => l.CreatedAt),
+            "viewsDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt),
+            _ => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.CreatedAt)
         };
 
         const int pageSize = 12;
@@ -165,6 +170,7 @@ public class ListingsController : Controller
         ViewBag.MaxArea = maxArea;
         ViewBag.MinRooms = minRooms;
         ViewBag.FurnishedOnly = furnishedOnly;
+        ViewBag.Area = area;
         ViewBag.Sort = sortKey;
         ViewBag.Page = page;
         ViewBag.TotalPages = totalPages;
@@ -219,6 +225,22 @@ public class ListingsController : Controller
     }
 
     [Authorize]
+    /// <summary>مقارنة حتى 3 إعلانات مقبولة جنب بعض (ids مفصولة بفاصلة).</summary>
+    [HttpGet]
+    public async Task<IActionResult> Compare(string? ids)
+    {
+        var idList = (ids ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => int.TryParse(s, out var n) ? n : -1)
+            .Where(n => n > 0).Distinct().Take(3).ToList();
+        var found = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
+            .Where(l => l.Approval == ListingApproval.Approved && idList.Contains(l.Id))
+            .ToListAsync();
+        // نحافظ على ترتيب اختيار المستخدم.
+        var listings = idList.Select(id => found.FirstOrDefault(l => l.Id == id))
+            .Where(l => l != null).Cast<Listing>().ToList();
+        return View(listings);
+    }
+
     [HttpGet]
     public IActionResult Create()
     {
@@ -266,6 +288,7 @@ public class ListingsController : Controller
             TempData["Info"] = "تم إرسال إعلانك للمراجعة، وسيظهر للعامة بعد موافقة الأدمن.";
             return RedirectToAction(nameof(MyListings));
         }
+        await SavedSearchAlerts.NotifyMatchingAsync(_context, listing, _hub);
         await _hub.Clients.All.SendAsync("listingsChanged");
         return RedirectToAction(nameof(Details), new { id = listing.Id });
     }
@@ -692,6 +715,19 @@ public class AdminDashboardViewModel
     public List<Listing> FilteredListings { get; set; } = new();
     /// <summary>إعلانات مقبولة ومتاحة بقالها أكثر من 30 يومًا — تحتاج مراجعة/تحديث.</summary>
     public List<Listing> StaleListings { get; set; } = new();
+    /// <summary>إعلانات جديدة في آخر 6 شهور (للرسم البياني).</summary>
+    public List<ChartPoint> MonthlyListings { get; set; } = new();
+    /// <summary>توزيع الإعلانات حسب المنطقة — أعلى 8 مناطق.</summary>
+    public List<ChartPoint> ListingsByArea { get; set; } = new();
+    /// <summary>أكثر 5 إعلانات مشاهدة.</summary>
+    public List<Listing> TopViewed { get; set; } = new();
+}
+
+/// <summary>نقطة في رسم بياني: تسمية وعدد.</summary>
+public class ChartPoint
+{
+    public string Label { get; set; } = string.Empty;
+    public int Count { get; set; }
 }
 
 [Authorize(Roles = "Admin")]
@@ -782,6 +818,26 @@ public class AdminController : Controller
                 .OrderBy(l => l.CreatedAt)
                 .ToListAsync()
         };
+        // رسوم بيانية: إعلانات جديدة في آخر 6 شهور، وتوزيعها حسب المنطقة،
+        // وأكثرها مشاهدة. تُحسب في الذاكرة لأن حجم البيانات صغير.
+        var allListings = await _context.Listings.ToListAsync();
+        var arabicMonths = new[] { "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر" };
+        model.MonthlyListings = Enumerable.Range(0, 6)
+            .Select(i => DateTime.UtcNow.AddMonths(-5 + i))
+            .Select(m => new ChartPoint
+            {
+                Label = $"{arabicMonths[m.Month - 1]} {m.Year}",
+                Count = allListings.Count(l => l.CreatedAt.Year == m.Year && l.CreatedAt.Month == m.Month)
+            }).ToList();
+        model.ListingsByArea = allListings
+            .GroupBy(l => l.Area)
+            .Select(g => new ChartPoint { Label = g.Key, Count = g.Count() })
+            .OrderByDescending(p => p.Count)
+            .Take(8).ToList();
+        model.TopViewed = allListings
+            .Where(l => l.Approval == ListingApproval.Approved)
+            .OrderByDescending(l => l.ViewCount)
+            .Take(5).ToList();
         return View(model);
     }
 
@@ -1095,6 +1151,7 @@ public class AdminController : Controller
         }
         listing.Approval = ListingApproval.Approved;
         await _context.SaveChangesAsync();
+        await SavedSearchAlerts.NotifyMatchingAsync(_context, listing, _hub);
         await NotifyAdminsAsync();
         await _hub.Clients.All.SendAsync("listingsChanged");
         return RedirectToAction(nameof(Listings));
@@ -1113,6 +1170,21 @@ public class AdminController : Controller
         await _context.SaveChangesAsync();
         await NotifyAdminsAsync();
         await _hub.Clients.All.SendAsync("listingsChanged");
+        return RedirectToAction(nameof(Listings));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleFeatured(int id)
+    {
+        var listing = await _context.Listings.FindAsync(id);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        listing.IsFeatured = !listing.IsFeatured;
+        await _context.SaveChangesAsync();
+        TempData["Info"] = listing.IsFeatured ? "تم تثبيت الإعلان كمميز." : "تم إلغاء تمييز الإعلان.";
         return RedirectToAction(nameof(Listings));
     }
 
@@ -1227,8 +1299,9 @@ public class NotificationsController : Controller
     [HttpGet]
     public async Task<IActionResult> Index()
     {
+        // التنبيه العام (بلا مستخدم مستهدف) يظهر للكل؛ والموجَّه يظهر لصاحبه فقط.
         var notifications = await _context.Notifications
-            .Where(n => n.IsActive)
+            .Where(n => n.IsActive && (n.TargetUserId == null || n.TargetUserId == CurrentUserId))
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
         var readIds = await _context.NotificationReads
@@ -1251,7 +1324,8 @@ public class NotificationsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> MarkRead(int id)
     {
-        var exists = await _context.Notifications.AnyAsync(n => n.Id == id && n.IsActive);
+        var exists = await _context.Notifications.AnyAsync(n => n.Id == id && n.IsActive
+            && (n.TargetUserId == null || n.TargetUserId == CurrentUserId));
         var already = await _context.NotificationReads
             .AnyAsync(r => r.NotificationId == id && r.UserId == CurrentUserId);
         if (exists && !already)
@@ -1272,7 +1346,7 @@ public class NotificationsController : Controller
     public async Task<IActionResult> MarkAllRead(string? returnUrl = null)
     {
         var activeIds = await _context.Notifications
-            .Where(n => n.IsActive)
+            .Where(n => n.IsActive && (n.TargetUserId == null || n.TargetUserId == CurrentUserId))
             .Select(n => n.Id)
             .ToListAsync();
         var readIds = await _context.NotificationReads
@@ -1298,6 +1372,207 @@ public class NotificationsController : Controller
 }
 
 [Authorize]
+/// <summary>
+/// تنبيهات البحث المحفوظ: عند نشر إعلان، يُنبَّه أصحاب البحوث المطابقة
+/// بإشعار موجَّه لهم فقط (TargetUserId)، مع رابط لصفحة الإعلان.
+/// </summary>
+public static class SavedSearchAlerts
+{
+    public static bool Matches(SavedSearch s, Listing l)
+    {
+        if (!string.IsNullOrWhiteSpace(s.Search)
+            && !(l.Title.Contains(s.Search) || l.Area.Contains(s.Search)))
+        {
+            return false;
+        }
+        if (!string.IsNullOrWhiteSpace(s.Area) && l.Area != s.Area)
+        {
+            return false;
+        }
+        if (s.ListingType.HasValue && l.ListingType != s.ListingType.Value)
+        {
+            return false;
+        }
+        if (s.PropertyType.HasValue && l.PropertyType != s.PropertyType.Value)
+        {
+            return false;
+        }
+        if (s.MinPrice.HasValue && l.Price < s.MinPrice.Value)
+        {
+            return false;
+        }
+        if (s.MaxPrice.HasValue && l.Price > s.MaxPrice.Value)
+        {
+            return false;
+        }
+        if (s.MinAreaSqm.HasValue && l.AreaSqm < s.MinAreaSqm.Value)
+        {
+            return false;
+        }
+        if (s.MaxAreaSqm.HasValue && l.AreaSqm > s.MaxAreaSqm.Value)
+        {
+            return false;
+        }
+        if (s.MinRooms.HasValue && (l.Rooms ?? 0) < s.MinRooms.Value)
+        {
+            return false;
+        }
+        if (s.FurnishedOnly && !l.IsFurnished)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    public static async Task NotifyMatchingAsync(ApplicationDbContext context, Listing listing,
+        Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub)
+    {
+        var url = $"/Listings/Details/{listing.Id}";
+        var searches = await context.SavedSearches.ToListAsync();
+        var userIds = searches.Where(s => Matches(s, listing)).Select(s => s.UserId).Distinct().ToList();
+        var created = false;
+        foreach (var userId in userIds)
+        {
+            if (userId == listing.OwnerId)
+            {
+                continue; // لا تنبيه لصاحب الإعلان نفسه.
+            }
+            var exists = await context.Notifications.AnyAsync(n => n.TargetUserId == userId && n.Url == url);
+            if (exists)
+            {
+                continue; // تنبيه واحد لكل إعلان لكل مستخدم، حتى لو اتوافق عليه مرتين.
+            }
+            context.Notifications.Add(new Notification
+            {
+                Title = "إعلان جديد مطابق لبحثك المحفوظ",
+                Message = $"{listing.Title} — {listing.Area}، {listing.Price:N0} جنيه.",
+                TargetUserId = userId,
+                Url = url,
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            created = true;
+        }
+        if (created)
+        {
+            await context.SaveChangesAsync();
+            await hub.Clients.All.SendAsync("refreshBell");
+        }
+    }
+}
+
+[Authorize]
+public class SavedSearchesController : Controller
+{
+    private readonly ApplicationDbContext _context;
+
+    public SavedSearchesController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+
+    [HttpGet]
+    public async Task<IActionResult> Index()
+    {
+        var searches = await _context.SavedSearches
+            .Where(s => s.UserId == CurrentUserId)
+            .OrderByDescending(s => s.CreatedAt).ToListAsync();
+        var approved = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved).ToListAsync();
+        ViewBag.MatchCounts = searches.ToDictionary(
+            s => s.Id, s => approved.Count(l => SavedSearchAlerts.Matches(s, l)));
+        return View(searches);
+    }
+
+    /// <summary>حفظ البحث الحالي من صفحة الإعلانات (كل الشروط من الفورم هناك).</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(string? search, string? area,
+        ListingType? listingType, PropertyType? propertyType,
+        decimal? minPrice, decimal? maxPrice, int? minArea, int? maxArea,
+        int? minRooms, bool furnishedOnly = false, string? returnUrl = null)
+    {
+        var candidate = new SavedSearch
+        {
+            UserId = CurrentUserId,
+            Search = string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
+            Area = string.IsNullOrWhiteSpace(area) ? null : area.Trim(),
+            ListingType = listingType,
+            PropertyType = propertyType,
+            MinPrice = minPrice,
+            MaxPrice = maxPrice,
+            MinAreaSqm = minArea,
+            MaxAreaSqm = maxArea,
+            MinRooms = minRooms,
+            FurnishedOnly = furnishedOnly,
+            CreatedAt = DateTime.UtcNow
+        };
+        var mine = await _context.SavedSearches.Where(s => s.UserId == CurrentUserId).ToListAsync();
+        if (mine.Any(s => SameCriteria(s, candidate)))
+        {
+            TempData["Info"] = "البحث ده محفوظ عندك بالفعل.";
+        }
+        else
+        {
+            _context.SavedSearches.Add(candidate);
+            await _context.SaveChangesAsync();
+            TempData["Info"] = "تم حفظ البحث — هننبّهك لما ينزل إعلان جديد مطابق.";
+        }
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return Redirect(returnUrl);
+        }
+        return RedirectToAction("Index", "Listings");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Run(int id)
+    {
+        var saved = await _context.SavedSearches
+            .FirstOrDefaultAsync(s => s.Id == id && s.UserId == CurrentUserId);
+        if (saved == null)
+        {
+            return NotFound();
+        }
+        return RedirectToAction("Index", "Listings", new
+        {
+            search = saved.Search,
+            area = saved.Area,
+            listingType = saved.ListingType,
+            propertyType = saved.PropertyType,
+            minPrice = saved.MinPrice,
+            maxPrice = saved.MaxPrice,
+            minArea = saved.MinAreaSqm,
+            maxArea = saved.MaxAreaSqm,
+            minRooms = saved.MinRooms,
+            furnishedOnly = saved.FurnishedOnly
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var saved = await _context.SavedSearches
+            .FirstOrDefaultAsync(s => s.Id == id && s.UserId == CurrentUserId);
+        if (saved != null)
+        {
+            _context.SavedSearches.Remove(saved);
+            await _context.SaveChangesAsync();
+            TempData["Info"] = "تم حذف البحث المحفوظ.";
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    private static bool SameCriteria(SavedSearch a, SavedSearch b) =>
+        a.Search == b.Search && a.Area == b.Area && a.ListingType == b.ListingType
+        && a.PropertyType == b.PropertyType && a.MinPrice == b.MinPrice && a.MaxPrice == b.MaxPrice
+        && a.MinAreaSqm == b.MinAreaSqm && a.MaxAreaSqm == b.MaxAreaSqm
+        && a.MinRooms == b.MinRooms && a.FurnishedOnly == b.FurnishedOnly;
+}
+
 public class FavoritesController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -1375,7 +1650,7 @@ public class NotificationBellViewComponent : ViewComponent
         }
         var userId = ViewContext.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
         var notifications = await _context.Notifications
-            .Where(n => n.IsActive)
+            .Where(n => n.IsActive && (n.TargetUserId == null || n.TargetUserId == userId))
             .OrderByDescending(n => n.CreatedAt)
             .Take(5)
             .ToListAsync();
@@ -1384,7 +1659,7 @@ public class NotificationBellViewComponent : ViewComponent
             .Select(r => r.NotificationId)
             .ToListAsync();
         var activeIds = await _context.Notifications
-            .Where(n => n.IsActive)
+            .Where(n => n.IsActive && (n.TargetUserId == null || n.TargetUserId == userId))
             .Select(n => n.Id)
             .ToListAsync();
         var model = new BellViewModel

@@ -26,7 +26,14 @@
             @foreach (var row in Model.Items)
             {
                 <div class="bell-item @(row.IsRead ? "" : "unread")">
-                    <strong>@row.Notification.Title</strong>
+                    @if (!string.IsNullOrEmpty(row.Notification.Url))
+                    {
+                        <a href="@row.Notification.Url"><strong>@row.Notification.Title</strong></a>
+                    }
+                    else
+                    {
+                        <strong>@row.Notification.Title</strong>
+                    }
                     <p>@row.Notification.Message</p>
                     <small>@row.Notification.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
                 </div>

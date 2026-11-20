@@ -227,6 +227,9 @@ namespace AqarakOnline.Migrations
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsFurnished")
                         .HasColumnType("bit");
 
@@ -322,10 +325,17 @@ namespace AqarakOnline.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<string>("TargetUserId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Url")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.HasKey("Id");
 
@@ -392,6 +402,62 @@ namespace AqarakOnline.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("PhoneVerificationCodes");
+                });
+
+            modelBuilder.Entity("AqarakOnline.Models.SavedSearch", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Area")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("FurnishedOnly")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ListingType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MaxAreaSqm")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("MaxPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("MinAreaSqm")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("MinPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("MinRooms")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PropertyType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Search")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SavedSearches");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -603,6 +669,17 @@ namespace AqarakOnline.Migrations
                 });
 
             modelBuilder.Entity("AqarakOnline.Models.PhoneVerificationCode", b =>
+                {
+                    b.HasOne("AqarakOnline.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AqarakOnline.Models.SavedSearch", b =>
                 {
                     b.HasOne("AqarakOnline.Models.ApplicationUser", "User")
                         .WithMany()

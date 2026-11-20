@@ -20,6 +20,10 @@
 <div class="listing-meta">
     <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
     <span class="badge">@L.PropertyTypeText(Model.PropertyType)</span>
+    @if (Model.IsFeatured)
+    {
+        <span class="badge badge-featured">⭐ @L.T("Featured")</span>
+    }
     <span class="ad-number">@L.T("AdNumber"): @Model.AdNumber</span>
     <span class="listing-status @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</span>
 </div>
@@ -158,6 +162,7 @@ else
     <a class="btn btn-ghost" href="https://wa.me/?text=@Uri.EscapeDataString(shareText)" target="_blank" rel="noopener">واتساب</a>
     <a class="btn btn-ghost" href="https://www.facebook.com/sharer/sharer.php?u=@Uri.EscapeDataString(pageUrl)" target="_blank" rel="noopener">فيسبوك</a>
     <button type="button" class="btn btn-ghost share-copy" data-url="@pageUrl">@L.T("CopyLink")</button>
+    <button type="button" class="btn btn-ghost compare-toggle" data-id="@Model.Id" data-add="@L.T("AddToCompare")" data-added="@L.T("InCompare")" data-max="@L.T("CompareMax")">@L.T("AddToCompare")</button>
 </div>
 
 @if (Model.ListingType == ListingType.Sale)

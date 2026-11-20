@@ -430,6 +430,69 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // المقارنة: اختيار حتى 3 إعلانات من الكروت أو التفاصيل، محفوظة في
+    // localStorage حتى تفضل موجودة وأنت بتتنقل بين الصفحات.
+    var compareKey = "aqarak-compare";
+    var compareBar = document.getElementById("compareBar");
+    var compareCount = document.getElementById("compareCount");
+    var compareLink = document.getElementById("compareLink");
+    var compareClear = document.getElementById("compareClear");
+    function readCompare() {
+        try {
+            var raw = JSON.parse(localStorage.getItem(compareKey) || "[]");
+            return Array.isArray(raw) ? raw.filter(function (n) { return Number.isInteger(n); }).slice(0, 3) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+    function renderCompare() {
+        var ids = readCompare();
+        document.querySelectorAll(".compare-toggle").forEach(function (btn) {
+            var id = parseInt(btn.getAttribute("data-id"), 10);
+            var selected = ids.indexOf(id) !== -1;
+            btn.textContent = selected ? btn.getAttribute("data-added") : btn.getAttribute("data-add");
+            btn.classList.toggle("is-selected", selected);
+        });
+        if (!compareBar) {
+            return;
+        }
+        if (ids.length === 0) {
+            compareBar.hidden = true;
+            return;
+        }
+        compareBar.hidden = false;
+        compareCount.textContent = ids.length + " / 3";
+        compareLink.href = "/Listings/Compare?ids=" + ids.join(",");
+    }
+    document.addEventListener("click", function (event) {
+        var btn = event.target.closest(".compare-toggle");
+        if (!btn) {
+            return;
+        }
+        var id = parseInt(btn.getAttribute("data-id"), 10);
+        var ids = readCompare();
+        var at = ids.indexOf(id);
+        if (at !== -1) {
+            ids.splice(at, 1);
+        } else if (ids.length >= 3) {
+            var original = btn.textContent;
+            btn.textContent = btn.getAttribute("data-max");
+            setTimeout(function () { btn.textContent = original; }, 2000);
+            return;
+        } else {
+            ids.push(id);
+        }
+        localStorage.setItem(compareKey, JSON.stringify(ids));
+        renderCompare();
+    });
+    if (compareClear) {
+        compareClear.addEventListener("click", function () {
+            localStorage.removeItem(compareKey);
+            renderCompare();
+        });
+    }
+    renderCompare();
+
     // نسخ رابط الإعلان: زر "نسخ الرابط" في الكارت والتفاصيل.
     // بتفويض الأحداث حتى يعمل بعد استبدال شبكة الكروت لحظيًا.
     document.addEventListener("click", function (event) {
