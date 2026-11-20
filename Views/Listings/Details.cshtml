@@ -17,11 +17,31 @@
 }
 @if (photos.Any())
 {
-    <div class="gallery">
-        @foreach (var photo in photos)
+    <div class="gallery" id="gallery">
+        <div class="gallery-main">
+            <img id="galleryMain" class="gallery-main-photo" src="/@photos[0].FilePath" alt="@Model.Title" />
+            <span id="galleryCounter" class="gallery-counter">1 / @photos.Count</span>
+            <button type="button" id="galleryPrev" class="gallery-nav gallery-prev" aria-label="@L.T("Previous")">‹</button>
+            <button type="button" id="galleryNext" class="gallery-nav gallery-next" aria-label="@L.T("Next")">›</button>
+        </div>
+        @if (photos.Count > 1)
         {
-            <img class="detail-photo" src="/@photo.FilePath" alt="@Model.Title" />
+            <div class="gallery-thumbs">
+                @for (var i = 0; i < photos.Count; i++)
+                {
+                    <button type="button" class="gallery-thumb @(i == 0 ? "active" : "")" data-index="@i" aria-label="@(i + 1)">
+                        <img src="/@photos[i].FilePath" alt="@Model.Title @(i + 1)" loading="lazy" />
+                    </button>
+                }
+            </div>
         }
+    </div>
+    <div id="lightbox" class="lightbox" hidden>
+        <button type="button" id="lightboxClose" class="lightbox-close" aria-label="@L.T("Close")">✕</button>
+        <button type="button" id="lightboxPrev" class="lightbox-nav lightbox-prev" aria-label="@L.T("Previous")">‹</button>
+        <img id="lightboxImg" class="lightbox-img" src="" alt="@Model.Title" />
+        <button type="button" id="lightboxNext" class="lightbox-nav lightbox-next" aria-label="@L.T("Next")">›</button>
+        <span id="lightboxCounter" class="lightbox-counter"></span>
     </div>
 }
 else

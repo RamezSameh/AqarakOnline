@@ -331,6 +331,105 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // معرض صور التفاصيل: صورة رئيسية + مصغرات + عدّاد + عرض كامل (Lightbox).
+    // الأسهم والكيبورد (يمين/شمال وEscape) شغالة، والضغطة على الخلفية تقفل.
+    var gallery = document.getElementById("gallery");
+    if (gallery) {
+        var mainImg = document.getElementById("galleryMain");
+        var thumbs = Array.prototype.slice.call(gallery.querySelectorAll(".gallery-thumb"));
+        var urls = thumbs.length
+            ? thumbs.map(function (t) { return t.querySelector("img").src; })
+            : [mainImg.src];
+        var counter = document.getElementById("galleryCounter");
+        var lightbox = document.getElementById("lightbox");
+        var lightboxImg = document.getElementById("lightboxImg");
+        var lightboxCounter = document.getElementById("lightboxCounter");
+        var current = 0;
+        function showPhoto(index) {
+            current = (index + urls.length) % urls.length;
+            mainImg.src = urls[current];
+            if (counter) {
+                counter.textContent = (current + 1) + " / " + urls.length;
+            }
+            thumbs.forEach(function (t, i) {
+                t.classList.toggle("active", i === current);
+            });
+            if (lightboxImg) {
+                lightboxImg.src = urls[current];
+            }
+            if (lightboxCounter) {
+                lightboxCounter.textContent = (current + 1) + " / " + urls.length;
+            }
+        }
+        function setLightbox(open) {
+            if (!lightbox) {
+                return;
+            }
+            if (open) {
+                showPhoto(current);
+                lightbox.hidden = false;
+                document.body.style.overflow = "hidden";
+            } else {
+                lightbox.hidden = true;
+                document.body.style.overflow = "";
+            }
+        }
+        if (urls.length <= 1) {
+            ["galleryPrev", "galleryNext"].forEach(function (id) {
+                var btn = document.getElementById(id);
+                if (btn) {
+                    btn.style.display = "none";
+                }
+            });
+            if (counter) {
+                counter.style.display = "none";
+            }
+        }
+        thumbs.forEach(function (t, i) {
+            t.addEventListener("click", function () { showPhoto(i); });
+        });
+        var gPrev = document.getElementById("galleryPrev");
+        var gNext = document.getElementById("galleryNext");
+        if (gPrev) {
+            gPrev.addEventListener("click", function () { showPhoto(current - 1); });
+        }
+        if (gNext) {
+            gNext.addEventListener("click", function () { showPhoto(current + 1); });
+        }
+        mainImg.addEventListener("click", function () { setLightbox(true); });
+        var lbClose = document.getElementById("lightboxClose");
+        var lbPrev = document.getElementById("lightboxPrev");
+        var lbNext = document.getElementById("lightboxNext");
+        if (lbClose) {
+            lbClose.addEventListener("click", function () { setLightbox(false); });
+        }
+        if (lbPrev) {
+            lbPrev.addEventListener("click", function () { showPhoto(current - 1); });
+        }
+        if (lbNext) {
+            lbNext.addEventListener("click", function () { showPhoto(current + 1); });
+        }
+        if (lightbox) {
+            lightbox.addEventListener("click", function (event) {
+                if (event.target === lightbox || event.target === lightboxImg) {
+                    setLightbox(false);
+                }
+            });
+        }
+        document.addEventListener("keydown", function (event) {
+            if (!lightbox || lightbox.hidden) {
+                return;
+            }
+            if (event.key === "Escape") {
+                setLightbox(false);
+            } else if (event.key === "ArrowLeft") {
+                showPhoto(current - 1);
+            } else if (event.key === "ArrowRight") {
+                showPhoto(current + 1);
+            }
+        });
+    }
+
     // إظهار/إخفاء كلمة المرور أثناء الكتابة.
     document.querySelectorAll(".password-toggle").forEach(function (button) {
         button.addEventListener("click", function () {

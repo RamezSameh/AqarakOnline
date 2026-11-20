@@ -165,6 +165,7 @@ public class LanguageService
         ["OwnListingError"] = ("لا يمكنك شراء أو استئجار إعلانك الخاص.", "You cannot buy or rent your own listing."),
         ["OwnListingNote"] = ("هذا إعلانك، فلا يمكنك شراؤه أو استئجاره.", "This is your listing, so you cannot buy or rent it."),
         ["SearchUsersPlaceholder"] = ("ابحث بالاسم أو رقم الموبايل...", "Search by name or phone..."),
+        ["Close"] = ("إغلاق", "Close"),
         ["Email"] = ("البريد الإلكتروني", "Email"),
         ["Password"] = ("كلمة المرور", "Password"),
         ["ConfirmPassword"] = ("تأكيد كلمة المرور", "Confirm password"),
