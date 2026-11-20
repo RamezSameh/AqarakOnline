@@ -6,7 +6,7 @@
     <div class="availability-bar @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</div>
     @if (firstPhoto != null)
     {
-        <img class="listing-photo" src="/@firstPhoto.FilePath" alt="@Model.Title" />
+        <img class="listing-photo" src="/@firstPhoto.FilePath" alt="@Model.Title" loading="lazy" />
     }
     else
     {

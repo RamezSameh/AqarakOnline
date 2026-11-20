@@ -83,7 +83,8 @@ public class ListingsController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(
         string? search, ListingType? listingType, PropertyType? propertyType,
-        decimal? minPrice, decimal? maxPrice, bool onlyAvailable = false)
+        decimal? minPrice, decimal? maxPrice, bool onlyAvailable = false,
+        int? minArea = null, int? maxArea = null, string? sort = null, int page = 1)
     {
         var query = _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.Approval == ListingApproval.Approved).AsQueryable();
@@ -112,6 +113,38 @@ public class ListingsController : Controller
         {
             query = query.Where(l => l.IsAvailable);
         }
+        if (minArea.HasValue)
+        {
+            query = query.Where(l => l.AreaSqm >= minArea.Value);
+        }
+        if (maxArea.HasValue)
+        {
+            query = query.Where(l => l.AreaSqm <= maxArea.Value);
+        }
+
+        // الترتيب: الافتراضي الأحدث. القيم المقبولة فقط هي المعرّفة هنا،
+        // وأي قيمة غير معروفة تعود للأحدث بدل ما تكسر الاستعلام.
+        var sortKey = (sort ?? "newest").ToLowerInvariant() switch
+        {
+            "priceasc" => "priceAsc",
+            "pricedesc" => "priceDesc",
+            "areadesc" => "areaDesc",
+            "viewsdesc" => "viewsDesc",
+            _ => "newest"
+        };
+        query = sortKey switch
+        {
+            "priceAsc" => query.OrderBy(l => l.Price).ThenByDescending(l => l.CreatedAt),
+            "priceDesc" => query.OrderByDescending(l => l.Price).ThenByDescending(l => l.CreatedAt),
+            "areaDesc" => query.OrderByDescending(l => l.AreaSqm).ThenByDescending(l => l.CreatedAt),
+            "viewsDesc" => query.OrderByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt),
+            _ => query.OrderByDescending(l => l.CreatedAt)
+        };
+
+        const int pageSize = 12;
+        var totalCount = await query.CountAsync();
+        var totalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)pageSize));
+        page = Math.Clamp(page, 1, totalPages);
 
         ViewBag.Search = search;
         ViewBag.ListingType = listingType;
@@ -119,8 +152,14 @@ public class ListingsController : Controller
         ViewBag.MinPrice = minPrice;
         ViewBag.MaxPrice = maxPrice;
         ViewBag.OnlyAvailable = onlyAvailable;
+        ViewBag.MinArea = minArea;
+        ViewBag.MaxArea = maxArea;
+        ViewBag.Sort = sortKey;
+        ViewBag.Page = page;
+        ViewBag.TotalPages = totalPages;
+        ViewBag.TotalCount = totalCount;
 
-        var listings = await query.OrderByDescending(l => l.CreatedAt).ToListAsync();
+        var listings = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
         if (User.Identity?.IsAuthenticated == true)
         {
             ViewBag.FavoriteListingIds = (await _context.Favorites

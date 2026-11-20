@@ -57,6 +57,19 @@ input, select, textarea { padding: 10px 12px; border: 1px solid #475569; border-
 .badge-rent { background: #1d4ed8; }
 .ad-number { color: #94a3b8; font-size: 13px; }
 .listing-area, .listing-price { margin: 6px 0; }
+.listing-price { font-size: 20px; font-weight: 800; color: #fff; }
+.listing-views { color: #94a3b8; font-size: 13px; margin: 6px 0; }
+/* الدفعة الأولى لتحسين البحث والتصميم: صندوق فلاتر قابل للطي، شريط نتائج، ترقيم صفحات. */
+.filters-box { border: 1px solid #334155; border-radius: 10px; padding: 12px 16px; background: #1e293b; margin: 20px 0 0; }
+.filters-box summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+.filters-box .filter-form { margin: 12px 0 0; }
+.sort-label { display: flex; gap: 8px; align-items: center; flex: 1 1 260px; font-weight: 600; }
+.sort-label select { flex: 1; min-width: 0; }
+.results-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 16px 0 0; color: #cbd5e1; }
+.empty-results { text-align: center; padding: 32px 16px; border: 1px dashed #475569; border-radius: 10px; color: #cbd5e1; margin-top: 20px; }
+.pagination { display: flex; gap: 8px; justify-content: center; align-items: center; margin: 24px 0 0; flex-wrap: wrap; }
+.pagination .btn[aria-current="page"] { background: #6366f1; color: #fff; border-color: #6366f1; }
+.pagination .btn.disabled { opacity: .45; pointer-events: none; }
 .listing-status.available { color: #4ade80; }
 .listing-status.closed { color: #f87171; }
 .filter-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 20px 0; }

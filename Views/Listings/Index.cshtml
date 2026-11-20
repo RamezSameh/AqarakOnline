@@ -14,23 +14,53 @@
     {
         propertyTypes.Add(new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(L.PropertyTypeText(type), type.ToString(), ViewBag.PropertyType == type));
     }
+    var sortOptions = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+    {
+        new(L.T("SortNewest"), "newest", ViewBag.Sort == "newest"),
+        new(L.T("SortPriceAsc"), "priceAsc", ViewBag.Sort == "priceAsc"),
+        new(L.T("SortPriceDesc"), "priceDesc", ViewBag.Sort == "priceDesc"),
+        new(L.T("SortAreaDesc"), "areaDesc", ViewBag.Sort == "areaDesc"),
+        new(L.T("SortViewsDesc"), "viewsDesc", ViewBag.Sort == "viewsDesc")
+    };
+    var listingTypeValue = ViewBag.ListingType?.ToString() ?? "";
+    var propertyTypeValue = ViewBag.PropertyType?.ToString() ?? "";
+    var currentPage = (int)(ViewBag.Page ?? 1);
+    var totalPages = (int)(ViewBag.TotalPages ?? 1);
+    var totalCount = (int)(ViewBag.TotalCount ?? 0);
 }
 <h1>@L.T("Listings")</h1>
 
-<form class="filter-form" asp-action="Index" method="get">
-    <input type="text" name="search" value="@ViewBag.Search" placeholder="@L.T("SearchPlaceholder")" />
-    <select name="listingType" asp-items="listingTypes"></select>
-    <select name="propertyType" asp-items="propertyTypes"></select>
-    <input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="@L.T("MinPrice")" min="0" step="any" />
-    <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" placeholder="@L.T("MaxPrice")" min="0" step="any" />
-    <label><input type="checkbox" name="onlyAvailable" value="true" checked="@(ViewBag.OnlyAvailable == true)" /> @L.T("OnlyAvailable")</label>
-    <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
-    <a class="btn btn-ghost" asp-action="Index">@L.T("ClearFilter")</a>
-</form>
+<details class="filters-box" open>
+    <summary>@L.T("Filters")</summary>
+    <form class="filter-form" asp-action="Index" method="get">
+        <input type="text" name="search" value="@ViewBag.Search" placeholder="@L.T("SearchPlaceholder")" />
+        <select name="listingType" asp-items="listingTypes"></select>
+        <select name="propertyType" asp-items="propertyTypes"></select>
+        <input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="@L.T("MinPrice")" min="0" step="any" />
+        <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" placeholder="@L.T("MaxPrice")" min="0" step="any" />
+        <input type="number" name="minArea" value="@ViewBag.MinArea" placeholder="@L.T("MinArea")" min="1" step="1" />
+        <input type="number" name="maxArea" value="@ViewBag.MaxArea" placeholder="@L.T("MaxArea")" min="1" step="1" />
+        <label class="sort-label">
+            @L.T("SortBy")
+            <select name="sort" asp-items="sortOptions"></select>
+        </label>
+        <label><input type="checkbox" name="onlyAvailable" value="true" checked="@(ViewBag.OnlyAvailable == true)" /> @L.T("OnlyAvailable")</label>
+        <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
+        <a class="btn btn-ghost" asp-action="Index">@L.T("ClearFilter")</a>
+    </form>
+</details>
+
+<div class="results-bar">
+    <span>@L.T("ResultsCount"): @totalCount</span>
+    @if (totalPages > 1)
+    {
+        <span>@currentPage / @totalPages</span>
+    }
+</div>
 
 @if (!Model.Any())
 {
-    <p>@L.T("NoResults")</p>
+    <p class="empty-results">@L.T("NoResults")<br />@L.T("TryClearFilters")</p>
 }
 else
 {
@@ -40,4 +70,24 @@ else
             @await Html.PartialAsync("_ListingCard", listing)
         }
     </div>
+    @if (totalPages > 1)
+    {
+        <nav class="pagination" aria-label="Pagination">
+            <a class="btn btn-ghost @(currentPage <= 1 ? "disabled" : "")"
+               asp-action="Index" asp-route-search="@ViewBag.Search" asp-route-listingType="@listingTypeValue" asp-route-propertyType="@propertyTypeValue"
+               asp-route-minPrice="@ViewBag.MinPrice" asp-route-maxPrice="@ViewBag.MaxPrice" asp-route-minArea="@ViewBag.MinArea" asp-route-maxArea="@ViewBag.MaxArea"
+               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-page="@(currentPage - 1)">@L.T("Previous")</a>
+            @for (var p = 1; p <= totalPages; p++)
+            {
+                <a class="btn btn-ghost" aria-current="@(p == currentPage ? "page" : null)"
+                   asp-action="Index" asp-route-search="@ViewBag.Search" asp-route-listingType="@listingTypeValue" asp-route-propertyType="@propertyTypeValue"
+                   asp-route-minPrice="@ViewBag.MinPrice" asp-route-maxPrice="@ViewBag.MaxPrice" asp-route-minArea="@ViewBag.MinArea" asp-route-maxArea="@ViewBag.MaxArea"
+                   asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-page="@p">@p</a>
+            }
+            <a class="btn btn-ghost @(currentPage >= totalPages ? "disabled" : "")"
+               asp-action="Index" asp-route-search="@ViewBag.Search" asp-route-listingType="@listingTypeValue" asp-route-propertyType="@propertyTypeValue"
+               asp-route-minPrice="@ViewBag.MinPrice" asp-route-maxPrice="@ViewBag.MaxPrice" asp-route-minArea="@ViewBag.MinArea" asp-route-maxArea="@ViewBag.MaxArea"
+               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-page="@(currentPage + 1)">@L.T("Next")</a>
+        </nav>
+    }
 }
