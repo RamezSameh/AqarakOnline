@@ -93,11 +93,36 @@ public static class AttachmentStorage
         Directory.CreateDirectory(folder);
         var fullPath = Path.Combine(folder, fileName);
         await File.WriteAllBytesAsync(fullPath, bytes);
+        // نسخة مصغّرة 480px للكروت (srcset) — من الصورة المضغوطة بس.
+        string? thumbPath = null;
+        if (kind == AttachmentKind.Photo && ext == ".webp")
+        {
+            try
+            {
+                var thumbName = Path.GetFileNameWithoutExtension(fileName) + "-thumb.webp";
+                await using var thumbInput = new MemoryStream(bytes);
+                using var thumbImage = await Image.LoadAsync(thumbInput);
+                thumbImage.Mutate(x => x.AutoOrient().Resize(new ResizeOptions
+                {
+                    Mode = ResizeMode.Max,
+                    Size = new Size(480, 480)
+                }));
+                await using var thumbOutput = new MemoryStream();
+                await thumbImage.SaveAsWebpAsync(thumbOutput, new WebpEncoder { Quality = PhotoQuality });
+                await File.WriteAllBytesAsync(Path.Combine(folder, thumbName), thumbOutput.ToArray());
+                thumbPath = $"uploads/listings/{listingId}/{thumbName}";
+            }
+            catch
+            {
+                // المصغّرة اختيارية — الكارت يرجع للصورة الكاملة.
+            }
+        }
         return new ListingAttachment
         {
             ListingId = listingId,
             Kind = kind,
             FilePath = $"uploads/listings/{listingId}/{fileName}",
+            ThumbPath = thumbPath,
             ContentType = contentType,
             OriginalFileName = Path.GetFileName(file.FileName),
             SizeBytes = bytes.LongLength,

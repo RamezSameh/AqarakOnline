@@ -53,11 +53,11 @@ else
                         }
                         else
                         {
-                            <select name="days">
-                                <option value="7">7 أيام</option>
-                                <option value="14">14 يومًا</option>
-                                <option value="30">30 يومًا</option>
-                            </select>
+                            <div class="filter-chips">
+                                <label class="filter-chip"><input type="radio" name="days" value="7" checked /> 7 أيام</label>
+                                <label class="filter-chip"><input type="radio" name="days" value="14" /> 14 يومًا</label>
+                                <label class="filter-chip"><input type="radio" name="days" value="30" /> 30 يومًا</label>
+                            </div>
                             <button type="submit" class="btn btn-primary">@L.T("MarkFeatured")</button>
                         }
                     </form>

@@ -43,6 +43,7 @@
     <script type="application/ld+json">@Html.Raw(jsonLd)</script>
 }
 <div class="details-back-wrap"><a class="btn btn-ghost" asp-action="Index">← @L.T("BackToList")</a></div>
+<div class="reading-progress"><div id="readingProgressBar"></div></div>
 <h1 class="details-title">@typeIcon @Model.Title</h1>
 <div class="listing-meta">
     <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
@@ -117,6 +118,16 @@ else
 {
     <div class="detail-photo placeholder">@L.T("NoPhoto")</div>
 }
+<aside class="details-summary">
+    <p class="details-price">@L.PriceText(Model.Price, Model.ListingType)</p>
+    <p>📐 @L.T("AreaSqm"): @Model.AreaSqm م²</p>
+    @if (Model.Rooms.HasValue)
+    {
+        <p>🛏️ @L.T("Rooms"): @Model.Rooms</p>
+    }
+    <p>@L.PropertyTypeText(Model.PropertyType) • @Model.Area</p>
+    <p class="availability-text">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</p>
+</aside>
 @if (video != null)
 {
     <video class="detail-video" controls src="/@video.FilePath"></video>
@@ -411,6 +422,11 @@ else
             <div class="time-chips">
                 <button type="button" class="btn btn-ghost time-chip" data-time="10:00">صباحًا</button>
                 <button type="button" class="btn btn-ghost time-chip" data-time="18:00">مساءً</button>
+            </div>
+            <div class="day-chips">
+                <button type="button" class="btn btn-ghost day-chip" data-days="0">اليوم</button>
+                <button type="button" class="btn btn-ghost day-chip" data-days="1">بكره</button>
+                <button type="button" class="btn btn-ghost day-chip" data-days="2">بعد بكره</button>
             </div>
             <label>المدة المتوقعة</label>
             <select name="duration">

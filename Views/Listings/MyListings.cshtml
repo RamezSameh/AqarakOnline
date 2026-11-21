@@ -22,10 +22,16 @@
     <button type="submit" class="btn btn-primary">تجديد الكل 🔄</button>
 </form>
 <form class="filter-form" asp-action="MyListings" method="get">
-    <label class="sort-label">
+    <label class="sort-label sort-select-hidden">
         @L.T("Status")
-        <select name="status" asp-items="statusOptions"></select>
+        <select name="status" id="myListingsStatusSelect" asp-items="statusOptions"></select>
     </label>
+    <div class="status-tabs">
+        @foreach (var opt in statusOptions)
+        {
+            <button type="button" class="btn tab-chip @(ViewBag.Status == opt.Value ? "active" : "")" data-status="@opt.Value">@opt.Text</button>
+        }
+    </div>
     <input type="text" name="search" value="@ViewBag.Search" placeholder="@L.T("SearchPlaceholder")" />
     <label class="sort-label">
         @L.T("SortBy")

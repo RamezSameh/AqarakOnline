@@ -25,6 +25,15 @@
     <label>@L.T("Message")</label>
     <textarea asp-for="Message" rows="4"></textarea>
 
+    <label>أفضل وقت للتواصل</label>
+    <select name="preferredTime">
+        <option value="">—</option>
+        <option value="صباحًا">صباحًا</option>
+        <option value="ظهرًا">ظهرًا</option>
+        <option value="مساءً">مساءً</option>
+        <option value="أي وقت">أي وقت</option>
+    </select>
+
     <div class="actions">
         <button type="submit" class="btn btn-primary">@L.T("SendRequest")</button>
         <a class="btn btn-ghost" asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@L.T("Cancel")</a>

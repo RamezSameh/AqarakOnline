@@ -102,6 +102,7 @@ else
 
 <div class="search-layout">
     <aside class="search-sidebar">
+<button type="button" id="filterSheetClose" class="filter-sheet-close" aria-label="إغلاق">✕</button>
 <details class="filters-box" open>
     <summary>@L.T("Filters")</summary>
     <form class="filter-form" asp-action="Index" method="get">
@@ -110,30 +111,40 @@ else
             <div id="searchSuggest" class="suggest-list" style="display:none;"></div>
         </div>
         <input type="text" name="adNumber" value="@ViewBag.AdNumber" placeholder="@L.T("SearchByAdNumber")" />
-        <select name="area" asp-items="areaOptions"></select>
+                <details class="filter-group" open>
+            <summary>النوع والمنطقة</summary>
+<select name="area" asp-items="areaOptions"></select>
         <select name="listingType" asp-items="listingTypes"></select>
-        <select name="propertyType" asp-items="propertyTypes"></select>
-        <input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="@L.T("MinPrice")" min="0" step="any" />
-        <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" placeholder="@L.T("MaxPrice")" min="0" step="any" />
-        <input type="number" name="minArea" value="@ViewBag.MinArea" placeholder="@L.T("MinArea")" min="1" step="1" />
+        <select name="propertyType" asp-items="propertyTypes"></select>        </details>
+
+                <details class="filter-group" open>
+            <summary>السعر</summary>
+<input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="@L.T("MinPrice")" min="0" step="any" />
+        <input type="number" name="maxPrice" id="maxPriceInput" value="@ViewBag.MaxPrice" placeholder="@L.T("MaxPrice")" min="0" step="any" />
+        <input type="range" id="priceMaxSlider" min="0" max="10000000" step="100000" value="@(ViewBag.MaxPrice ?? 10000000)" aria-label="أقصى سعر" />        </details>
+
+                <details class="filter-group" open>
+            <summary>المساحة</summary>
+<input type="number" name="minArea" value="@ViewBag.MinArea" placeholder="@L.T("MinArea")" min="1" step="1" />
         <div class="area-chips">
             <button type="button" class="btn btn-ghost area-chip" data-min="50">+50 م²</button>
             <button type="button" class="btn btn-ghost area-chip" data-min="100">+100 م²</button>
             <button type="button" class="btn btn-ghost area-chip" data-min="150">+150 م²</button>
         </div>
-        <input type="number" name="maxArea" value="@ViewBag.MaxArea" placeholder="@L.T("MaxArea")" min="1" step="1" />
-        <input type="number" name="minRooms" value="@ViewBag.MinRooms" placeholder="@L.T("MinRooms")" min="0" step="1" />
+        <input type="number" name="maxArea" id="maxAreaInput" value="@ViewBag.MaxArea" placeholder="@L.T("MaxArea")" min="1" step="1" />
+        <input type="range" id="areaMaxSlider" min="0" max="1000" step="10" value="@(ViewBag.MaxArea ?? 1000)" aria-label="أقصى مساحة" />        </details>
+
+                <details class="filter-group" open>
+            <summary>المواصفات</summary>
+<input type="number" name="minRooms" value="@ViewBag.MinRooms" placeholder="@L.T("MinRooms")" min="0" step="1" />
         <input type="number" name="minFloor" value="@ViewBag.MinFloor" placeholder="@L.T("MinFloor")" min="0" step="1" />
         <input type="number" name="maxFloor" value="@ViewBag.MaxFloor" placeholder="@L.T("MaxFloor")" min="0" step="1" />
-        <label class="sort-label">
-            @L.T("Furnishing")
-            <select name="furnishing">
-                <option value="">—</option>
-                <option value="Full" selected="@(ViewBag.Furnishing == "Full")">@L.T("FurnishingFull")</option>
-                <option value="Partial" selected="@(ViewBag.Furnishing == "Partial")">@L.T("FurnishingPartial")</option>
-                <option value="Any" selected="@(ViewBag.Furnishing == "Any")">@L.T("FurnishingAny")</option>
-            </select>
-        </label>
+        <div class="filter-chips">
+            <label class="filter-chip"><input type="radio" name="furnishing" value="" checked="@(string.IsNullOrWhiteSpace(ViewBag.Furnishing?.ToString()))" /> @L.T("All")</label>
+            <label class="filter-chip"><input type="radio" name="furnishing" value="Full" checked="@(ViewBag.Furnishing == "Full")" /> @L.T("FurnishingFull")</label>
+            <label class="filter-chip"><input type="radio" name="furnishing" value="Partial" checked="@(ViewBag.Furnishing == "Partial")" /> @L.T("FurnishingPartial")</label>
+            <label class="filter-chip"><input type="radio" name="furnishing" value="Any" checked="@(ViewBag.Furnishing == "Any")" /> @L.T("FurnishingAny")</label>
+        </div>
         <div class="filter-chips">
             <label class="filter-chip"><input type="radio" name="finishing" value="" checked="@(string.IsNullOrWhiteSpace(ViewBag.Finishing?.ToString()))" /> @L.T("All")</label>
             @foreach (FinishingLevel level in Enum.GetValues(typeof(FinishingLevel)))
@@ -141,7 +152,25 @@ else
                 <label class="filter-chip"><input type="radio" name="finishing" value="@level" checked="@(ViewBag.Finishing?.ToString() == level.ToString())" /> @L.FinishingText(level)</label>
             }
         </div>
-        <label class="sort-label">
+        <select name="rentPeriod" asp-items="rentPeriodOptions"></select>
+        <input type="number" name="minBuildingFloors" value="@ViewBag.MinBuildingFloors" placeholder="@L.T("MinBuildingFloors")" min="0" step="1" />        </details>
+
+                <details class="filter-group" open>
+            <summary>المرافق</summary>
+<label><input type="checkbox" name="hasParking" value="true" checked="@(ViewBag.HasParking == true)" /> @L.T("Parking")</label>
+        <label><input type="checkbox" name="hasElevator" value="true" checked="@(ViewBag.HasElevator == true)" /> @L.T("Elevator")</label>
+        <label><input type="checkbox" name="hasBalcony" value="true" checked="@(ViewBag.HasBalcony == true)" /> @L.T("Balcony")</label>
+        <label><input type="checkbox" name="hasAirConditioning" value="true" checked="@(ViewBag.HasAirConditioning == true)" /> @L.T("AirConditioning")</label>
+        <label><input type="checkbox" name="hasSecurity" value="true" checked="@(ViewBag.HasSecurity == true)" /> @L.T("Security")</label>
+        <label><input type="checkbox" name="installmentsOnly" value="true" checked="@(ViewBag.InstallmentsOnly == true)" /> @L.T("InstallmentsOnly")</label>
+        <label><input type="checkbox" name="negotiableOnly" value="true" checked="@(ViewBag.NegotiableOnly == true)" /> @L.T("NegotiableOnly")</label>
+        <label><input type="checkbox" name="hasElectricityMeter" value="true" checked="@(ViewBag.HasElectricityMeter == true)" /> @L.T("ElectricityMeter")</label>
+        <label><input type="checkbox" name="hasGasMeter" value="true" checked="@(ViewBag.HasGasMeter == true)" /> @L.T("GasMeter")</label>
+        <label><input type="checkbox" name="hasWaterMeter" value="true" checked="@(ViewBag.HasWaterMeter == true)" /> @L.T("WaterMeter")</label>        </details>
+
+                <details class="filter-group" open>
+            <summary>أخرى</summary>
+<label class="sort-label">
             @L.T("Recency")
             <select name="recency" asp-items="recencyOptions"></select>
         </label>
@@ -154,18 +183,6 @@ else
                 <option value="Broker" selected="@(ViewBag.AdvertiserType == "Broker")">@L.T("AdvertiserBroker")</option>
             </select>
         </label>
-        <label><input type="checkbox" name="hasParking" value="true" checked="@(ViewBag.HasParking == true)" /> @L.T("Parking")</label>
-        <label><input type="checkbox" name="hasElevator" value="true" checked="@(ViewBag.HasElevator == true)" /> @L.T("Elevator")</label>
-        <label><input type="checkbox" name="hasBalcony" value="true" checked="@(ViewBag.HasBalcony == true)" /> @L.T("Balcony")</label>
-        <label><input type="checkbox" name="hasAirConditioning" value="true" checked="@(ViewBag.HasAirConditioning == true)" /> @L.T("AirConditioning")</label>
-        <label><input type="checkbox" name="hasSecurity" value="true" checked="@(ViewBag.HasSecurity == true)" /> @L.T("Security")</label>
-        <label><input type="checkbox" name="installmentsOnly" value="true" checked="@(ViewBag.InstallmentsOnly == true)" /> @L.T("InstallmentsOnly")</label>
-        <label><input type="checkbox" name="negotiableOnly" value="true" checked="@(ViewBag.NegotiableOnly == true)" /> @L.T("NegotiableOnly")</label>
-        <select name="rentPeriod" asp-items="rentPeriodOptions"></select>
-        <label><input type="checkbox" name="hasElectricityMeter" value="true" checked="@(ViewBag.HasElectricityMeter == true)" /> @L.T("ElectricityMeter")</label>
-        <label><input type="checkbox" name="hasGasMeter" value="true" checked="@(ViewBag.HasGasMeter == true)" /> @L.T("GasMeter")</label>
-        <label><input type="checkbox" name="hasWaterMeter" value="true" checked="@(ViewBag.HasWaterMeter == true)" /> @L.T("WaterMeter")</label>
-        <input type="number" name="minBuildingFloors" value="@ViewBag.MinBuildingFloors" placeholder="@L.T("MinBuildingFloors")" min="0" step="1" />
         <label class="sort-label sort-select-hidden">
             @L.T("SortBy")
             <select name="sort" asp-items="sortOptions"></select>
@@ -177,7 +194,8 @@ else
                 <button type="button" class="btn sort-chip @(ViewBag.Sort == opt.Value ? "active" : "")" data-sort="@opt.Value">@opt.Text</button>
             }
         </div>
-        <label><input type="checkbox" name="onlyAvailable" value="true" checked="@(ViewBag.OnlyAvailable == true)" /> @L.T("OnlyAvailable")</label>
+        <label><input type="checkbox" name="onlyAvailable" value="true" checked="@(ViewBag.OnlyAvailable == true)" /> @L.T("OnlyAvailable")</label>        </details>
+
         <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
         <a class="btn btn-ghost" asp-action="Index">@L.T("ClearFilter")</a>
     </form>
@@ -263,3 +281,4 @@ else
 }
     </div>
 </div>
+<button type="button" id="filterFab" class="filter-fab">🔍 فلترة</button>

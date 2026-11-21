@@ -304,21 +304,27 @@ document.addEventListener("DOMContentLoaded", function () {
     var propertyTypeSelect = document.getElementById("PropertyType");
     var floorField = document.getElementById("floorField");
     var apartmentsCountField = document.getElementById("apartmentsCountField");
+    function getPropertyTypeValue() {
+        var radio = document.querySelector("input[name='PropertyType']:checked");
+        if (radio) { return radio.value; }
+        return propertyTypeSelect ? propertyTypeSelect.value : "";
+    }
     function toggleFloorField() {
-        if (!propertyTypeSelect) {
-            return;
-        }
+        var v = getPropertyTypeValue();
         if (floorField) {
-            floorField.style.display = propertyTypeSelect.value === "Apartment" ? "" : "none";
+            floorField.style.display = v === "Apartment" ? "" : "none";
         }
         if (apartmentsCountField) {
-            apartmentsCountField.style.display = propertyTypeSelect.value === "Building" ? "" : "none";
+            apartmentsCountField.style.display = v === "Building" ? "" : "none";
         }
     }
     if (propertyTypeSelect && (floorField || apartmentsCountField)) {
         propertyTypeSelect.addEventListener("change", toggleFloorField);
-        toggleFloorField();
     }
+    document.querySelectorAll("input[name='PropertyType']").forEach(function (r) {
+        r.addEventListener("change", toggleFloorField);
+    });
+    toggleFloorField();
 
     // عند إرسال نموذج الإعلان (رفع صور/فيديو ممكن يبطّأ)، اظهر
     // "جاري رفع الإعلان..." وعطّل زرار الحفظ لمنع الإرسال مرتين.
@@ -456,6 +462,20 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 });
             }
+        }
+        // سحب (swipe) للتنقل بين صور المعرض في الموبايل.
+        var galleryMain = document.querySelector(".gallery-main");
+        if (galleryMain && urls.length > 1) {
+            var touchX = null;
+            galleryMain.addEventListener("touchstart", function (e) {
+                touchX = e.changedTouches[0].clientX;
+            }, { passive: true });
+            galleryMain.addEventListener("touchend", function (e) {
+                if (touchX === null) { return; }
+                var dx = e.changedTouches[0].clientX - touchX;
+                touchX = null;
+                if (Math.abs(dx) > 40) { showPhoto(current + (dx < 0 ? 1 : -1)); }
+            }, { passive: true });
         }
     }
 
@@ -1226,6 +1246,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // 23 — أزرار التالي/السابق بين خطوات النموذج.
     document.querySelectorAll(".step-next, .step-prev").forEach(function (btn) {
         btn.addEventListener("click", function () {
+            if (window.__wizardActive) { return; }
             var target = document.querySelector(".form-step." + btn.getAttribute("data-target"));
             if (target) { target.scrollIntoView({ behavior: "smooth", block: "start" }); }
         });
@@ -1234,6 +1255,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var stepsBar = document.getElementById("stepsProgressBar");
     var stepHeads = document.querySelectorAll(".form-step");
     function updateStepsProgress() {
+        if (window.__wizardActive) { return; }
         if (!stepsBar || !stepHeads.length) { return; }
         var current = 0;
         stepHeads.forEach(function (h, i) {
@@ -1348,10 +1370,17 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!opt || !opt.value) { return; }
             var setValue = function (id, value) {
                 var el = document.getElementById(id);
-                if (!el) { return; }
-                el.value = value || "";
-                el.dispatchEvent(new Event("input", { bubbles: true }));
-                el.dispatchEvent(new Event("change", { bubbles: true }));
+                if (el) {
+                    el.value = value || "";
+                    el.dispatchEvent(new Event("input", { bubbles: true }));
+                    el.dispatchEvent(new Event("change", { bubbles: true }));
+                    return;
+                }
+                var radio = document.querySelector("input[name='" + id + "'][value='" + value + "']");
+                if (radio) {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event("change", { bubbles: true }));
+                }
             };
             setValue("Title", opt.getAttribute("data-title"));
             setValue("Price", opt.getAttribute("data-price"));
@@ -1514,10 +1543,13 @@ document.addEventListener("DOMContentLoaded", function () {
         suggestTitleBtn.addEventListener("click", function () {
             var titleInput = document.getElementById("Title");
             if (!titleInput || titleInput.value.trim()) { return; }
+            var typeRadio = document.querySelector("input[name='PropertyType']:checked");
             var typeSelect = document.getElementById("PropertyType");
             var roomsInput = document.getElementById("Rooms");
             var areaSelect = document.getElementById("Area");
-            var typeText = typeSelect ? typeSelect.options[typeSelect.selectedIndex].text : "";
+            var typeText = typeRadio
+                ? (typeRadio.closest("label") ? (typeRadio.closest("label").getAttribute("data-text") || "") : "")
+                : (typeSelect ? typeSelect.options[typeSelect.selectedIndex].text : "");
             var rooms = roomsInput && roomsInput.value ? roomsInput.value + " غرف في " : "";
             var area = areaSelect ? areaSelect.value : "";
             var suggestion = (typeText + " " + rooms + area).trim();
@@ -1639,5 +1671,154 @@ document.addEventListener("DOMContentLoaded", function () {
                 }, 200);
             });
         });
+    }
+});
+
+// Batch 29 — design 11 (responsive / mobile / forms)
+document.addEventListener("DOMContentLoaded", function () {
+    // 22 — نموذج الإضافة كمعالج خطوات فعلي: خطوة واحدة ظاهرة، والتالي يتحقق من الحقول المطلوبة.
+    var listingForm = document.getElementById("listingForm");
+    if (listingForm) {
+        var wizardSteps = Array.prototype.slice.call(listingForm.querySelectorAll(".form-step-details"));
+        var wizardIndex = 0;
+        var wizardBar = document.getElementById("stepsProgressBar");
+        var wizardPills = document.querySelectorAll(".form-step-item");
+        function showWizardStep(i) {
+            wizardIndex = Math.max(0, Math.min(i, wizardSteps.length - 1));
+            wizardSteps.forEach(function (d, j) { d.open = (j === wizardIndex); });
+            if (wizardBar) { wizardBar.style.width = ((wizardIndex + 1) / wizardSteps.length * 100) + "%"; }
+            wizardPills.forEach(function (p, j) { p.classList.toggle("active", j === wizardIndex); });
+            listingForm.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        function validateWizardStep(i) {
+            var fields = wizardSteps[i].querySelectorAll("[data-val-required]");
+            for (var k = 0; k < fields.length; k++) {
+                if (!fields[k].value || !fields[k].value.trim()) {
+                    fields[k].focus();
+                    if (window.showToast) { window.showToast("أكمل الحقول المطلوبة في الخطوة دي أولًا"); }
+                    return false;
+                }
+            }
+            return true;
+        }
+        if (wizardSteps.length > 1 && window.matchMedia("(max-width: 899px)").matches) {
+            // المعالج للموبايل بس — على الديسكتوب الخطوات الأربع ظاهرة في عمودين.
+            window.__wizardActive = true;
+            showWizardStep(0);
+            listingForm.querySelectorAll(".step-next, .step-prev").forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    var idx = { "step-1": 0, "step-2": 1, "step-3": 2, "step-4": 3 }[btn.getAttribute("data-target")];
+                    if (idx === undefined) { return; }
+                    if (idx > wizardIndex && !validateWizardStep(wizardIndex)) { return; }
+                    showWizardStep(idx);
+                });
+            });
+            wizardPills.forEach(function (p, j) {
+                p.addEventListener("click", function () {
+                    if (j > wizardIndex && !validateWizardStep(wizardIndex)) { return; }
+                    showWizardStep(j);
+                });
+            });
+        }
+    }
+
+    // 13 — زر "أضف إعلانك" العائم يختفي عند التمرير لأسفل ويظهر عند التمرير لأعلى.
+    var fabCreate = document.querySelector(".fab-create");
+    if (fabCreate) {
+        var lastScrollY = window.scrollY;
+        window.addEventListener("scroll", function () {
+            var y = window.scrollY;
+            fabCreate.classList.toggle("fab-hidden", y > 200 && y > lastScrollY);
+            lastScrollY = y;
+        }, { passive: true });
+    }
+
+    // 30 — أزرار أيام سريعة في نموذج المعاينة (تحافظ على الوقت المختار، وإلا 10:00).
+    var requestedAt = document.getElementById("requestedAtInput");
+    document.querySelectorAll(".day-chip").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+            if (!requestedAt) { return; }
+            var base = requestedAt.value ? new Date(requestedAt.value) : new Date();
+            var time = requestedAt.value ? requestedAt.value.slice(11, 16) : "10:00";
+            var d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + parseInt(chip.getAttribute("data-days"), 10));
+            var pad = function (n) { return String(n).padStart(2, "0"); };
+            requestedAt.value = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + time;
+            requestedAt.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+    });
+
+    // 28 — سلايدرات السعر والمساحة في الفلاتر (متزامنة مع حقول الأرقام).
+    function bindRangeSlider(sliderId, inputId) {
+        var slider = document.getElementById(sliderId);
+        var input = document.getElementById(inputId);
+        if (!slider || !input) { return; }
+        slider.addEventListener("input", function () { input.value = slider.value; });
+        input.addEventListener("change", function () {
+            var v = parseFloat(input.value);
+            if (!isNaN(v)) { slider.value = Math.max(parseFloat(slider.min), Math.min(parseFloat(slider.max), v)); }
+        });
+    }
+    bindRangeSlider("priceMaxSlider", "maxPriceInput");
+    bindRangeSlider("areaMaxSlider", "maxAreaInput");
+
+    // 34 — فلتر حالة "إعلاناتي" كأزرار tabs.
+    var statusSelect = document.getElementById("myListingsStatusSelect");
+    document.querySelectorAll(".status-tabs .tab-chip").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+            if (!statusSelect) { return; }
+            statusSelect.value = chip.getAttribute("data-status");
+            statusSelect.form.submit();
+        });
+    });
+
+    // 35 — ترتيب المفضلة كأزرار tabs.
+    var favSortSelect = document.getElementById("favoritesSortSelect");
+    document.querySelectorAll(".fav-sort-tabs .tab-chip").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+            if (!favSortSelect) { return; }
+            favSortSelect.value = chip.getAttribute("data-sort");
+            favSortSelect.form.submit();
+        });
+    });
+
+    // 27 — أزرار + و - للغرف والحمامات والدور وعدد الأسانسيرات.
+    document.querySelectorAll(".stepper").forEach(function (stepper) {
+        var input = stepper.querySelector("input[type='number']");
+        if (!input) { return; }
+        stepper.querySelectorAll(".stepper-btn").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                var min = parseFloat(input.min);
+                var max = parseFloat(input.max);
+                var cur = parseFloat(input.value);
+                var next = (isNaN(cur) ? 0 : cur) + parseInt(btn.getAttribute("data-step"), 10);
+                if (!isNaN(min)) { next = Math.max(min, next); }
+                if (!isNaN(max)) { next = Math.min(max, next); }
+                input.value = next;
+                input.dispatchEvent(new Event("input", { bubbles: true }));
+                input.dispatchEvent(new Event("change", { bubbles: true }));
+            });
+        });
+    });
+
+    // 50 — شريط تقدم القراءة أعلى صفحة التفاصيل.
+    var readingBar = document.getElementById("readingProgressBar");
+    if (readingBar) {
+        var updateReading = function () {
+            var max = document.documentElement.scrollHeight - window.innerHeight;
+            readingBar.style.width = (max > 0 ? (window.scrollY / max * 100) : 0) + "%";
+        };
+        window.addEventListener("scroll", updateReading, { passive: true });
+        updateReading();
+    }
+
+    // 4/5 — درج الفلاتر السفلي في الموبايل والتابلت + زر الفلترة العائم.
+    var sidebar = document.querySelector(".search-sidebar");
+    var filterFab = document.getElementById("filterFab");
+    var filterClose = document.getElementById("filterSheetClose");
+    if (sidebar && filterFab) {
+        filterFab.addEventListener("click", function () { sidebar.classList.toggle("open"); });
+    }
+    if (sidebar && filterClose) {
+        filterClose.addEventListener("click", function () { sidebar.classList.remove("open"); });
     }
 });

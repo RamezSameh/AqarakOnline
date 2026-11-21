@@ -3,12 +3,24 @@
 <p><a asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a> — @Model.Area</p>
 <form asp-action="Report" asp-route-id="@Model.Id" method="post" class="form">
     <label>@L.T("ReportReason")</label>
-    <select name="reason">
+    <div class="report-reasons">
         @foreach (ReportReason reason in Enum.GetValues(typeof(ReportReason)))
         {
-            <option value="@reason">@L.ReportReasonText(reason)</option>
+            var icon = reason switch
+            {
+                ReportReason.Misleading => "🚫",
+                ReportReason.WrongInfo => "❌",
+                ReportReason.Scam => "⚠️",
+                ReportReason.Offensive => "🔞",
+                _ => "📝"
+            };
+            <label class="report-reason">
+                <input type="radio" name="reason" value="@reason" checked="@(reason == ReportReason.Misleading)" />
+                <span class="report-reason-icon">@icon</span>
+                <span>@L.ReportReasonText(reason)</span>
+            </label>
         }
-    </select>
+    </div>
     <label>@L.T("ReportDetails")</label>
     <textarea name="details" rows="4" maxlength="1000" placeholder="اكتب أي تفاصيل تساعد الأدمن يراجع البلاغ"></textarea>
     <div class="actions">

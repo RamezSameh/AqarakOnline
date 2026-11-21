@@ -1376,7 +1376,7 @@ public class ContactController : Controller
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Contact(ContactRequest request)
+    public async Task<IActionResult> Contact(ContactRequest request, string? preferredTime = null)
     {
         var listing = await _context.Listings.FindAsync(request.ListingId);
         if (listing == null || listing.Approval != ListingApproval.Approved || !listing.IsAvailable)
@@ -1401,6 +1401,12 @@ public class ContactController : Controller
         request.BuyerId = CurrentUserId;
         request.CreatedAt = DateTime.UtcNow;
         request.IsReplied = false;
+        if (!string.IsNullOrWhiteSpace(preferredTime))
+        {
+            var timeNote = "أفضل وقت للتواصل: " + preferredTime;
+            request.Message = string.IsNullOrEmpty(request.Message) ? timeNote : request.Message + " — " + timeNote;
+            if (request.Message.Length > 2000) { request.Message = request.Message[..2000]; }
+        }
         _context.ContactRequests.Add(request);
         await _context.SaveChangesAsync();
         await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");

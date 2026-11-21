@@ -191,6 +191,10 @@ public class ListingAttachment
     [MaxLength(500)]
     public string FilePath { get; set; } = string.Empty;
 
+    /// <summary>نسخة مصغّرة (480px) من الصورة للكروت وsrcset — null للصور القديمة والفيديو.</summary>
+    [MaxLength(500)]
+    public string? ThumbPath { get; set; }
+
     [MaxLength(100)]
     public string ContentType { get; set; } = string.Empty;
 

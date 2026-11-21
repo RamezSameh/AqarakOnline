@@ -29,13 +29,16 @@
         <div class="container header-inner">
             <a class="brand" asp-controller="Home" asp-action="Index"><span class="brand-icon">🏠</span> @L.T("Brand")</a>
             <nav class="main-nav" id="mainNav">
+                <span class="nav-section">الإعلانات</span>
                 <a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">🏠 @L.T("Home")</a>
                 <a class="nav-link @(currentController == "Listings" && currentAction == "Index" ? "active" : "")" asp-controller="Listings" asp-action="Index">🏘️ @L.T("Listings")</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     @* باقي الخصائص ظاهرة عادي في الـ header على اليمين. *@
+                    <span class="nav-section">إضافة</span>
                     <a class="nav-cta nav-create-primary @(currentController == "Listings" && currentAction == "Create" ? "active" : "")" asp-controller="Listings" asp-action="Create">➕ @L.T("CreateListing")</a>
                     @* غلاف display:contents حتى تُستبدل الإدارة لحظيًا من غير كسر توزيع الـ flex. *@
+                    <span class="nav-section">الإدارة</span>
                     <span id="adminNavLinks" style="display:contents">@await Component.InvokeAsync("AdminNav")</span>
                     @* على الموبايل فقط: تسجيل الخروج داخل اللوحة. *@
                     <div class="panel-account mobile-only">
@@ -119,6 +122,14 @@
                 <p>👁️ <a asp-controller="Listings" asp-action="Index" asp-route-sort="viewsDesc">الأكثر مشاهدة</a></p>
             </div>
             <div class="footer-col">
+                <p class="footer-heading">مناطق شائعة</p>
+                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="مدينة نصر">مدينة نصر</a></p>
+                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="المعادي">المعادي</a></p>
+                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="التجمع الخامس">التجمع الخامس</a></p>
+                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="6 أكتوبر">6 أكتوبر</a></p>
+                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="المهندسين">المهندسين</a></p>
+            </div>
+            <div class="footer-col">
                 <p class="footer-heading">تواصل معنا</p>
                 <p>@L.T("Phone"): <a href="tel:@ContactOptions.Value.Phone">@ContactOptions.Value.Phone</a></p>
                 <p>@L.T("WhatsApp"): @ContactOptions.Value.WhatsApp</p>
@@ -151,6 +162,7 @@
         <button type="button" id="compareClear" class="btn btn-ghost">@L.T("ClearCompare")</button>
     </div>
     <a class="fab-create" asp-controller="Listings" asp-action="Create" title="@L.T("CreateListing")">＋</a>
+    <a class="fab-call" href="tel:@ContactOptions.Value.Phone" aria-label="اتصال">📞</a>
     @* مكتبة SignalR من CDN (مطابقة لإصدار .NET 8). لو تعذّر تحميلها،
        يعود site.js تلقائيًا للتحديث الدوري كل 30 ثانية. *@
     <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>

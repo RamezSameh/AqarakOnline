@@ -1,16 +1,6 @@
 @model Listing
 @{
     var isEdit = Model.Id != 0;
-    var listingTypes = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
-    {
-        new(L.T("ForRent"), "Rent", Model.ListingType == ListingType.Rent),
-        new(L.T("ForSale"), "Sale", Model.ListingType == ListingType.Sale)
-    };
-    var propertyTypes = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
-    foreach (PropertyType type in Enum.GetValues(typeof(PropertyType)))
-    {
-        propertyTypes.Add(new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(L.PropertyTypeText(type), type.ToString(), Model.PropertyType == type));
-    }
     var action = isEdit ? "Edit" : "Create";
 }
 <h1>@(isEdit ? L.T("Edit") : L.T("CreateListing"))</h1>
@@ -31,6 +21,7 @@
         <span class="form-step-item">1 — بيانات الإعلان</span>
         <span class="form-step-item">2 — السعر والمواصفات</span>
         <span class="form-step-item">3 — الصور والفيديو</span>
+        <span class="form-step-item">4 — مراجعة الإعلان</span>
     </div>
     <div class="steps-progress"><div class="steps-progress-bar" id="stepsProgressBar"></div></div>
     <label>نسخ من إعلان سابق</label>
@@ -45,7 +36,7 @@
         }
     </select>
 
-    <details class="form-step-details" open>
+    <details class="form-step-details step-details-1" open>
     <summary class="form-step step-1"><span class="step-num">1</span> بيانات الإعلان</summary>
 
     <label>@L.T("Title")</label>
@@ -55,10 +46,19 @@
     <span asp-validation-for="Title" class="field-error"></span>
 
     <label>@L.T("ListingType")</label>
-    <select asp-for="ListingType" asp-items="listingTypes"></select>
+    <div class="type-toggle">
+        <label class="type-option"><input type="radio" name="ListingType" value="Sale" checked="@(Model.ListingType == ListingType.Sale)" /> @L.T("ForSale")</label>
+        <label class="type-option"><input type="radio" name="ListingType" value="Rent" checked="@(Model.ListingType == ListingType.Rent)" /> @L.T("ForRent")</label>
+    </div>
 
     <label>@L.T("PropertyType")</label>
-    <select asp-for="PropertyType" asp-items="propertyTypes"></select>
+    <div class="type-options">
+        <label class="type-option" data-text="@L.PropertyTypeText(PropertyType.Apartment)"><input type="radio" name="PropertyType" value="Apartment" checked="@(Model.PropertyType == PropertyType.Apartment)" /> 🏢 @L.PropertyTypeText(PropertyType.Apartment)</label>
+        <label class="type-option" data-text="@L.PropertyTypeText(PropertyType.House)"><input type="radio" name="PropertyType" value="House" checked="@(Model.PropertyType == PropertyType.House)" /> 🏠 @L.PropertyTypeText(PropertyType.House)</label>
+        <label class="type-option" data-text="@L.PropertyTypeText(PropertyType.Building)"><input type="radio" name="PropertyType" value="Building" checked="@(Model.PropertyType == PropertyType.Building)" /> 🏗️ @L.PropertyTypeText(PropertyType.Building)</label>
+        <label class="type-option" data-text="@L.PropertyTypeText(PropertyType.Shop)"><input type="radio" name="PropertyType" value="Shop" checked="@(Model.PropertyType == PropertyType.Shop)" /> 🏪 @L.PropertyTypeText(PropertyType.Shop)</label>
+        <label class="type-option" data-text="@L.PropertyTypeText(PropertyType.Villa)"><input type="radio" name="PropertyType" value="Villa" checked="@(Model.PropertyType == PropertyType.Villa)" /> 🏰 @L.PropertyTypeText(PropertyType.Villa)</label>
+    </div>
 
     <label>@L.T("AdvertiserType")</label>
     <select asp-for="AdvertiserType">
@@ -106,7 +106,7 @@
         <button type="button" class="btn btn-primary step-next" data-target="step-2">التالي ←</button>
     </div>
 
-    <details class="form-step-details" open>
+    <details class="form-step-details step-details-2" open>
     <summary class="form-step step-2"><span class="step-num">2</span> السعر والمواصفات</summary>
 
     <div class="form-row">
@@ -125,16 +125,16 @@
     </div>
 
     <label>@L.T("Rooms")</label>
-    <input asp-for="Rooms" type="number" min="0" max="50" step="1" />
+    <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="Rooms" type="number" min="0" max="50" step="1" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
     <span asp-validation-for="Rooms" class="field-error"></span>
 
     <label>@L.T("Bathrooms")</label>
-    <input asp-for="Bathrooms" type="number" min="0" max="20" step="1" />
+    <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="Bathrooms" type="number" min="0" max="20" step="1" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
     <span asp-validation-for="Bathrooms" class="field-error"></span>
 
     <div id="floorField" style="@(Model.PropertyType != PropertyType.Apartment ? "display:none;" : "")">
         <label>@L.T("Floor")</label>
-        <input asp-for="Floor" type="number" min="0" max="60" step="1" />
+        <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="Floor" type="number" min="0" max="60" step="1" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
         <span asp-validation-for="Floor" class="field-error"></span>
     </div>
 
@@ -163,14 +163,14 @@
     <input asp-for="SaleReason" maxlength="200" placeholder="اختياري — للبيع فقط" />
 
     <label>@L.T("Amenities")</label>
-    <label><input asp-for="HasParking" type="checkbox" /> @L.T("Parking")</label>
-    <label><input asp-for="HasElevator" type="checkbox" /> @L.T("Elevator")</label>
+    <label class="toggle-label"><input asp-for="HasParking" type="checkbox" /><span class="toggle-slider"></span> @L.T("Parking")</label>
+    <label class="toggle-label"><input asp-for="HasElevator" type="checkbox" /><span class="toggle-slider"></span> @L.T("Elevator")</label>
     <label>@L.T("ElevatorCount")</label>
-    <input asp-for="ElevatorCount" type="number" min="1" max="20" step="1" />
+    <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="ElevatorCount" type="number" min="1" max="20" step="1" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
     <span asp-validation-for="ElevatorCount" class="field-error"></span>
-    <label><input asp-for="HasBalcony" type="checkbox" /> @L.T("Balcony")</label>
-    <label><input asp-for="HasAirConditioning" type="checkbox" /> @L.T("AirConditioning")</label>
-    <label><input asp-for="HasSecurity" type="checkbox" /> @L.T("Security")</label>
+    <label class="toggle-label"><input asp-for="HasBalcony" type="checkbox" /><span class="toggle-slider"></span> @L.T("Balcony")</label>
+    <label class="toggle-label"><input asp-for="HasAirConditioning" type="checkbox" /><span class="toggle-slider"></span> @L.T("AirConditioning")</label>
+    <label class="toggle-label"><input asp-for="HasSecurity" type="checkbox" /><span class="toggle-slider"></span> @L.T("Security")</label>
     <label><input asp-for="AcceptsInstallments" type="checkbox" /> @L.T("AcceptsInstallments")</label>
     <label><input asp-for="IsPriceNegotiable" type="checkbox" /> @L.T("Negotiable")</label>
     <label class="urgent-option"><input asp-for="IsUrgent" type="checkbox" /> 🔥 @L.T("Urgent")</label>
@@ -191,7 +191,7 @@
         <button type="button" class="btn btn-primary step-next" data-target="step-3">التالي ←</button>
     </div>
 
-    <details class="form-step-details" open>
+    <details class="form-step-details step-details-3" open>
     <summary class="form-step step-3"><span class="step-num">3</span> الصور والفيديو</summary>
 
     <label>صور توضيحية (حتى 5 صور)</label>
@@ -227,7 +227,7 @@
         <button type="button" class="btn btn-primary step-next" data-target="step-4">مراجعة ←</button>
     </div>
 
-    <details class="form-step-details" open>
+    <details class="form-step-details step-details-4" open>
     <summary class="form-step step-4"><span class="step-num">4</span> مراجعة الإعلان</summary>
     <div id="reviewPanel" class="review-panel"></div>
 

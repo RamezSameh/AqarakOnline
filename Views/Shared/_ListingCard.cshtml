@@ -44,7 +44,7 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
         <div class="card-photos" data-photo-count="@photos.Count">
             @for (var i = 0; i < photos.Count; i++)
             {
-                <img class="listing-photo @(i == 0 ? "active" : "")" src="/@photos[i].FilePath" alt="@Model.Title" loading="lazy" />
+                <img class="listing-photo @(i == 0 ? "active" : "")" src="/@photos[i].FilePath" @Html.Raw(photos[i].ThumbPath != null ? $"srcset=\"/{photos[i].ThumbPath} 480w, /{photos[i].FilePath} 1600w\" sizes=\"(max-width: 640px) 100vw, 400px\"" : "") alt="@Model.Title" loading="lazy" />
             }
         </div>
         @if (photos.Count > 1)

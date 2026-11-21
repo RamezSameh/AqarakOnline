@@ -27,10 +27,16 @@
 else
 {
     <form class="filter-form" asp-controller="Favorites" asp-action="Index" method="get">
-        <label class="sort-label">
+        <label class="sort-label sort-select-hidden">
             @L.T("SortBy")
-            <select name="sort" asp-items="sortOptions"></select>
+            <select name="sort" id="favoritesSortSelect" asp-items="sortOptions"></select>
         </label>
+        <div class="fav-sort-tabs">
+            @foreach (var opt in sortOptions)
+            {
+                <button type="button" class="btn tab-chip @(ViewBag.Sort == opt.Value ? "active" : "")" data-sort="@opt.Value">@opt.Text</button>
+            }
+        </div>
         <label class="sort-label">
             @L.T("PropertyType")
             <select name="propertyType" asp-items="typeOptions"></select>
