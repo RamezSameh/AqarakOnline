@@ -7,6 +7,18 @@
 }
 else
 {
+    <div class="actions">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <form asp-controller="Favorites" asp-action="ClearAll" method="post" class="inline-form" onsubmit="return confirm('حذف كل المفضلة؟');">
+                <button type="submit" class="btn btn-ghost">@L.T("ClearAllFavorites")</button>
+            </form>
+        }
+        else
+        {
+            <button type="button" class="btn btn-ghost clear-guest-favorites">@L.T("ClearAllFavorites")</button>
+        }
+    </div>
     <div class="cards-grid">
         @foreach (var listing in Model)
         {

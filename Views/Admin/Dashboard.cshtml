@@ -321,6 +321,26 @@ else
         }
     </div>
 }
+<h3>@L.T("MostReported")</h3>
+@if (!Model.TopReported.Any())
+{
+    <p>لا توجد بلاغات بعد.</p>
+}
+else
+{
+    var maxReported = Model.TopReported.Max(p => p.Count);
+    <div class="chart">
+        @foreach (var point in Model.TopReported)
+        {
+            var pct = maxReported > 0 ? point.Count * 100 / maxReported : 0;
+            <div class="chart-row">
+                <span class="chart-label">@point.Label</span>
+                <div class="chart-track"><div class="chart-bar" style="width:@pct%"></div></div>
+                <span class="chart-count">@point.Count</span>
+            </div>
+        }
+    </div>
+}
 <h3>@L.T("TopContactedListings")</h3>
 @if (!Model.TopContactedListings.Any())
 {

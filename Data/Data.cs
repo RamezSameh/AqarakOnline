@@ -16,6 +16,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         base.OnModelCreating(builder);
         // السعر بعملة الجنيه: دقة صريحة حتى لا يُقتطع عند الحفظ في SQL Server.
         builder.Entity<Listing>().Property(l => l.Price).HasPrecision(18, 2);
+        builder.Entity<Listing>().Property(l => l.OriginalPrice).HasPrecision(18, 2);
         builder.Entity<SavedSearch>().Property(s => s.MinPrice).HasPrecision(18, 2);
         builder.Entity<SavedSearch>().Property(s => s.MaxPrice).HasPrecision(18, 2);
         // حذف مستخدم يحذف بحثه المحفوظ.
@@ -95,6 +96,7 @@ public static class SeedData
                 Description = "شقة واسعة بإطلالة مميزة، قريبة من الخدمات والمواصلات.",
                 Features = "3 غرف\n2 حمام\nتشطيب سوبر لوكس\nمصعد",
                 Price = 2500000,
+                OriginalPrice = 2500000,
                 AreaSqm = 150,
                 Rooms = 3,
                 Bathrooms = 2,
@@ -113,6 +115,7 @@ public static class SeedData
                 Description = "شقة مفروشة للإيجار، مناسبة للعائلات، بمنطقة هادئة وآمنة.",
                 Features = "2 غرفة\nحمام\nمفروشة\nأمن وحراسة",
                 Price = 12000,
+                OriginalPrice = 12000,
                 AreaSqm = 110,
                 Rooms = 2,
                 Bathrooms = 1,
@@ -131,6 +134,7 @@ public static class SeedData
                 Description = "فيلا مستقلة بحديقة خاصة وموقف سيارات، تشطيب راقٍ.",
                 Features = "4 غرف\n3 حمامات\nحديقة خاصة\nموقف سيارات",
                 Price = 8500000,
+                OriginalPrice = 8500000,
                 AreaSqm = 320,
                 Rooms = 4,
                 Bathrooms = 3,
@@ -148,6 +152,7 @@ public static class SeedData
                 Description = "محل تجاري بموقع حيوي وحركة مرور عالية، مناسب لكل الأنشطة.",
                 Features = "واجهة على الشارع\nمساحة مفتوحة\nكهرباء 3 فاز",
                 Price = 15000,
+                OriginalPrice = 15000,
                 AreaSqm = 80,
                 IsAvailable = true,
                 Approval = ListingApproval.Approved,

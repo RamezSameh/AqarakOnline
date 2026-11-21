@@ -31,7 +31,7 @@ public class HomeController : Controller
     {
         var listings = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
-            .OrderByDescending(l => l.IsFeatured)
+            .OrderByDescending(l => l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow))
             .ThenByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
             .Take(6)
             .ToListAsync();
@@ -171,7 +171,7 @@ public class ListingsController : Controller
         bool hasAirConditioning = false, bool hasSecurity = false, bool installmentsOnly = false,
         bool negotiableOnly = false, RentPeriod? rentPeriod = null,
         bool hasElectricityMeter = false, bool hasGasMeter = false, bool hasWaterMeter = false,
-        int? minBuildingFloors = null)
+        int? minBuildingFloors = null, string? advertiserType = null)
     {
         var query = _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.Approval == ListingApproval.Approved).AsQueryable();
@@ -303,6 +303,17 @@ public class ListingsController : Controller
         {
             query = query.Where(l => l.AdvertiserType == AdvertiserType.Owner);
         }
+        if (!string.IsNullOrWhiteSpace(advertiserType))
+        {
+            if (advertiserType == "Broker")
+            {
+                query = query.Where(l => l.AdvertiserType == AdvertiserType.Broker);
+            }
+            else if (advertiserType == "Owner")
+            {
+                query = query.Where(l => l.AdvertiserType == AdvertiserType.Owner);
+            }
+        }
         if (finishing.HasValue)
         {
             query = query.Where(l => l.Finishing == finishing.Value);
@@ -346,16 +357,16 @@ public class ListingsController : Controller
         // الإعلانات المميزة أولًا دائمًا، ثم الترتيب المختار.
         query = sortKey switch
         {
-            "priceAsc" => query.OrderByDescending(l => l.IsFeatured).ThenBy(l => l.Price).ThenByDescending(l => l.CreatedAt),
-            "priceDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.Price).ThenByDescending(l => l.CreatedAt),
-            "areaDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.AreaSqm).ThenByDescending(l => l.CreatedAt),
-            "viewsDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt),
-            "pricePerSqmAsc" => query.OrderByDescending(l => l.IsFeatured).ThenBy(l => l.Price / l.AreaSqm).ThenByDescending(l => l.CreatedAt),
-            "pricePerSqmDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.Price / l.AreaSqm).ThenByDescending(l => l.CreatedAt),
-            "roomsDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.Rooms).ThenByDescending(l => l.CreatedAt),
-            "roomsAsc" => query.OrderByDescending(l => l.IsFeatured).ThenBy(l => l.Rooms).ThenByDescending(l => l.CreatedAt),
-            "oldest" => query.OrderByDescending(l => l.IsFeatured).ThenBy(l => l.LastBumpedAt ?? l.CreatedAt),
-            _ => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
+            "priceAsc" => query.OrderByDescending(l => l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow)).ThenBy(l => l.Price).ThenByDescending(l => l.CreatedAt),
+            "priceDesc" => query.OrderByDescending(l => l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow)).ThenByDescending(l => l.Price).ThenByDescending(l => l.CreatedAt),
+            "areaDesc" => query.OrderByDescending(l => l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow)).ThenByDescending(l => l.AreaSqm).ThenByDescending(l => l.CreatedAt),
+            "viewsDesc" => query.OrderByDescending(l => l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow)).ThenByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt),
+            "pricePerSqmAsc" => query.OrderByDescending(l => l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow)).ThenBy(l => l.Price / l.AreaSqm).ThenByDescending(l => l.CreatedAt),
+            "pricePerSqmDesc" => query.OrderByDescending(l => l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow)).ThenByDescending(l => l.Price / l.AreaSqm).ThenByDescending(l => l.CreatedAt),
+            "roomsDesc" => query.OrderByDescending(l => l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow)).ThenByDescending(l => l.Rooms).ThenByDescending(l => l.CreatedAt),
+            "roomsAsc" => query.OrderByDescending(l => l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow)).ThenBy(l => l.Rooms).ThenByDescending(l => l.CreatedAt),
+            "oldest" => query.OrderByDescending(l => l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow)).ThenBy(l => l.LastBumpedAt ?? l.CreatedAt),
+            _ => query.OrderByDescending(l => l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow)).ThenByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
         };
 
         const int pageSize = 12;
@@ -377,6 +388,7 @@ public class ListingsController : Controller
         ViewBag.AdNumber = adNumber;
         ViewBag.Recency = recencyKey;
         ViewBag.DirectOwnerOnly = directOwnerOnly;
+        ViewBag.AdvertiserType = advertiserType;
         ViewBag.Finishing = finishing;
         ViewBag.MinFloor = minFloor;
         ViewBag.MaxFloor = maxFloor;
@@ -412,6 +424,28 @@ public class ListingsController : Controller
                 .ToListAsync()).ToHashSet();
         }
         return View(listings);
+    }
+
+    /// <summary>اقتراحات أثناء الكتابة في البحث: مناطق مطابقة + عناوين إعلانات مطابقة.</summary>
+    [HttpGet]
+    public async Task<IActionResult> Suggest(string? term)
+    {
+        if (string.IsNullOrWhiteSpace(term) || term.Trim().Length < 2)
+        {
+            return Json(Array.Empty<object>());
+        }
+        var t = term.Trim();
+        var areas = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved && l.Area.Contains(t))
+            .Select(l => l.Area).Distinct().OrderBy(a => a).Take(5).ToListAsync();
+        var listings = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable && l.Title.Contains(t))
+            .OrderByDescending(l => l.CreatedAt).Take(5)
+            .Select(l => new { l.Id, l.Title }).ToListAsync();
+        var result = areas.Select(a => new { kind = "area", label = a, url = Url.Action(nameof(Index), new { area = a }) })
+            .Concat(listings.Select(l => new { kind = "listing", label = l.Title, url = Url.Action(nameof(Details), new { id = l.Id }) }))
+            .ToList();
+        return Json(result);
     }
 
     [HttpGet]
@@ -538,10 +572,21 @@ public class ListingsController : Controller
         listing.OwnerId = CurrentUserId;
         listing.CreatedAt = DateTime.UtcNow;
         listing.IsAvailable = true;
+        // السعر الأصلي = سعر الإنشاء؛ أي تخفيض لاحق يظهر شارة «تم تخفيض السعر».
+        listing.OriginalPrice = listing.Price;
         // الدور خاص بالشقة فقط؛ أي قيمة مرسلة مع نوع آخر تُتجاهل.
         if (listing.PropertyType != PropertyType.Apartment)
         {
             listing.Floor = null;
+        }
+        // عدد الشقق خاص بالعمارة فقط، وعدد المصاعد خاص بوجود مصعد.
+        if (listing.PropertyType != PropertyType.Building)
+        {
+            listing.ApartmentsCount = null;
+        }
+        if (!listing.HasElevator)
+        {
+            listing.ElevatorCount = null;
         }
         listing.Approval = User.IsInRole("Admin") ? ListingApproval.Approved : ListingApproval.Pending;
         listing.AdNumber = "TEMP";
@@ -631,11 +676,18 @@ public class ListingsController : Controller
         listing.Description = model.Description;
         listing.Features = ListingFeatureComposer.ComposeFeatures(selectedFeatures, customFeatures);
         listing.Price = model.Price;
+        // لو السعر الجديد أعلى من الأصلي، الأصلي يتحدث معه؛
+        // ولو أقل، الأصلي يفضل كما هو فتظهر شارة «تم تخفيض السعر».
+        if (listing.Price > listing.OriginalPrice)
+        {
+            listing.OriginalPrice = listing.Price;
+        }
         listing.AreaSqm = model.AreaSqm;
         listing.AdvertiserType = model.AdvertiserType;
         listing.Rooms = model.Rooms;
         listing.Bathrooms = model.Bathrooms;
         listing.Floor = model.PropertyType == PropertyType.Apartment ? model.Floor : null;
+        listing.ApartmentsCount = model.PropertyType == PropertyType.Building ? model.ApartmentsCount : null;
         listing.Furnishing = model.Furnishing;
         listing.SaleReason = model.ListingType == ListingType.Sale && !string.IsNullOrWhiteSpace(model.SaleReason)
             ? model.SaleReason.Trim()
@@ -643,6 +695,7 @@ public class ListingsController : Controller
         listing.Finishing = model.Finishing;
         listing.HasParking = model.HasParking;
         listing.HasElevator = model.HasElevator;
+        listing.ElevatorCount = model.HasElevator ? model.ElevatorCount : null;
         listing.HasBalcony = model.HasBalcony;
         listing.HasAirConditioning = model.HasAirConditioning;
         listing.HasSecurity = model.HasSecurity;
@@ -973,9 +1026,13 @@ public class ListingsController : Controller
             HasWaterMeter = source.HasWaterMeter,
             LandAreaSqm = source.LandAreaSqm,
             BuildingFloors = source.BuildingFloors,
+            ApartmentsCount = source.ApartmentsCount,
+            ElevatorCount = source.ElevatorCount,
+            OriginalPrice = source.Price,
             UpdatedAt = null,
             IsAvailable = true,
             IsFeatured = false,
+            FeaturedUntil = null,
             IsUrgent = false,
             ViewCount = 0,
             LastBumpedAt = null,
@@ -1378,6 +1435,8 @@ public class AdminDashboardViewModel
     public List<Listing> TopViewed { get; set; } = new();
     /// <summary>أكثر كلمات البحث في آخر 30 يومًا (للرسم البياني).</summary>
     public List<ChartPoint> TopSearchTerms { get; set; } = new();
+    /// <summary>أكثر 5 إعلانات بلاغًا (للرسم البياني).</summary>
+    public List<ChartPoint> TopReported { get; set; } = new();
     /// <summary>وضع الصيانة مفعّل؟</summary>
     public bool MaintenanceEnabled { get; set; }
     /// <summary>رسالة وضع الصيانة المعروضة للزوار.</summary>
@@ -1565,6 +1624,21 @@ public class AdminController : Controller
             })
             .OrderByDescending(pt => pt.Count)
             .Take(5).ToList();
+        var reportCounts = await _context.ListingReports
+            .GroupBy(r => r.ListingId)
+            .Select(g => new { ListingId = g.Key, Count = g.Count() })
+            .OrderByDescending(g => g.Count)
+            .Take(5).ToListAsync();
+        var reportedListings = await _context.Listings
+            .Where(l => reportCounts.Select(c => c.ListingId).Contains(l.Id))
+            .ToDictionaryAsync(l => l.Id);
+        model.TopReported = reportCounts.Select(c => new ChartPoint
+        {
+            Label = reportedListings.TryGetValue(c.ListingId, out var reported)
+                ? $"{reported.AdNumber} — {reported.Title}"
+                : c.ListingId.ToString(),
+            Count = c.Count
+        }).ToList();
         return View(model);
     }
 
@@ -1846,6 +1920,7 @@ public class AdminController : Controller
             PropertyType = propertyType,
             Area = area,
             Price = price,
+            OriginalPrice = price,
             AreaSqm = areaSqm,
             Rooms = rooms,
             Bathrooms = bathrooms,
@@ -2491,16 +2566,26 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ToggleFeatured(int id)
+    public async Task<IActionResult> SetFeatured(int id, int? days = null)
     {
         var listing = await _context.Listings.FindAsync(id);
         if (listing == null)
         {
             return NotFound();
         }
-        listing.IsFeatured = !listing.IsFeatured;
+        if (days.HasValue)
+        {
+            listing.IsFeatured = true;
+            listing.FeaturedUntil = DateTime.UtcNow.AddDays(days.Value);
+            TempData["Info"] = $"تم تمييز الإعلان لمدة {days.Value} أيام.";
+        }
+        else
+        {
+            listing.IsFeatured = false;
+            listing.FeaturedUntil = null;
+            TempData["Info"] = "تم إلغاء تمييز الإعلان.";
+        }
         await _context.SaveChangesAsync();
-        TempData["Info"] = listing.IsFeatured ? "تم تثبيت الإعلان كمميز." : "تم إلغاء تمييز الإعلان.";
         return RedirectToAction(nameof(Listings));
     }
 
@@ -3598,6 +3683,19 @@ public class FavoritesController : Controller
         {
             return Redirect(returnUrl);
         }
+        return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>حذف كل مفضلتي دفعة واحدة — للحساب المسجَّل (الزائر يمسحها من جهازه).</summary>
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ClearAll()
+    {
+        var mine = await _context.Favorites.Where(f => f.UserId == CurrentUserId).ToListAsync();
+        _context.Favorites.RemoveRange(mine);
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تم حذف كل المفضلة.";
         return RedirectToAction(nameof(Index));
     }
 }

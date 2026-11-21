@@ -312,11 +312,33 @@ public class Listing
     /// <summary>عدد أدوار العمارة أو الفيلا.</summary>
     public int? BuildingFloors { get; set; }
 
+    /// <summary>عدد الشقق في العمارة — للعمارة فقط.</summary>
+    [Range(1, 1000)]
+    public int? ApartmentsCount { get; set; }
+
+    /// <summary>عدد المصاعد — عند وجود مصعد.</summary>
+    [Range(1, 20)]
+    public int? ElevatorCount { get; set; }
+
+    /// <summary>السعر الأصلي عند الإنشاء — لشارة «تم تخفيض السعر» (السعر الحالي أقل منه).</summary>
+    public decimal OriginalPrice { get; set; }
+
+    /// <summary>سعره الحالي أقل من سعره الأصلي.</summary>
+    [NotMapped]
+    public bool IsPriceReduced => Price < OriginalPrice;
+
     /// <summary>عدد مرات مشاهدة صفحة تفاصيل الإعلان (من غير الأدمن وصاحب الإعلان).</summary>
     public int ViewCount { get; set; }
 
     /// <summary>إعلان مميز يثبّته الأدمن: يظهر أولًا في نتائج البحث وبشارة «مميز».</summary>
     public bool IsFeatured { get; set; }
+
+    /// <summary>نهاية مدة التمييز — بلا قيمة = تمييز دائم.</summary>
+    public DateTime? FeaturedUntil { get; set; }
+
+    /// <summary>مميز فعليًا الآن: مميز ولم تنتهِ مدة تمييزه.</summary>
+    [NotMapped]
+    public bool IsEffectivelyFeatured => IsFeatured && (FeaturedUntil == null || FeaturedUntil > DateTime.UtcNow);
 
     /// <summary>آخر مرة جدّد فيها صاحب الإعلان ظهوره أول النتائج (ترتيب «الأحدث» يستخدمها بدل تاريخ النشر).</summary>
     public DateTime? LastBumpedAt { get; set; }

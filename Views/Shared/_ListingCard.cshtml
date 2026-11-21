@@ -18,6 +18,7 @@ if (Model.AcceptsInstallments) { facts.Add(L.T("AcceptsInstallments")); }
 if (Model.IsPriceNegotiable) { facts.Add(L.T("Negotiable")); }
 if (Model.LandAreaSqm.HasValue) { facts.Add($"{L.T("LandArea")}: {Model.LandAreaSqm}"); }
 if (Model.BuildingFloors.HasValue) { facts.Add($"{L.T("BuildingFloors")}: {Model.BuildingFloors}"); }
+if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Model.ApartmentsCount}"); }
 }
 <article class="listing-card" data-listing-id="@Model.Id">
     <div class="availability-bar @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</div>
@@ -34,13 +35,17 @@ if (Model.BuildingFloors.HasValue) { facts.Add($"{L.T("BuildingFloors")}: {Model
             <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
             <span class="badge">@L.PropertyTypeText(Model.PropertyType)</span>
             <span class="badge">@L.AdvertiserTypeText(Model.AdvertiserType)</span>
-            @if (Model.IsFeatured)
+            @if (Model.IsEffectivelyFeatured)
             {
                 <span class="badge badge-featured">⭐ @L.T("Featured")</span>
             }
             @if (Model.IsUrgent)
             {
                 <span class="badge badge-urgent">🔥 @L.T("Urgent")</span>
+            }
+            @if (Model.IsPriceReduced)
+            {
+                <span class="badge badge-reduced">🔻 @L.T("PriceReduced")</span>
             }
             @if (Model.CreatedAt >= DateTime.UtcNow.AddDays(-1))
             {

@@ -35,11 +35,29 @@ else
                         @(listing.Owner?.Address ?? "-")
                     </td>
                     <td>@L.ApprovalText(listing.Approval)</td>
-                    <td>@(listing.IsFeatured ? "⭐" : "-")</td>
                     <td>
-                        <form asp-action="ToggleFeatured" method="post" class="inline-form">
+                        @(listing.IsEffectivelyFeatured ? "⭐" : "-")
+                        @if (listing.FeaturedUntil.HasValue && listing.IsFeatured)
+                        {
+                            <br /><small>@L.T("FeaturedUntil") @listing.FeaturedUntil.Value.ToLocalTime().ToString("dd/MM/yyyy")</small>
+                        }
+                    </td>
+                    <td>
+                        <form asp-action="SetFeatured" method="post" class="inline-form">
                             <input type="hidden" name="id" value="@listing.Id" />
-                            <button type="submit" class="btn btn-ghost">@(listing.IsFeatured ? L.T("UnmarkFeatured") : L.T("MarkFeatured"))</button>
+                            @if (listing.IsEffectivelyFeatured)
+                            {
+                                <button type="submit" class="btn btn-ghost">@L.T("UnmarkFeatured")</button>
+                            }
+                            else
+                            {
+                                <select name="days">
+                                    <option value="7">7 أيام</option>
+                                    <option value="14">14 يومًا</option>
+                                    <option value="30">30 يومًا</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary">@L.T("MarkFeatured")</button>
+                            }
                         </form>
                         @if (listing.Approval == ListingApproval.Pending)
                         {

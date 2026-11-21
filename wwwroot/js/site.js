@@ -300,16 +300,22 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // حقل الدور يظهر في نموذج الإعلان للشقة بس، ويتخفي لغيرها.
+    // حقل الدور يظهر في نموذج الإعلان للشقة بس، وعدد الشقق للعمارة بس.
     var propertyTypeSelect = document.getElementById("PropertyType");
     var floorField = document.getElementById("floorField");
+    var apartmentsCountField = document.getElementById("apartmentsCountField");
     function toggleFloorField() {
-        if (!propertyTypeSelect || !floorField) {
+        if (!propertyTypeSelect) {
             return;
         }
-        floorField.style.display = propertyTypeSelect.value === "Apartment" ? "" : "none";
+        if (floorField) {
+            floorField.style.display = propertyTypeSelect.value === "Apartment" ? "" : "none";
+        }
+        if (apartmentsCountField) {
+            apartmentsCountField.style.display = propertyTypeSelect.value === "Building" ? "" : "none";
+        }
     }
-    if (propertyTypeSelect && floorField) {
+    if (propertyTypeSelect && (floorField || apartmentsCountField)) {
         propertyTypeSelect.addEventListener("change", toggleFloorField);
         toggleFloorField();
     }
@@ -757,6 +763,17 @@ document.addEventListener("DOMContentLoaded", function () {
         saveGuestFavorites(ids);
         refreshGuestFavoriteButtons();
     });
+    document.addEventListener("click", function (event) {
+        var clearBtn = event.target.closest ? event.target.closest(".clear-guest-favorites") : null;
+        if (!clearBtn) {
+            return;
+        }
+        if (!confirm("حذف كل المفضلة؟")) {
+            return;
+        }
+        saveGuestFavorites([]);
+        location.reload();
+    });
     refreshGuestFavoriteButtons();
 });
 
@@ -896,4 +913,36 @@ document.addEventListener("DOMContentLoaded", function () {
     backToTop.addEventListener("click", function () {
         window.scrollTo({ top: 0, behavior: "smooth" });
     });
+});
+
+// اقتراحات أثناء الكتابة في مربع البحث (مناطق + عناوين إعلانات).
+document.addEventListener("DOMContentLoaded", function () {
+    var input = document.getElementById("searchInput");
+    var box = document.getElementById("searchSuggest");
+    if (!input || !box) { return; }
+    var timer = null;
+    input.addEventListener("input", function () {
+        var term = input.value.trim();
+        clearTimeout(timer);
+        if (term.length < 2) { box.innerHTML = ""; box.style.display = "none"; return; }
+        timer = setTimeout(function () {
+            fetch("/Listings/Suggest?term=" + encodeURIComponent(term))
+                .then(function (r) { return r.json(); })
+                .then(function (items) {
+                    if (!items.length) { box.innerHTML = ""; box.style.display = "none"; return; }
+                    box.innerHTML = "";
+                    items.forEach(function (item) {
+                        var a = document.createElement("a");
+                        a.href = item.url;
+                        a.className = "suggest-item";
+                        a.textContent = (item.kind === "area" ? "📍 " : "🏠 ") + item.label;
+                        box.appendChild(a);
+                    });
+                    box.style.display = "block";
+                })
+                .catch(function () { box.style.display = "none"; });
+        }, 250);
+    });
+    input.addEventListener("blur", function () { setTimeout(function () { box.style.display = "none"; }, 150); });
+    input.addEventListener("focus", function () { if (box.children.length) { box.style.display = "block"; } });
 });

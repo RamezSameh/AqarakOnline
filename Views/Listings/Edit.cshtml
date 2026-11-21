@@ -98,6 +98,12 @@
         <span asp-validation-for="Floor" class="field-error"></span>
     </div>
 
+    <div id="apartmentsCountField" style="@(Model.PropertyType != PropertyType.Building ? "display:none;" : "")">
+        <label>@L.T("ApartmentsCount")</label>
+        <input asp-for="ApartmentsCount" type="number" min="1" max="1000" step="1" />
+        <span asp-validation-for="ApartmentsCount" class="field-error"></span>
+    </div>
+
     <label>@L.T("Furnishing")</label>
     <select asp-for="Furnishing">
         @foreach (FurnishingLevel level in Enum.GetValues(typeof(FurnishingLevel)))
@@ -120,6 +126,9 @@
     <label>@L.T("Amenities")</label>
     <label><input asp-for="HasParking" type="checkbox" /> @L.T("Parking")</label>
     <label><input asp-for="HasElevator" type="checkbox" /> @L.T("Elevator")</label>
+    <label>@L.T("ElevatorCount")</label>
+    <input asp-for="ElevatorCount" type="number" min="1" max="20" step="1" />
+    <span asp-validation-for="ElevatorCount" class="field-error"></span>
     <label><input asp-for="HasBalcony" type="checkbox" /> @L.T("Balcony")</label>
     <label><input asp-for="HasAirConditioning" type="checkbox" /> @L.T("AirConditioning")</label>
     <label><input asp-for="HasSecurity" type="checkbox" /> @L.T("Security")</label>

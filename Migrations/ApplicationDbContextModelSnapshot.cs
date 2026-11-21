@@ -256,6 +256,9 @@ namespace AqarakOnline.Migrations
                     b.Property<int>("AdvertiserType")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ApartmentsCount")
+                        .HasColumnType("int");
+
                     b.Property<int>("Approval")
                         .HasColumnType("int");
 
@@ -287,6 +290,12 @@ namespace AqarakOnline.Migrations
                     b.Property<string>("DetailedAddress")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("ElevatorCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FeaturedUntil")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Features")
                         .HasMaxLength(2000)
@@ -345,6 +354,10 @@ namespace AqarakOnline.Migrations
 
                     b.Property<int>("ListingType")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("OriginalPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("OwnerId")
                         .HasColumnType("nvarchar(450)");

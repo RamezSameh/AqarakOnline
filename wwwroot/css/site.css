@@ -256,3 +256,12 @@ input, select, textarea { padding: 10px 12px; border: 1px solid #475569; border-
 .back-to-top { position: fixed; bottom: 16px; left: 16px; z-index: 60; width: 44px; height: 44px; border-radius: 50%; border: 1px solid #334155; background: #1e293b; color: #f8fafc; font-size: 20px; line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
 .back-to-top.visible { display: flex; }
 [data-theme="light"] .back-to-top { background: #fff; color: #0f172a; border-color: #cbd5e1; }
+
+.search-suggest-wrap { position: relative; }
+.suggest-list { position: absolute; top: 100%; inset-inline-start: 0; inset-inline-end: 0; z-index: 50; margin-top: 4px; border: 1px solid #334155; border-radius: 8px; background: #1e293b; box-shadow: 0 8px 24px rgba(0,0,0,.45); overflow: hidden; }
+.suggest-item { display: block; padding: 8px 12px; text-decoration: none; color: #f1f5f9; }
+.suggest-item:hover { background: #334155; }
+[data-theme="light"] .suggest-list { background: #fff; border-color: #cbd5e1; }
+[data-theme="light"] .suggest-item { color: #0f172a; }
+[data-theme="light"] .suggest-item:hover { background: #f1f5f9; }
+.badge-reduced { background: #dc2626; color: #fff; }

@@ -36,7 +36,7 @@
 <div class="listing-meta">
     <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
     <span class="badge">@L.PropertyTypeText(Model.PropertyType)</span>
-    @if (Model.IsFeatured)
+    @if (Model.IsEffectivelyFeatured)
     {
         <span class="badge badge-featured">⭐ @L.T("Featured")</span>
     }
@@ -174,7 +174,19 @@ else
 {
     <p><strong>@L.T("BuildingFloors"):</strong> @Model.BuildingFloors</p>
 }
+@if (Model.ApartmentsCount.HasValue)
+{
+    <p><strong>@L.T("ApartmentsCount"):</strong> @Model.ApartmentsCount</p>
+}
+@if (Model.ElevatorCount.HasValue)
+{
+    <p><strong>@L.T("ElevatorCount"):</strong> @Model.ElevatorCount</p>
+}
 <p><strong>@L.T("Price"):</strong> @L.PriceText(Model.Price, Model.ListingType)</p>
+@if (Model.IsPriceReduced)
+{
+    <p><strong>@L.T("OriginalPrice"):</strong> <del>@Model.OriginalPrice.ToString("N0") جنيه</del></p>
+}
 @{
     var avgSqm = ViewBag.AreaAvgPricePerSqm as decimal?;
     var mySqm = ViewBag.PricePerSqm as decimal?;
