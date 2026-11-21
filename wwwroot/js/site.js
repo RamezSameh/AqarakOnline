@@ -493,6 +493,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     renderCompare();
 
+    // تثبيت الموقع كتطبيق (PWA): تسجيل الـ Service Worker.
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+            navigator.serviceWorker.register("/sw.js").catch(function () { /* يعمل الموقع عاديًا بدونه */ });
+        });
+    }
+
     // نسخ رابط الإعلان: زر "نسخ الرابط" في الكارت والتفاصيل.
     // بتفويض الأحداث حتى يعمل بعد استبدال شبكة الكروت لحظيًا.
     document.addEventListener("click", function (event) {

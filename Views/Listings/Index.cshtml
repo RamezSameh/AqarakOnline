@@ -1,4 +1,14 @@
 @model IEnumerable<Listing>
+@section Meta {
+    @if (ViewBag.AreaPage != null)
+    {
+        <link rel="canonical" href="@ViewBag.CanonicalUrl" />
+        <meta property="og:title" content="إعلانات @ViewBag.AreaPage" />
+        <meta property="og:description" content="شقق وفيلات ومحلات للبيع والإيجار في @ViewBag.AreaPage — عقارك أونلاين." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="@ViewBag.CanonicalUrl" />
+    }
+}
 @{
     var listingTypes = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
     {
@@ -37,7 +47,7 @@
     var totalPages = (int)(ViewBag.TotalPages ?? 1);
     var totalCount = (int)(ViewBag.TotalCount ?? 0);
 }
-<h1>@L.T("Listings")</h1>
+<h1>@(ViewBag.AreaPage != null ? "إعلانات " + ViewBag.AreaPage : L.T("Listings"))</h1>
 
 <details class="filters-box" open>
     <summary>@L.T("Filters")</summary>

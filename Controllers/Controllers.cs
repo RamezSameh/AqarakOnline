@@ -184,6 +184,15 @@ public class ListingsController : Controller
                 .Select(f => f.ListingId)
                 .ToListAsync()).ToHashSet();
         }
+        var pageOwnerIds = listings.Select(l => l.OwnerId)
+            .Where(id => !string.IsNullOrEmpty(id)).Distinct().ToList();
+        var pageRatingRows = await _context.AdvertiserReviews
+            .Where(r => pageOwnerIds.Contains(r.AdvertiserId))
+            .GroupBy(r => r.AdvertiserId)
+            .Select(g => new { AdvertiserId = g.Key, Avg = g.Average(r => r.Rating), Count = g.Count() })
+            .ToListAsync();
+        ViewBag.AdvertiserRatings = pageRatingRows
+            .ToDictionary(g => g.AdvertiserId, g => (g.Avg, g.Count));
         return View(listings);
     }
 
@@ -213,6 +222,15 @@ public class ListingsController : Controller
             ViewBag.IsFavorite = await _context.Favorites
                 .AnyAsync(f => f.UserId == CurrentUserId && f.ListingId == listing.Id);
         }
+        // تقييمات المعلن + متوسط تقييمه (ولأصحاب الإعلانات المشابهة لعرضها في كروتهم).
+        ViewBag.AdvertiserReviews = await _context.AdvertiserReviews
+            .Include(r => r.Reviewer)
+            .Where(r => r.AdvertiserId == listing.OwnerId)
+            .OrderByDescending(r => r.CreatedAt).ToListAsync();
+        ViewBag.MyReview = User.Identity?.IsAuthenticated == true
+            ? await _context.AdvertiserReviews
+                .FirstOrDefaultAsync(r => r.AdvertiserId == listing.OwnerId && r.ReviewerId == CurrentUserId)
+            : null;
         // إعلانات مشابهة: نفس المنطقة أولًا، ثم نفس النوع، وبسعر قريب.
         ViewBag.SimilarListings = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.Approval == ListingApproval.Approved && l.Id != listing.Id
@@ -221,10 +239,42 @@ public class ListingsController : Controller
             .ThenBy(l => Math.Abs(l.Price - listing.Price))
             .Take(4)
             .ToListAsync();
+        var similarForRatings = ViewBag.SimilarListings as List<Listing> ?? new List<Listing>();
+        var ratingOwnerIds = similarForRatings.Select(l => l.OwnerId)
+            .Append(listing.OwnerId)
+            .Where(id => !string.IsNullOrEmpty(id))
+            .Distinct().ToList();
+        var ratingRows = await _context.AdvertiserReviews
+            .Where(r => ratingOwnerIds.Contains(r.AdvertiserId))
+            .GroupBy(r => r.AdvertiserId)
+            .Select(g => new { AdvertiserId = g.Key, Avg = g.Average(r => r.Rating), Count = g.Count() })
+            .ToListAsync();
+        ViewBag.AdvertiserRatings = ratingRows
+            .ToDictionary(g => g.AdvertiserId, g => (g.Avg, g.Count));
         return View(listing);
     }
 
     [Authorize]
+    /// <summary>
+    /// صفحة منطقة (للـ SEO): نفس نتائج البحث لكن برابط ثابت لكل منطقة،
+    /// مثل /Listings/Area/مدينة-نصر،-القاهرة — وتظهر في sitemap.xml.
+    /// </summary>
+    [HttpGet]
+    [Route("Listings/Area/{area}")]
+    public async Task<IActionResult> Area(string area)
+    {
+        if (string.IsNullOrWhiteSpace(area) || !Models.ListingAreas.All.Contains(area))
+        {
+            return NotFound();
+        }
+        ViewBag.AreaPage = area;
+        ViewBag.CanonicalUrl = $"{Request.Scheme}://{Request.Host}/Listings/Area/{Uri.EscapeDataString(area)}";
+        return await Index(search: null, listingType: null, propertyType: null,
+            minPrice: null, maxPrice: null, onlyAvailable: false,
+            minArea: null, maxArea: null, sort: null, page: 1,
+            minRooms: null, furnishedOnly: false, area: area);
+    }
+
     /// <summary>مقارنة حتى 3 إعلانات مقبولة جنب بعض (ids مفصولة بفاصلة).</summary>
     [HttpGet]
     public async Task<IActionResult> Compare(string? ids)
@@ -946,8 +996,12 @@ public class AdminController : Controller
         var requests = await _context.ContactRequests
             .Where(r => r.BuyerId == user.Id)
             .ToListAsync();
+        var reviews = await _context.AdvertiserReviews
+            .Where(r => r.AdvertiserId == user.Id || r.ReviewerId == user.Id)
+            .ToListAsync();
         _context.Listings.RemoveRange(listings);
         _context.ContactRequests.RemoveRange(requests);
+        _context.AdvertiserReviews.RemoveRange(reviews);
         await _context.SaveChangesAsync();
         var result = await _userManager.DeleteAsync(user);
         if (!result.Succeeded)
@@ -1571,6 +1625,151 @@ public class SavedSearchesController : Controller
         && a.PropertyType == b.PropertyType && a.MinPrice == b.MinPrice && a.MaxPrice == b.MaxPrice
         && a.MinAreaSqm == b.MinAreaSqm && a.MaxAreaSqm == b.MaxAreaSqm
         && a.MinRooms == b.MinRooms && a.FurnishedOnly == b.FurnishedOnly;
+}
+
+/// <summary>ملفات الـ SEO: خريطة الموقع وrobots.txt — بروابط مطلقة من الدومين الحالي.</summary>
+public class SeoController : Controller
+{
+    private readonly ApplicationDbContext _context;
+
+    public SeoController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    [HttpGet]
+    [Route("sitemap.xml")]
+    public async Task<IActionResult> Sitemap()
+    {
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        var urls = new List<(string Loc, string? LastMod)>
+        {
+            ($"{baseUrl}/", null),
+            ($"{baseUrl}/Listings", null)
+        };
+        foreach (var area in Models.ListingAreas.All)
+        {
+            urls.Add(($"{baseUrl}/Listings/Area/{Uri.EscapeDataString(area)}", null));
+        }
+        var listings = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved)
+            .OrderByDescending(l => l.CreatedAt)
+            .Select(l => new { l.Id, l.CreatedAt })
+            .ToListAsync();
+        foreach (var listing in listings)
+        {
+            urls.Add(($"{baseUrl}/Listings/Details/{listing.Id}", listing.CreatedAt.ToString("yyyy-MM-dd")));
+        }
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        sb.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
+        foreach (var (loc, lastMod) in urls)
+        {
+            sb.AppendLine("  <url>");
+            sb.AppendLine($"    <loc>{System.Security.SecurityElement.Escape(loc)}</loc>");
+            if (lastMod != null)
+            {
+                sb.AppendLine($"    <lastmod>{lastMod}</lastmod>");
+            }
+            sb.AppendLine("  </url>");
+        }
+        sb.AppendLine("</urlset>");
+        return Content(sb.ToString(), "application/xml", System.Text.Encoding.UTF8);
+    }
+
+    [HttpGet]
+    [Route("robots.txt")]
+    public IActionResult Robots()
+    {
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        return Content($"User-agent: *\nAllow: /\nSitemap: {baseUrl}/sitemap.xml\n", "text/plain", System.Text.Encoding.UTF8);
+    }
+}
+
+/// <summary>
+/// تقييم المعلن: مستخدم مسجَّل يقيّم صاحب إعلان (1-5 نجوم + تعليق اختياري).
+/// تقييم واحد لكل (مقيِّم، معلن) — إعادة التقييم تحدّث السابق.
+/// </summary>
+[Authorize]
+public class ReviewsController : Controller
+{
+    private readonly ApplicationDbContext _context;
+
+    public ReviewsController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(string advertiserId, int listingId, int rating, string? comment)
+    {
+        if (string.IsNullOrWhiteSpace(advertiserId) || advertiserId == CurrentUserId)
+        {
+            TempData["Error"] = "لا يمكنك تقييم نفسك.";
+            return RedirectToAction("Details", "Listings", new { id = listingId });
+        }
+        if (rating < 1 || rating > 5)
+        {
+            TempData["Error"] = "التقييم من 1 إلى 5 نجوم.";
+            return RedirectToAction("Details", "Listings", new { id = listingId });
+        }
+        var listing = await _context.Listings.FindAsync(listingId);
+        if (listing == null || listing.OwnerId != advertiserId)
+        {
+            return NotFound();
+        }
+        var cleanComment = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim();
+        if (cleanComment != null && cleanComment.Length > 1000)
+        {
+            cleanComment = cleanComment[..1000];
+        }
+        var existing = await _context.AdvertiserReviews
+            .FirstOrDefaultAsync(r => r.AdvertiserId == advertiserId && r.ReviewerId == CurrentUserId);
+        if (existing == null)
+        {
+            _context.AdvertiserReviews.Add(new AdvertiserReview
+            {
+                AdvertiserId = advertiserId,
+                ReviewerId = CurrentUserId,
+                ListingId = listingId,
+                Rating = rating,
+                Comment = cleanComment,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            existing.Rating = rating;
+            existing.Comment = cleanComment;
+            existing.ListingId = listingId;
+            existing.CreatedAt = DateTime.UtcNow;
+        }
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تم حفظ تقييمك.";
+        return RedirectToAction("Details", "Listings", new { id = listingId });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id, string? returnUrl = null)
+    {
+        var review = await _context.AdvertiserReviews.FindAsync(id);
+        if (review != null)
+        {
+            _context.AdvertiserReviews.Remove(review);
+            await _context.SaveChangesAsync();
+            TempData["Info"] = "تم حذف التقييم.";
+        }
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return Redirect(returnUrl);
+        }
+        return RedirectToAction("Index", "Listings");
+    }
 }
 
 public class FavoritesController : Controller
