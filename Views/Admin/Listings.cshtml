@@ -2,6 +2,19 @@
 <h1>@L.T("AdminListings")</h1>
 <p>بيانات المعلن تظهر هنا للأدمن فقط، ولا تظهر في صفحة الإعلان العامة.</p>
 <p><a class="btn btn-primary" asp-action="ExportListings">⬇ @L.T("ExportListings")</a> <a class="btn btn-primary" asp-action="ImportListings">⬆ @L.T("ImportListings")</a></p>
+<form class="filter-form" asp-action="Listings" method="get">
+    <input type="text" name="search" value="@ViewBag.Search" placeholder="@L.T("SearchPlaceholder")" />
+    <label class="sort-label">
+        الحالة
+        <select name="approval">
+            <option value="" selected="@(string.IsNullOrWhiteSpace(ViewBag.Approval))">الكل</option>
+            <option value="Approved" selected="@(ViewBag.Approval == "Approved")">مقبول</option>
+            <option value="Pending" selected="@(ViewBag.Approval == "Pending")">معلّق</option>
+            <option value="Rejected" selected="@(ViewBag.Approval == "Rejected")">مرفوض</option>
+        </select>
+    </label>
+    <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
+</form>
 @if (!Model.Any())
 {
     <p>@L.T("NoResults")</p>

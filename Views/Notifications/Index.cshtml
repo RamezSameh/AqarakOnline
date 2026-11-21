@@ -1,5 +1,16 @@
 @model IEnumerable<AqarakOnline.Controllers.UserNotificationRow>
 <h1>@L.T("Notifications")</h1>
+<form class="filter-form" asp-action="Index" method="get">
+    <label class="sort-label">
+        الحالة
+        <select name="filter">
+            <option value="" selected="@(string.IsNullOrWhiteSpace(ViewBag.Filter))">الكل</option>
+            <option value="unread" selected="@(ViewBag.Filter == "unread")">غير مقروء</option>
+            <option value="read" selected="@(ViewBag.Filter == "read")">مقروء</option>
+        </select>
+    </label>
+    <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
+</form>
 @if (!Model.Any())
 {
     <p>@L.T("NoNotifications")</p>

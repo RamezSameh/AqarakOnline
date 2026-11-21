@@ -259,7 +259,12 @@ public class AccountController : Controller
                 .CountAsync(),
             RecentNotifications = await _context.Notifications
                 .Where(n => n.IsActive && (n.TargetUserId == null || n.TargetUserId == userId))
-                .OrderByDescending(n => n.CreatedAt).Take(5).ToListAsync()
+                .OrderByDescending(n => n.CreatedAt).Take(5).ToListAsync(),
+            LastActivityAt = new[]
+            {
+                await _context.Listings.Where(l => l.OwnerId == userId).MaxAsync(l => (DateTime?)l.CreatedAt),
+                await _context.Notifications.Where(n => n.IsActive && (n.TargetUserId == null || n.TargetUserId == userId)).MaxAsync(n => (DateTime?)n.CreatedAt)
+            }.Max()
         };
         return View(model);
     }
@@ -326,5 +331,6 @@ public class MyAccountViewModel
     public int FavoritesCount { get; set; }
     public int SavedSearchesCount { get; set; }
     public int UnreadNotificationsCount { get; set; }
+    public DateTime? LastActivityAt { get; set; }
     public List<Notification> RecentNotifications { get; set; } = new();
 }

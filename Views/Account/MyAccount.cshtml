@@ -6,6 +6,7 @@
     <div class="listing-card stat-card"><div class="listing-body"><h3>بحثي المحفوظ</h3><p class="stat-number">@Model.SavedSearchesCount</p></div></div>
     <div class="listing-card stat-card"><div class="listing-body"><h3>تنبيهات غير مقروءة</h3><p class="stat-number">@Model.UnreadNotificationsCount</p></div></div>
 </div>
+<p>آخر نشاط: @(Model.LastActivityAt.HasValue ? L.RelativeTime(Model.LastActivityAt.Value) : "-")</p>
 <div class="quick-links">
     <a class="btn btn-ghost quick-link" asp-controller="Listings" asp-action="MyListings">📋 إعلاناتي</a>
     <a class="btn btn-ghost quick-link" asp-controller="Favorites" asp-action="Index">♥ المفضلة</a>

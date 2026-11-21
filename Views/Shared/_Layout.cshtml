@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
+    <div id="pageLoader" class="page-loader"></div>
     <header class="site-header">
         <div class="container header-inner">
             <a class="brand" asp-controller="Home" asp-action="Index"><span class="brand-icon">🏠</span> @L.T("Brand")</a>
@@ -33,11 +34,16 @@
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     @* باقي الخصائص ظاهرة عادي في الـ header على اليمين. *@
-                    <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">📋 @L.T("MyListings")</a>
-                    <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>
-                    <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">🔔 @L.T("SavedSearches")</a>
-                    <a class="nav-link @(currentController == "Viewings" ? "active" : "")" asp-controller="Viewings" asp-action="Index">📅 @L.T("Viewings")</a>
-                    <a class="nav-link @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">👤 @L.T("MyAccount")</a>
+                    <div class="user-menu">
+                        <button type="button" class="nav-link user-menu-btn" id="userMenuBtn">👤 @L.T("MyAccount") ▾</button>
+                        <div class="user-menu-dropdown" id="userMenuDropdown" hidden>
+                            <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">📋 @L.T("MyListings")</a>
+                            <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>
+                            <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">🔔 @L.T("SavedSearches")</a>
+                            <a class="nav-link @(currentController == "Viewings" ? "active" : "")" asp-controller="Viewings" asp-action="Index">📅 @L.T("Viewings")</a>
+                            <a class="nav-link @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">👤 @L.T("MyAccount")</a>
+                        </div>
+                    </div>
                     <a class="nav-cta nav-create-primary @(currentController == "Listings" && currentAction == "Create" ? "active" : "")" asp-controller="Listings" asp-action="Create">➕ @L.T("CreateListing")</a>
                     @* غلاف display:contents حتى تُستبدل الإدارة لحظيًا من غير كسر توزيع الـ flex. *@
                     <span id="adminNavLinks" style="display:contents">@await Component.InvokeAsync("AdminNav")</span>
@@ -97,15 +103,15 @@
             </div>
             <div class="footer-col">
                 <p class="footer-heading">روابط سريعة</p>
-                <p><a asp-controller="Home" asp-action="Contact">@L.T("ContactUs")</a></p>
-                <p><a asp-controller="Home" asp-action="SellGuide">@L.T("SellGuide")</a></p>
-                <p><a asp-controller="Home" asp-action="Tips">@L.T("Tips")</a></p>
-                <p><a asp-controller="Home" asp-action="PriceGuide">@L.T("PriceGuide")</a></p>
-                <p><a asp-controller="Home" asp-action="BuyingMistakes">@L.T("BuyingMistakes")</a></p>
-                <p><a asp-controller="Home" asp-action="Terms">@L.T("TermsOfUse")</a></p>
-                <p><a asp-controller="Home" asp-action="Privacy">@L.T("PrivacyPolicy")</a></p>
-                <p><a asp-controller="Listings" asp-action="Index" asp-route-sort="newest">أحدث الإعلانات</a></p>
-                <p><a asp-controller="Listings" asp-action="Index" asp-route-sort="viewsDesc">الأكثر مشاهدة</a></p>
+                <p>📞 <a asp-controller="Home" asp-action="Contact">@L.T("ContactUs")</a></p>
+                <p>📖 <a asp-controller="Home" asp-action="SellGuide">@L.T("SellGuide")</a></p>
+                <p>💡 <a asp-controller="Home" asp-action="Tips">@L.T("Tips")</a></p>
+                <p>💰 <a asp-controller="Home" asp-action="PriceGuide">@L.T("PriceGuide")</a></p>
+                <p>⚠️ <a asp-controller="Home" asp-action="BuyingMistakes">@L.T("BuyingMistakes")</a></p>
+                <p>📜 <a asp-controller="Home" asp-action="Terms">@L.T("TermsOfUse")</a></p>
+                <p>🔒 <a asp-controller="Home" asp-action="Privacy">@L.T("PrivacyPolicy")</a></p>
+                <p>🆕 <a asp-controller="Listings" asp-action="Index" asp-route-sort="newest">أحدث الإعلانات</a></p>
+                <p>👁️ <a asp-controller="Listings" asp-action="Index" asp-route-sort="viewsDesc">الأكثر مشاهدة</a></p>
             </div>
             <div class="footer-col">
                 <p class="footer-heading">تواصل معنا</p>

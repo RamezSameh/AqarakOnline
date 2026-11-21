@@ -34,7 +34,8 @@
     </div>
     <div class="steps-progress"><div class="steps-progress-bar" id="stepsProgressBar"></div></div>
 
-    <h2 class="form-step step-1"><span class="step-num">1</span> بيانات الإعلان</h2>
+    <details class="form-step-details" open>
+    <summary class="form-step step-1"><span class="step-num">1</span> بيانات الإعلان</summary>
 
     <label>@L.T("Title")</label>
     <input asp-for="Title" placeholder="مثال: شقة 3 غرف في مدينة نصر" />
@@ -74,6 +75,7 @@
     <label>@L.T("Details")</label>
     <textarea asp-for="Description" rows="4" placeholder="اكتب وصفًا واضحًا للعقار..."></textarea>
     <small id="descCounter" class="char-counter"></small>
+    <small id="descWordCounter" class="char-counter"></small>
     <span asp-validation-for="Description" class="field-error"></span>
 
     <label>@L.T("Features")</label>
@@ -86,11 +88,14 @@
     <label>@L.T("CustomFeature")</label>
     <input type="text" name="customFeatures" value="@string.Join("، ", Model.FeaturesList.Except(AqarakOnline.Models.ListingFeatures.All))" placeholder="اكتب ميزة مش موجودة في الاختيارات (افصل بين الميزات بفاصلة)" />
 
+    </details>
+
     <div class="step-nav">
         <button type="button" class="btn btn-primary step-next" data-target="step-2">التالي ←</button>
     </div>
 
-    <h2 class="form-step step-2"><span class="step-num">2</span> السعر والمواصفات</h2>
+    <details class="form-step-details" open>
+    <summary class="form-step step-2"><span class="step-num">2</span> السعر والمواصفات</summary>
 
     <div class="form-row">
         <div>
@@ -185,12 +190,15 @@
         <label><input asp-for="IsAvailable" type="checkbox" /> @L.T("Available")</label>
     }
 
+    </details>
+
     <div class="step-nav">
         <button type="button" class="btn btn-ghost step-prev" data-target="step-1">→ السابق</button>
         <button type="button" class="btn btn-primary step-next" data-target="step-3">التالي ←</button>
     </div>
 
-    <h2 class="form-step step-3"><span class="step-num">3</span> الصور والفيديو</h2>
+    <details class="form-step-details" open>
+    <summary class="form-step step-3"><span class="step-num">3</span> الصور والفيديو</summary>
 
     <label>صور توضيحية (حتى 5 صور)</label>
     <div id="photoDropZone" class="drop-zone">
@@ -247,13 +255,18 @@
 
     <div id="uploadStatus" class="upload-progress" hidden><div class="upload-progress-bar"></div><span>@L.T("UploadingListing")</span></div>
 
+    </details>
+
     <div class="step-nav">
         <button type="button" class="btn btn-ghost step-prev" data-target="step-2">→ السابق</button>
         <button type="button" class="btn btn-primary step-next" data-target="step-4">مراجعة ←</button>
     </div>
 
-    <h2 class="form-step step-4"><span class="step-num">4</span> مراجعة الإعلان</h2>
+    <details class="form-step-details" open>
+    <summary class="form-step step-4"><span class="step-num">4</span> مراجعة الإعلان</summary>
     <div id="reviewPanel" class="review-panel"></div>
+
+    </details>
 
     <div class="actions">
         <button type="button" id="previewListingBtn" class="btn btn-ghost">👁 @L.T("PreviewListing")</button>

@@ -363,6 +363,10 @@ document.addEventListener("DOMContentLoaded", function () {
             if (lightboxImg) {
                 lightboxImg.src = urls[current];
             }
+            var lbDownload = document.getElementById("lightboxDownload");
+            if (lbDownload) {
+                lbDownload.href = urls[current];
+            }
             if (lightboxCounter) {
                 lightboxCounter.textContent = (current + 1) + " / " + urls.length;
             }
@@ -643,13 +647,9 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         var done = function () {
-            var original = btn.textContent;
-            btn.textContent = "تم النسخ ✓";
-            btn.disabled = true;
-            setTimeout(function () {
-                btn.textContent = original;
-                btn.disabled = false;
-            }, 2000);
+            if (window.showToast) {
+                window.showToast("تم النسخ ✓");
+            }
         };
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(url).then(done).catch(function () { fallbackCopy(url, done); });
@@ -965,7 +965,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!backToTop) { return; }
     var ringFg = backToTop.querySelector(".ring-fg");
     function updateBackToTop() {
-        backToTop.classList.toggle("visible", window.scrollY > 400);
+        backToTop.classList.toggle("visible", window.scrollY > 200);
         if (ringFg) {
             var max = document.documentElement.scrollHeight - window.innerHeight;
             var p = max > 0 ? Math.min(window.scrollY / max, 1) : 0;
@@ -1288,4 +1288,180 @@ document.addEventListener("DOMContentLoaded", function () {
     if (notifMessage && previewMessage) {
         notifMessage.addEventListener("input", function () { previewMessage.textContent = notifMessage.value || "نص التنبيه"; });
     }
+});
+
+// Batch 27 — design 9
+document.addEventListener("DOMContentLoaded", function () {
+    // 50 — toast helper used by the copy handler.
+    window.showToast = function (message) {
+        var toast = document.createElement("div");
+        toast.className = "toast toast-info";
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(function () {
+            toast.classList.add("hide");
+            setTimeout(function () { toast.remove(); }, 400);
+        }, 2500);
+    };
+
+    // 16 — word counter for the description.
+    var desc = document.getElementById("Description");
+    var wordCounter = document.getElementById("descWordCounter");
+    if (desc && wordCounter) {
+        var updateWords = function () {
+            var count = desc.value.trim() === "" ? 0 : desc.value.trim().split(/\s+/).length;
+            wordCounter.textContent = count + " كلمة";
+        };
+        desc.addEventListener("input", updateWords);
+        updateWords();
+    }
+
+    // 17 — confirm before saving a listing.
+    var listingForm = document.getElementById("listingForm");
+    if (listingForm) {
+        var saveBtn = listingForm.querySelector('button[type="submit"]');
+        if (saveBtn) {
+            saveBtn.addEventListener("click", function (e) {
+                if (!confirm("حفظ الإعلان؟")) {
+                    e.preventDefault();
+                }
+            });
+        }
+    }
+
+    // 18 — morning/evening chips in the viewing form.
+    document.querySelectorAll(".time-chip").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+            var input = document.getElementById("requestedAtInput");
+            if (!input) { return; }
+            var datePart = input.value ? input.value.split("T")[0] : new Date().toISOString().slice(0, 10);
+            input.value = datePart + "T" + chip.getAttribute("data-time");
+        });
+    });
+
+    // 19 — copy from a previous listing (Create only).
+    var copySelect = document.getElementById("copyFromListing");
+    if (copySelect) {
+        copySelect.addEventListener("change", function () {
+            var opt = copySelect.options[copySelect.selectedIndex];
+            if (!opt || !opt.value) { return; }
+            var setValue = function (id, value) {
+                var el = document.getElementById(id);
+                if (!el) { return; }
+                el.value = value || "";
+                el.dispatchEvent(new Event("input", { bubbles: true }));
+                el.dispatchEvent(new Event("change", { bubbles: true }));
+            };
+            setValue("Title", opt.getAttribute("data-title"));
+            setValue("Price", opt.getAttribute("data-price"));
+            setValue("AreaSqm", opt.getAttribute("data-area"));
+            setValue("Area", opt.getAttribute("data-area-name"));
+            setValue("ListingType", opt.getAttribute("data-listing-type"));
+            setValue("PropertyType", opt.getAttribute("data-property-type"));
+            setValue("Description", opt.getAttribute("data-desc"));
+        });
+    }
+
+    // 21 — compact view in MyListings.
+    var compactToggle = document.getElementById("compactToggle");
+    var myGrid = document.getElementById("myListingsGrid");
+    if (compactToggle && myGrid) {
+        compactToggle.addEventListener("click", function () {
+            var compact = myGrid.classList.toggle("my-listings-compact");
+            compactToggle.textContent = compact ? "عرض كروت" : "عرض مدمج";
+        });
+    }
+
+    // 26 — register two steps.
+    var regNext = document.getElementById("registerNextBtn");
+    var regPrev = document.getElementById("registerPrevBtn");
+    var regStep1 = document.getElementById("registerStep1");
+    var regStep2 = document.getElementById("registerStep2");
+    if (regNext && regPrev && regStep1 && regStep2) {
+        regNext.addEventListener("click", function () { regStep1.hidden = true; regStep2.hidden = false; });
+        regPrev.addEventListener("click", function () { regStep2.hidden = true; regStep1.hidden = false; });
+        var step2Errors = regStep2.querySelectorAll(".field-error:not(:empty)");
+        if (step2Errors.length > 0) { regStep1.hidden = true; regStep2.hidden = false; }
+    }
+
+    // 31 — quick area chips set minArea.
+    document.querySelectorAll(".area-chip").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+            var minArea = document.querySelector('input[name="minArea"]');
+            if (minArea) { minArea.value = chip.getAttribute("data-min"); }
+        });
+    });
+
+    // 32 — load more listings instead of pagination.
+    var loadMoreBtn = document.getElementById("loadMoreBtn");
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener("click", function () {
+            var nextPage = parseInt(loadMoreBtn.getAttribute("data-next-page"), 10);
+            var totalPages = parseInt(loadMoreBtn.getAttribute("data-total-pages"), 10);
+            var url = new URL(window.location.href);
+            var areaMatch = url.pathname.match(/\/Listings\/Area\/(.+)$/);
+            if (areaMatch) {
+                url.pathname = "/Listings";
+                url.searchParams.set("area", decodeURIComponent(areaMatch[1]));
+            }
+            url.searchParams.set("page", nextPage);
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.textContent = "جاري التحميل...";
+            fetch(url.toString())
+                .then(function (r) { return r.text(); })
+                .then(function (html) {
+                    var doc = new DOMParser().parseFromString(html, "text/html");
+                    var grid = document.querySelector(".cards-grid");
+                    var newGrid = doc.querySelector(".cards-grid");
+                    if (grid && newGrid) {
+                        newGrid.querySelectorAll(":scope > .listing-card").forEach(function (el) {
+                            grid.appendChild(el);
+                        });
+                    }
+                    var next = nextPage + 1;
+                    if (next > totalPages) {
+                        loadMoreBtn.remove();
+                    } else {
+                        loadMoreBtn.setAttribute("data-next-page", next);
+                        loadMoreBtn.disabled = false;
+                        loadMoreBtn.textContent = "عرض المزيد ↓";
+                    }
+                })
+                .catch(function () {
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.textContent = "عرض المزيد ↓";
+                });
+        });
+    }
+
+    // 34 — alternate the hero background every 8 seconds.
+    var hero = document.querySelector(".hero");
+    if (hero) {
+        setInterval(function () { hero.classList.toggle("hero-alt"); }, 8000);
+    }
+
+    // 36 — user menu dropdown.
+    var userMenuBtn = document.getElementById("userMenuBtn");
+    var userMenuDropdown = document.getElementById("userMenuDropdown");
+    if (userMenuBtn && userMenuDropdown) {
+        userMenuBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            userMenuDropdown.hidden = !userMenuDropdown.hidden;
+        });
+        document.addEventListener("click", function (e) {
+            if (!userMenuDropdown.hidden && !e.target.closest(".user-menu")) {
+                userMenuDropdown.hidden = true;
+            }
+        });
+    }
+
+    // 49 — page loading indicator on internal links.
+    document.addEventListener("click", function (e) {
+        var a = e.target.closest("a");
+        if (!a || a.target === "_blank") { return; }
+        var href = a.getAttribute("href");
+        if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("http")) { return; }
+        var loader = document.getElementById("pageLoader");
+        if (loader) { loader.classList.add("loading"); }
+    });
 });

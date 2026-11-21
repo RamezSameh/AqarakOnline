@@ -2,6 +2,10 @@
 <h1>لوحة التحكم</h1>
 <p><a class="btn btn-primary export-btn" asp-action="ExportBackup">⬇ @L.T("DownloadBackup")</a></p>
 <p>تحليل بيانات المنصة: المستخدمون، وعدد الإعلانات لكل مستخدم، مع فلترة حسب المستخدم أو المنطقة.</p>
+@if (Model.PendingListings > 0)
+{
+    <p class="alert-info pending-banner">⏳ يوجد @Model.PendingListings إعلان معلّق بانتظار المراجعة.</p>
+}
 
 <div class="dash-tabs" role="tablist">
     <button type="button" class="dash-tab-btn active" data-tab="dash-overview">نظرة عامة</button>
@@ -16,6 +20,20 @@
 </form>
 
 <section class="dash-tab" id="dash-overview">
+<h2>آخر المستخدمين</h2>
+@if (ViewBag.LatestUsers is List<ApplicationUser> latestUsers && latestUsers.Any())
+{
+    <ul class="latest-list">
+        @foreach (var user in latestUsers)
+        {
+            <li>@(user.FullName ?? user.UserName) — @user.PhoneNumber • @L.RelativeTime(user.CreatedAt)</li>
+        }
+    </ul>
+}
+else
+{
+    <p>لا يوجد مستخدمون بعد.</p>
+}
 <div class="cards-grid">
     <div class="listing-card stat-card"><div class="listing-body"><h3>المستخدمون</h3><p class="stat-number">@Model.TotalUsers</p><p>قيد المراجعة: @Model.PendingUsers | مفعّلون: @Model.ActiveUsers | موقوفون/محظورون: @Model.SuspendedOrBlockedUsers</p></div></div>
     <div class="listing-card stat-card"><div class="listing-body"><h3>الإعلانات</h3><p class="stat-number">@Model.TotalListings</p><p>مقبول: @Model.ApprovedListings | قيد المراجعة: @Model.PendingListings | متاح: @Model.AvailableListings</p></div></div>

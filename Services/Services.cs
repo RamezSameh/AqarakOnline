@@ -120,6 +120,8 @@ public class LanguageService
         ["SortPriceDesc"] = ("السعر: من الأعلى", "Price: high to low"),
         ["SortAreaDesc"] = ("المساحة: الأكبر", "Area: largest"),
         ["SortViewsDesc"] = ("الأكثر مشاهدة", "Most viewed"),
+        ["SortAreaAsc"] = ("المنطقة (أ-ي)", "Area (A-Z)"),
+        ["SortAreaDesc"] = ("المنطقة (ي-أ)", "Area (Z-A)"),
         ["SortPricePerSqmAsc"] = ("سعر المتر: من الأقل", "Price per sqm: low to high"),
         ["SortPricePerSqmDesc"] = ("سعر المتر: من الأعلى", "Price per sqm: high to low"),
         ["SearchByAdNumber"] = ("ابحث برقم الإعلان (مثال: AQ-0001)", "Search by ad number (e.g. AQ-0001)"),

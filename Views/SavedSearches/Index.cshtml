@@ -25,6 +25,7 @@ else
                 <p>@L.T("ListingType"): @(saved.ListingType.HasValue ? L.ListingTypeText(saved.ListingType.Value) : "-")</p>
                 <p>@L.T("Price"): @priceText</p>
                 <p>@L.T("AreaSqm"): @areaText</p>
+                <p>حُفظ في: @saved.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</p>
                 <p><strong>@L.T("MatchingNow"): @(matchCounts.TryGetValue(saved.Id, out var count) ? count : 0)</strong></p>
                 <div class="actions">
                     <a class="btn btn-primary run-search-btn" asp-action="Run" asp-route-id="@saved.Id">@L.T("RunSearch")</a>

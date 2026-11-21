@@ -78,9 +78,13 @@ public class HomeController : Controller
         return View();
     }
 
-    public IActionResult Error404()
+    public async Task<IActionResult> Error404()
     {
         Response.StatusCode = StatusCodes.Status404NotFound;
+        ViewBag.SuggestedListings = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
+            .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
+            .OrderByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
+            .Take(3).ToListAsync();
         return View();
     }
 
@@ -583,8 +587,12 @@ public class ListingsController : Controller
     }
 
     [HttpGet]
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
+        var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        ViewBag.MyListings = await _context.Listings
+            .Where(l => l.OwnerId == userId)
+            .OrderByDescending(l => l.CreatedAt).Take(20).ToListAsync();
         return View(new Listing());
     }
 
@@ -1426,6 +1434,13 @@ public class AdminNotificationFormViewModel
     public string Message { get; set; } = string.Empty;
 }
 
+public class ImportPreviewRow
+{
+    public int RowNumber { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? Error { get; set; }
+}
+
 public class AdminUserRow
 {
     public ApplicationUser User { get; set; } = null!;
@@ -1723,6 +1738,7 @@ public class AdminController : Controller
         model.SaleListings = allListings.Count(l => l.ListingType == ListingType.Sale);
         model.RentListings = allListings.Count(l => l.ListingType == ListingType.Rent);
         ViewBag.LatestListings = allListings.OrderByDescending(l => l.CreatedAt).Take(5).ToList();
+        ViewBag.LatestUsers = users.OrderByDescending(u => u.CreatedAt).Take(5).ToList();
         model.ListingsByAdvertiserType = allListings
             .GroupBy(l => l.AdvertiserType)
             .Select(g => new ChartPoint { Label = _language.AdvertiserTypeText(g.Key), Count = g.Count() })
@@ -1801,14 +1817,122 @@ public class AdminController : Controller
     [RequestSizeLimit(10_000_000)]
     public async Task<IActionResult> ImportListings(Microsoft.AspNetCore.Http.IFormFile file)
     {
-        var errors = new List<string>();
-        var imported = new List<Listing>();
         if (file == null || file.Length == 0)
         {
             ViewBag.Errors = new List<string> { "اختار ملف CSV أولًا." };
             ViewBag.Imported = 0;
             return View();
         }
+        var lines = await ReadImportLinesAsync(file);
+        var (valid, errors) = await ParseImportLinesAsync(lines);
+        if (valid == null)
+        {
+            ViewBag.Errors = errors;
+            ViewBag.Imported = 0;
+            return View();
+        }
+        var count = await InsertImportedListingsAsync(valid);
+        ViewBag.Imported = count;
+        ViewBag.Errors = errors;
+        if (count > 0)
+        {
+            TempData["Info"] = $"تم استيراد {count} إعلانًا ونشرهم فورًا.";
+        }
+        return View();
+    }
+
+    /// <summary>معاينة صفوف الاستيراد قبل التأكيد — بيحفظ الملف مؤقتًا وبيعرض الصفوف الصح والغلط.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(10_000_000)]
+    public async Task<IActionResult> PreviewImport(Microsoft.AspNetCore.Http.IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            ViewBag.Errors = new List<string> { "اختار ملف CSV أولًا." };
+            ViewBag.Imported = 0;
+            return View("ImportListings");
+        }
+        var lines = await ReadImportLinesAsync(file);
+        var (valid, errors) = await ParseImportLinesAsync(lines);
+        if (valid == null)
+        {
+            ViewBag.Errors = errors;
+            ViewBag.Imported = 0;
+            return View("ImportListings");
+        }
+        var token = Guid.NewGuid();
+        var tempPath = Path.Combine(Path.GetTempPath(), "aqarak-import-" + token + ".csv");
+        using (var stream = new FileStream(tempPath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+        var rows = new List<ImportPreviewRow>();
+        var rowNumber = 1;
+        foreach (var line in lines.Skip(1))
+        {
+            rowNumber++;
+            var cells = ParseCsvLine(line);
+            var title = cells.Count > 0 ? cells[0] : "-";
+            var rowError = errors.FirstOrDefault(e => e.StartsWith($"الصف {rowNumber}:"));
+            rows.Add(new ImportPreviewRow
+            {
+                RowNumber = rowNumber,
+                Title = title,
+                Error = rowError == null ? null : rowError[$"الصف {rowNumber}: ".Length..]
+            });
+        }
+        ViewBag.Token = token.ToString();
+        ViewBag.ValidCount = valid.Count;
+        ViewBag.ErrorCount = errors.Count;
+        return View(rows);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmImport(string token)
+    {
+        if (!Guid.TryParse(token, out var guid))
+        {
+            TempData["Error"] = "رمز الاستيراد غير صالح.";
+            return RedirectToAction(nameof(ImportListings));
+        }
+        var tempPath = Path.Combine(Path.GetTempPath(), "aqarak-import-" + guid + ".csv");
+        if (!System.IO.File.Exists(tempPath))
+        {
+            TempData["Error"] = "ملف الاستيراد انتهت صلاحيته — ارفع الملف تاني.";
+            return RedirectToAction(nameof(ImportListings));
+        }
+        var lines = new List<string>();
+        using (var reader = new System.IO.StreamReader(tempPath, System.Text.Encoding.UTF8, true))
+        {
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    lines.Add(line.TrimStart('\uFEFF'));
+                }
+            }
+        }
+        System.IO.File.Delete(tempPath);
+        var (valid, errors) = await ParseImportLinesAsync(lines);
+        if (valid == null)
+        {
+            ViewBag.Errors = errors;
+            ViewBag.Imported = 0;
+            return View("ImportListings");
+        }
+        var count = await InsertImportedListingsAsync(valid);
+        if (count > 0)
+        {
+            TempData["Info"] = $"تم استيراد {count} إعلانًا ونشرهم فورًا.";
+        }
+        return RedirectToAction(nameof(ImportListings));
+    }
+
+    private static async Task<List<string>> ReadImportLinesAsync(Microsoft.AspNetCore.Http.IFormFile file)
+    {
         var lines = new List<string>();
         using (var reader = new System.IO.StreamReader(file.OpenReadStream(), System.Text.Encoding.UTF8, true))
         {
@@ -1821,11 +1945,17 @@ public class AdminController : Controller
                 }
             }
         }
+        return lines;
+    }
+
+    private async Task<(List<Listing>? Valid, List<string> Errors)> ParseImportLinesAsync(List<string> lines)
+    {
+        var errors = new List<string>();
+        var imported = new List<Listing>();
         if (lines.Count < 2)
         {
-            ViewBag.Errors = new List<string> { "الملف فاضي أو فيه الهيدر بس — ضيف صف إعلان واحد على الأقل." };
-            ViewBag.Imported = 0;
-            return View();
+            errors.Add("الملف فاضي أو فيه الهيدر بس — ضيف صف إعلان واحد على الأقل.");
+            return (null, errors);
         }
         var expectedHeader = new[] { "Title", "ListingType", "PropertyType", "Area", "Price", "AreaSqm", "Rooms", "Bathrooms", "Floor", "Furnishing", "Finishing", "Description", "Features", "AdvertiserType", "OwnerPhone" };
         var headerCells = ParseCsvLine(lines[0]);
@@ -1833,15 +1963,13 @@ public class AdminController : Controller
             && !expectedHeader.Where((h, i) => !string.Equals(h, headerCells[i].Trim(), StringComparison.OrdinalIgnoreCase)).Any();
         if (!headerOk)
         {
-            ViewBag.Errors = new List<string> { "هيدر الملف غير مطابق للقالب — حمّل القالب من نفس الصفحة واملأه." };
-            ViewBag.Imported = 0;
-            return View();
+            errors.Add("هيدر الملف غير مطابق للقالب — حمّل القالب من نفس الصفحة واملأه.");
+            return (null, errors);
         }
         if (lines.Count - 1 > 200)
         {
-            ViewBag.Errors = new List<string> { "الحد الأقصى 200 إعلان في الملف الواحد." };
-            ViewBag.Imported = 0;
-            return View();
+            errors.Add("الحد الأقصى 200 إعلان في الملف الواحد.");
+            return (null, errors);
         }
         var rowNumber = 1;
         foreach (var line in lines.Skip(1))
@@ -1861,6 +1989,11 @@ public class AdminController : Controller
             }
             imported.Add(listing!);
         }
+        return (imported, errors);
+    }
+
+    private async Task<int> InsertImportedListingsAsync(List<Listing> imported)
+    {
         foreach (var listing in imported)
         {
             listing.CreatedAt = DateTime.UtcNow;
@@ -1877,13 +2010,7 @@ public class AdminController : Controller
             await SavedSearchAlerts.NotifyMatchingAsync(_context, listing, _hub);
         }
         await _context.SaveChangesAsync();
-        ViewBag.Imported = imported.Count;
-        ViewBag.Errors = errors;
-        if (imported.Count > 0)
-        {
-            TempData["Info"] = $"تم استيراد {imported.Count} إعلانًا ونشرهم فورًا.";
-        }
-        return View();
+        return imported.Count;
     }
 
     private static List<string> ParseCsvLine(string line)
@@ -2263,7 +2390,7 @@ public class AdminController : Controller
         return RedirectToAction(nameof(Dashboard));
     }
 
-    public async Task<IActionResult> Users(string? search = null)
+    public async Task<IActionResult> Users(string? search = null, string? status = null)
     {
         var usersQuery = _userManager.Users.AsQueryable();
         if (!string.IsNullOrWhiteSpace(search))
@@ -2273,8 +2400,13 @@ public class AdminController : Controller
                 (u.FullName != null && u.FullName.Contains(term)) ||
                 (u.PhoneNumber != null && u.PhoneNumber.Contains(term)));
         }
+        if (Enum.TryParse<AccountStatus>(status, out var statusValue))
+        {
+            usersQuery = usersQuery.Where(u => u.AccountStatus == statusValue);
+        }
         var users = await usersQuery.OrderBy(u => u.FullName).ToListAsync();
         ViewBag.Search = search;
+        ViewBag.Status = status;
         var rows = new List<AdminUserRow>();
         foreach (var user in users)
         {
@@ -2704,7 +2836,7 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Listings(string? search = null)
+    public async Task<IActionResult> Listings(string? search = null, string? approval = null)
     {
         var query = _context.Listings.Include(l => l.Owner).AsQueryable();
         if (!string.IsNullOrWhiteSpace(search))
@@ -2712,8 +2844,13 @@ public class AdminController : Controller
             var term = search.Trim();
             query = query.Where(l => l.Title.Contains(term) || l.AdNumber.Contains(term));
         }
+        if (Enum.TryParse<ListingApproval>(approval, out var approvalValue))
+        {
+            query = query.Where(l => l.Approval == approvalValue);
+        }
         var listings = await query.OrderByDescending(l => l.CreatedAt).ToListAsync();
         ViewBag.Search = search;
+        ViewBag.Approval = approval;
         return View(listings);
     }
 
@@ -3157,7 +3294,7 @@ public class NotificationsController : Controller
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? filter = null)
     {
         // التنبيه العام (بلا مستخدم مستهدف) يظهر للكل؛ والموجَّه يظهر لصاحبه فقط.
         var notifications = await _context.Notifications
@@ -3173,6 +3310,15 @@ public class NotificationsController : Controller
             Notification = n,
             IsRead = readIds.Contains(n.Id)
         }).ToList();
+        if (filter == "unread")
+        {
+            rows = rows.Where(r => !r.IsRead).ToList();
+        }
+        else if (filter == "read")
+        {
+            rows = rows.Where(r => r.IsRead).ToList();
+        }
+        ViewBag.Filter = filter;
         return View(rows);
     }
 
@@ -3776,6 +3922,8 @@ public class FavoritesController : Controller
             "priceasc" => "priceAsc",
             "pricedesc" => "priceDesc",
             "viewsdesc" => "viewsDesc",
+            "areaasc" => "areaAsc",
+            "areadesc" => "areaDesc",
             _ => "newest"
         };
         ViewBag.Sort = sortKey;
@@ -3801,6 +3949,8 @@ public class FavoritesController : Controller
                 "priceAsc" => await query.OrderBy(f => f.Listing!.Price).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
                 "priceDesc" => await query.OrderByDescending(f => f.Listing!.Price).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
                 "viewsDesc" => await query.OrderByDescending(f => f.Listing!.ViewCount).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
+                "areaAsc" => await query.OrderBy(f => f.Listing!.Area).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
+                "areaDesc" => await query.OrderByDescending(f => f.Listing!.Area).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
                 _ => await query.OrderByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync()
             };
             ViewBag.FavoriteListingIds = listings.Select(l => l.Id).ToHashSet();
@@ -3836,6 +3986,14 @@ public class FavoritesController : Controller
         else if (sortKey == "viewsDesc")
         {
             ordered = ordered.OrderByDescending(l => l.ViewCount).ToList();
+        }
+        else if (sortKey == "areaAsc")
+        {
+            ordered = ordered.OrderBy(l => l.Area).ToList();
+        }
+        else if (sortKey == "areaDesc")
+        {
+            ordered = ordered.OrderByDescending(l => l.Area).ToList();
         }
         ViewBag.FavoriteListingIds = ordered.Select(l => l.Id).ToHashSet();
         return View(ordered);

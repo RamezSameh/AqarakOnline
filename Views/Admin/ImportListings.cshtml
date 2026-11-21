@@ -24,6 +24,7 @@
     </div>
     <div class="actions">
         <button type="submit" class="btn btn-primary">@L.T("ImportListings")</button>
+        <button type="submit" class="btn btn-ghost" formaction="@Url.Action("PreviewImport", "Admin")">معاينة قبل الاستيراد</button>
     </div>
 </form>
 @if (ViewBag.Imported is int imported)

@@ -793,3 +793,69 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 html { scrollbar-color: #6366f1 #0f172a; }
 ::selection { background: #6366f1; color: #fff; }
 main h1 { font-weight: 800; }
+
+/* Batch 27 — design 9 */
+/* 1 — furnishing badges by level */
+.badge-furnishing-full { background: #15803d; color: #fff; }
+.badge-furnishing-partial { background: #b45309; color: #fff; }
+/* 5 — full-width details button on the card */
+.view-details-full { flex: 1 1 100%; }
+/* 6 — hide card share buttons on mobile */
+@media (max-width: 640px) {
+    .listing-card .actions .share-copy,
+    .listing-card .actions a[href^="https://t.me"] { display: none; }
+}
+/* 9 — circular gallery thumbs */
+.gallery-thumb { flex-basis: 84px; }
+.gallery-thumb img { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; }
+/* 10 — details accordion */
+.details-accordion summary { list-style: none; cursor: pointer; }
+.details-accordion summary::-webkit-details-marker { display: none; }
+/* 11 — feature icons */
+#tab-features li { list-style: none; }
+#tab-features li::before { content: "✔️ "; }
+/* 14 — lightbox download link */
+.lightbox-download { position: absolute; bottom: 12px; inset-inline-end: 12px; color: #fff; background: rgba(0,0,0,.6); padding: 8px 14px; border-radius: 8px; z-index: 5; }
+/* 15 — collapsible form steps */
+.form-step-details summary { list-style: none; cursor: pointer; }
+.form-step-details summary::-webkit-details-marker { display: none; }
+/* 21 — compact my-listings */
+.my-listings-compact .card-photo-wrap { display: none; }
+.my-listings-compact .listing-body { padding: 8px 12px; }
+.my-listings-compact .listing-facts,
+.my-listings-compact .listing-published { display: none; }
+/* 30 — finishing filter chips */
+.filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-chip { border: 1px solid #334155; border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.filter-chip input { display: none; }
+.filter-chip:has(input:checked) { background: #6366f1; border-color: #6366f1; color: #fff; }
+/* 34 — hero alternate background */
+.hero { position: relative; overflow: hidden; }
+.hero::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(15,23,42,.55), rgba(15,23,42,.75)), url("/images/hero-2.jpg"); background-size: cover; background-position: center; opacity: 0; transition: opacity 1.5s ease; border-radius: 16px; z-index: 0; }
+.hero.hero-alt::before { opacity: 1; }
+.hero > * { position: relative; z-index: 1; }
+/* 35 — brand icon entrance */
+.brand-icon { animation: brandPop .6s ease; }
+@keyframes brandPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .brand-icon { animation: none; } }
+/* 36 — user menu */
+.user-menu { position: relative; }
+.user-menu-btn { background: none; border: none; font: inherit; color: inherit; cursor: pointer; }
+.user-menu-dropdown { position: absolute; top: 100%; inset-inline-end: 0; background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; min-width: 200px; z-index: 50; box-shadow: 0 12px 32px rgba(0,0,0,.4); }
+.user-menu-dropdown .nav-link { padding: 10px 12px; }
+@media (max-width: 900px) { .user-menu-dropdown { position: static; box-shadow: none; border: none; background: transparent; } }
+[data-theme="light"] .user-menu-dropdown { background: #fff; }
+/* 43 — audit colors by action */
+.audit-item.audit-approve strong { color: #22c55e; }
+.audit-item.audit-reject strong { color: #ef4444; }
+.audit-item.audit-create strong { color: #6366f1; }
+.audit-item.audit-edit strong { color: #f59e0b; }
+.audit-item.audit-bump strong { color: #14b8a6; }
+.audit-item.audit-duplicate strong { color: #a855f7; }
+/* 46 — tabular numbers in prices */
+.listing-price { font-variant-numeric: tabular-nums; letter-spacing: .5px; }
+/* 47 — button press */
+.btn:active { transform: scale(.97); }
+/* 49 — page loader */
+.page-loader { position: fixed; top: 0; inset-inline-start: 0; height: 3px; width: 0; background: linear-gradient(90deg, #6366f1, #8b5cf6); z-index: 999; transition: width .4s ease; }
+.page-loader.loading { width: 70%; }

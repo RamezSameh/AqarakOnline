@@ -5,3 +5,15 @@
     <p class="empty-state-hint">ممكن تكون اتنقلت أو الرابط غلط.</p>
     <a class="btn btn-primary" asp-controller="Home" asp-action="Index">@L.T("Home")</a>
 </div>
+@if (ViewBag.SuggestedListings is List<Listing> suggested && suggested.Any())
+{
+    <section>
+        <h2>اقتراحات ليك</h2>
+        <div class="cards-grid">
+            @foreach (var listing in suggested)
+            {
+                @await Html.PartialAsync("_ListingCard", listing)
+            }
+        </div>
+    </section>
+}

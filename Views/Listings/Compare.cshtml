@@ -1,5 +1,6 @@
 @model List<Listing>
 <h1>@L.T("CompareTitle")</h1>
+<p><a class="btn btn-primary" asp-action="Index">إضافة إعلان للمقارنة ←</a></p>
 @if (Model.Count < 2)
 {
     <p>@L.T("CompareEmpty")</p>

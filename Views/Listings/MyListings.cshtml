@@ -41,7 +41,8 @@
 }
 else
 {
-    <div class="cards-grid">
+<button type="button" id="compactToggle" class="btn btn-ghost">عرض مدمج</button>
+    <div class="cards-grid" id="myListingsGrid">
         @foreach (var listing in Model)
         {
             <div class="my-listing">

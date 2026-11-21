@@ -10,6 +10,8 @@
         <a class="btn btn-primary" asp-controller="Listings" asp-action="Index">تصفح الإعلانات</a>
         <a class="btn btn-ghost" asp-controller="Listings" asp-action="Create">@L.T("CreateListing")</a>
         <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index">بحث متقدم ←</a>
+        <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index" asp-route-listingType="Sale">بيع</a>
+        <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index" asp-route-listingType="Rent">إيجار</a>
     </div>
     <div class="hero-stats">
         <span>🏠 @ViewBag.AvailableListingsCount إعلان متاح</span>

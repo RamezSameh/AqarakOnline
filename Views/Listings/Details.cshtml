@@ -110,6 +110,7 @@
         <img id="lightboxImg" class="lightbox-img" src="" alt="@Model.Title" />
         <button type="button" id="lightboxNext" class="lightbox-nav lightbox-next" aria-label="@L.T("Next")">›</button>
         <span id="lightboxCounter" class="lightbox-counter"></span>
+        <a id="lightboxDownload" class="lightbox-download" href="#" download>⬇ تحميل الصورة</a>
     </div>
 }
 else
@@ -121,6 +122,7 @@ else
     <video class="detail-video" controls src="/@video.FilePath"></video>
 }
 
+<details class="details-accordion" open><summary>المواصفات</summary>
 <div class="details-facts">
 <p><strong>@L.T("Area"):</strong> @Model.Area</p>
 <p><strong>@L.T("AreaSqm"):</strong> @Model.AreaSqm</p>
@@ -216,6 +218,7 @@ else
     <p><strong>@L.T("OriginalPrice"):</strong> <del>@Model.OriginalPrice.ToString("N0") جنيه</del></p>
 }
 </div>
+</details>
 @{
     var avgSqm = ViewBag.AreaAvgPricePerSqm as decimal?;
     var mySqm = ViewBag.PricePerSqm as decimal?;
@@ -228,29 +231,6 @@ else
 <p class="details-views"><strong>@L.T("Views"):</strong> @Model.ViewCount</p>
 <p><strong>@L.T("PublishedAt"):</strong> @L.RelativeTime(Model.CreatedAt)</p>
 
-<section class="meters-table">
-    <h2>العدادات والمرافق</h2>
-    <div class="meters-grid">
-        <div>
-            <h3>@L.T("Meters")</h3>
-            <table class="table">
-                <tr><td>@L.T("ElectricityMeter")</td><td>@(Model.HasElectricityMeter ? "✓" : "✗")</td></tr>
-                <tr><td>@L.T("GasMeter")</td><td>@(Model.HasGasMeter ? "✓" : "✗")</td></tr>
-                <tr><td>@L.T("WaterMeter")</td><td>@(Model.HasWaterMeter ? "✓" : "✗")</td></tr>
-            </table>
-        </div>
-        <div>
-            <h3>@L.T("Amenities")</h3>
-            <table class="table">
-                <tr><td>@L.T("Parking")</td><td>@(Model.HasParking ? "✓" : "✗")</td></tr>
-                <tr><td>@L.T("Elevator")</td><td>@(Model.HasElevator ? "✓" : "✗")</td></tr>
-                <tr><td>@L.T("Balcony")</td><td>@(Model.HasBalcony ? "✓" : "✗")</td></tr>
-                <tr><td>@L.T("AirConditioning")</td><td>@(Model.HasAirConditioning ? "✓" : "✗")</td></tr>
-                <tr><td>@L.T("Security")</td><td>@(Model.HasSecurity ? "✓" : "✗")</td></tr>
-            </table>
-        </div>
-    </div>
-</section>
 @if (User.IsInRole("Admin"))
 {
     <h2>@L.T("AdvertiserData")</h2>
@@ -274,6 +254,7 @@ else
         {
             <button type="button" class="details-tab-btn" data-tab="tab-photos">الصور</button>
         }
+        <button type="button" class="details-tab-btn" data-tab="tab-meters">المرافق</button>
         @if (Model.ListingType == ListingType.Sale)
         {
             <button type="button" class="details-tab-btn" data-tab="tab-calc">@L.T("Calculator")</button>
@@ -304,6 +285,31 @@ else
             </div>
         </div>
     }
+    <div class="details-tab-panel" id="tab-meters" hidden>
+<section class="meters-table">
+    <h2>العدادات والمرافق</h2>
+    <div class="meters-grid">
+        <div>
+            <h3>@L.T("Meters")</h3>
+            <table class="table">
+                <tr><td>@L.T("ElectricityMeter")</td><td>@(Model.HasElectricityMeter ? "✓" : "✗")</td></tr>
+                <tr><td>@L.T("GasMeter")</td><td>@(Model.HasGasMeter ? "✓" : "✗")</td></tr>
+                <tr><td>@L.T("WaterMeter")</td><td>@(Model.HasWaterMeter ? "✓" : "✗")</td></tr>
+            </table>
+        </div>
+        <div>
+            <h3>@L.T("Amenities")</h3>
+            <table class="table">
+                <tr><td>@L.T("Parking")</td><td>@(Model.HasParking ? "✓" : "✗")</td></tr>
+                <tr><td>@L.T("Elevator")</td><td>@(Model.HasElevator ? "✓" : "✗")</td></tr>
+                <tr><td>@L.T("Balcony")</td><td>@(Model.HasBalcony ? "✓" : "✗")</td></tr>
+                <tr><td>@L.T("AirConditioning")</td><td>@(Model.HasAirConditioning ? "✓" : "✗")</td></tr>
+                <tr><td>@L.T("Security")</td><td>@(Model.HasSecurity ? "✓" : "✗")</td></tr>
+            </table>
+        </div>
+    </div>
+</section>
+    </div>
     @if (Model.ListingType == ListingType.Sale)
     {
         <div class="details-tab-panel" id="tab-calc" hidden>
@@ -399,7 +405,11 @@ else
         <form asp-controller="Viewings" asp-action="Create" method="post" class="form">
             <input type="hidden" name="listingId" value="@Model.Id" />
             <label>@L.T("ViewingDate")</label>
-            <input type="datetime-local" name="requestedAt" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" required />
+            <input type="datetime-local" id="requestedAtInput" name="requestedAt" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" required />
+            <div class="time-chips">
+                <button type="button" class="btn btn-ghost time-chip" data-time="10:00">صباحًا</button>
+                <button type="button" class="btn btn-ghost time-chip" data-time="18:00">مساءً</button>
+            </div>
             <label>@L.T("ViewingMessage")</label>
             <textarea name="message" rows="2" maxlength="500"></textarea>
             <button type="submit" class="btn btn-primary">@L.T("BookViewing")</button>
@@ -413,7 +423,7 @@ else
 @if (similar != null && similar.Any())
 {
     <section>
-        <h2>@L.T("SimilarListings")</h2>
+        <h2>@L.T("SimilarListings") (@similar.Count)</h2>
         <div class="cards-slider similar-compact">
             @foreach (var item in similar)
             {

@@ -14,7 +14,7 @@ else
     <div class="audit-timeline">
         @foreach (var audit in Model)
         {
-            <div class="audit-item">
+            <div class="audit-item audit-@audit.Action.ToLowerInvariant()">
                 <strong>@audit.Action</strong>
                 <p>@(audit.Details ?? "-")</p>
                 <p><small>@audit.UserName • @L.RelativeTime(audit.CreatedAt)</small></p>

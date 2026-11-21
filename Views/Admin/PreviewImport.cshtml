@@ -1,0 +1,22 @@
+@model List<AqarakOnline.Controllers.ImportPreviewRow>
+<h1>معاينة الاستيراد</h1>
+<p>صفوف صحيحة: @ViewBag.ValidCount • صفوف فيها مشكلة: @ViewBag.ErrorCount — الصفوف الغلط هتتخطى عند التأكيد.</p>
+@if (Model.Any())
+{
+    <div class="admin-cards">
+        @foreach (var row in Model)
+        {
+            <article class="admin-card @(row.Error == null ? "message-card read" : "message-card unread")">
+                <h3>الصف @row.RowNumber: @row.Title</h3>
+                <p>@(row.Error ?? "✓ جاهز للاستيراد")</p>
+            </article>
+        }
+    </div>
+}
+<form asp-action="ConfirmImport" method="post" class="form">
+    <input type="hidden" name="token" value="@ViewBag.Token" />
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">تأكيد الاستيراد</button>
+        <a class="btn btn-ghost" asp-action="ImportListings">إلغاء</a>
+    </div>
+</form>

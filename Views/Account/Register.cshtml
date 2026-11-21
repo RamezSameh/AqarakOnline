@@ -4,6 +4,7 @@
 <p>التسجيل يتطلب الاسم والعنوان ورقم موبايل مكوّن من 11 رقمًا بالضبط. بعد التسجيل، سيتم تفعيل حسابك بعد موافقة الأدمن.</p>
 <form asp-action="Register" method="post" class="form">
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+    <div class="register-step" id="registerStep1">
     <label>@L.T("FullName")</label>
     <input asp-for="FullName" />
     <span asp-validation-for="FullName" class="field-error"></span>
@@ -16,6 +17,11 @@
     <label>@L.T("Email") (اختياري)</label>
     <input asp-for="Email" type="email" />
     <span asp-validation-for="Email" class="field-error"></span>
+    <div class="step-nav">
+        <button type="button" class="btn btn-primary" id="registerNextBtn">التالي ←</button>
+    </div>
+    </div>
+    <div class="register-step" id="registerStep2" hidden>
     <label>@L.T("Password")</label>
     <div class="password-field">
         <input asp-for="Password" type="password" />
@@ -34,8 +40,10 @@
     </label>
     <span asp-validation-for="AcceptTerms" class="field-error"></span>
     <div class="actions">
+        <button type="button" class="btn btn-ghost" id="registerPrevBtn">→ السابق</button>
         <button type="submit" class="btn btn-primary">@L.T("Register")</button>
         <a class="btn btn-ghost" asp-action="Login">@L.T("HasAccount")</a>
+    </div>
     </div>
 </form>
 </div>

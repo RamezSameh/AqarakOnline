@@ -8,6 +8,16 @@
 </div>
 <form class="filter-form" asp-action="Users" method="get">
     <input type="text" name="search" value="@ViewBag.Search" placeholder="@L.T("SearchUsersPlaceholder")" />
+    <label class="sort-label">
+        الحالة
+        <select name="status">
+            <option value="" selected="@(string.IsNullOrWhiteSpace(ViewBag.Status))">الكل</option>
+            <option value="Pending" selected="@(ViewBag.Status == "Pending")">معلّق</option>
+            <option value="Active" selected="@(ViewBag.Status == "Active")">مفعّل</option>
+            <option value="Suspended" selected="@(ViewBag.Status == "Suspended")">موقوف</option>
+            <option value="Blocked" selected="@(ViewBag.Status == "Blocked")">محظور</option>
+        </select>
+    </label>
     <button type="submit" class="btn btn-primary">@L.T("Search")</button>
     <a class="btn btn-ghost" asp-action="Users">@L.T("ClearFilter")</a>
 </form>

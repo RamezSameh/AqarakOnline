@@ -31,7 +31,7 @@ else
                         <span>-</span>
                     }
                 </h3>
-                <p>@L.ReportReasonText(report.Reason)</p>
+                <p>@(report.Reason switch { ReportReason.Misleading => "🚫 ", ReportReason.WrongInfo => "❌ ", ReportReason.Scam => "⚠️ ", ReportReason.Offensive => "🔞 ", _ => "📝 " })@L.ReportReasonText(report.Reason)</p>
                 <p>@(report.Details ?? "-")</p>
                 <p>@(report.Reporter?.FullName ?? report.Reporter?.UserName ?? "-")</p>
                 <p>@L.RelativeTime(report.CreatedAt)</p>

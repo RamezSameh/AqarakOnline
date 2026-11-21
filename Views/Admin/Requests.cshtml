@@ -31,6 +31,7 @@ else
                 <p>@request.Message</p>
                 <div class="actions">
                     <a class="btn btn-ghost" href="@waUrl" target="_blank" rel="noreferrer">@L.T("OpenWhatsApp")</a>
+                    <a class="btn btn-ghost" href="tel:@request.BuyerPhone">📞 اتصال</a>
                     @if (request.IsReplied)
                     {
                         <span>@L.T("Replied")</span>
