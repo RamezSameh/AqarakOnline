@@ -42,7 +42,12 @@ if (Model.BuildingFloors.HasValue) { facts.Add($"{L.T("BuildingFloors")}: {Model
             {
                 <span class="badge badge-urgent">🔥 @L.T("Urgent")</span>
             }
+            @if (Model.CreatedAt >= DateTime.UtcNow.AddDays(-1))
+            {
+                <span class="badge badge-new">🆕 @L.T("New")</span>
+            }
             <span class="ad-number">@L.T("AdNumber"): @Model.AdNumber</span>
+            <span class="listing-views">👁 @Model.ViewCount</span>
         </div>
         <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a></h3>
         <p class="listing-area">@Model.Area</p>

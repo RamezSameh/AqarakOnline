@@ -101,6 +101,31 @@ namespace AqarakOnline.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("AqarakOnline.Models.BlockedPhone", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BlockedPhones");
+                });
+
             modelBuilder.Entity("AqarakOnline.Models.ContactMessage", b =>
                 {
                     b.Property<int>("Id")
@@ -629,6 +654,27 @@ namespace AqarakOnline.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("SavedSearches");
+                });
+
+            modelBuilder.Entity("AqarakOnline.Models.SearchLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Term")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SearchLogs");
                 });
 
             modelBuilder.Entity("AqarakOnline.Models.ViewingAppointment", b =>

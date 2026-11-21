@@ -821,3 +821,67 @@ document.addEventListener("DOMContentLoaded", function () {
         box.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+    var form = document.getElementById("listingForm");
+    if (!form) { return; }
+    var bar = document.getElementById("completenessBar");
+    var pct = document.getElementById("completenessPct");
+    var hint = document.getElementById("suggestedPriceHint");
+    function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; }
+    function checked(id) { var el = document.getElementById(id); return !!(el && el.checked); }
+    function customFeaturesText() {
+        var el = form.querySelector("input[name='customFeatures']");
+        return el ? el.value.trim() : "";
+    }
+    function updateCompleteness() {
+        if (!bar || !pct) { return; }
+        var score = 0;
+        if (val("Title")) { score += 15; }
+        if (val("Description").length >= 20) { score += 15; }
+        if (parseFloat(val("Price")) > 0) { score += 10; }
+        if (parseFloat(val("AreaSqm")) > 0) { score += 10; }
+        if (parseFloat(val("Rooms")) > 0) { score += 10; }
+        var photoInput = document.getElementById("PhotoFiles");
+        var hasPhoto = (photoInput && photoInput.files && photoInput.files.length > 0)
+            || !!document.querySelector("#existingPhotos img");
+        if (hasPhoto) { score += 20; }
+        var featureChecked = form.querySelectorAll("input[name='selectedFeatures']:checked").length > 0
+            || !!customFeaturesText();
+        if (featureChecked) { score += 10; }
+        if (val("Finishing")) { score += 10; }
+        bar.style.width = score + "%";
+        pct.textContent = score + "%";
+    }
+    var avgCache = {};
+    function updateSuggestedPrice() {
+        if (!hint) { return; }
+        var area = val("Area");
+        var areaSqm = parseFloat(val("AreaSqm")) || 0;
+        var price = parseFloat(val("Price")) || 0;
+        if (!area) { hint.textContent = ""; return; }
+        function render(avg) {
+            if (!avg || avg <= 0) {
+                hint.textContent = "لا توجد إعلانات كافية في هذه المنطقة لحساب متوسط.";
+                return;
+            }
+            var text = "متوسط سعر المتر في " + area + ": " + Math.round(avg).toLocaleString("en-US") + " ج.م";
+            if (areaSqm > 0) {
+                text += " — السعر المقترح لإعلانك: " + Math.round(avg * areaSqm).toLocaleString("en-US") + " ج.م";
+            }
+            if (areaSqm > 0 && price > 0) {
+                text += " — سعر متر إعلانك: " + Math.round(price / areaSqm).toLocaleString("en-US") + " ج.م";
+            }
+            hint.textContent = text;
+        }
+        if (avgCache[area] !== undefined) { render(avgCache[area]); return; }
+        fetch("/Listings/AreaAverage?area=" + encodeURIComponent(area))
+            .then(function (r) { return r.json(); })
+            .then(function (data) { avgCache[area] = data.avgPerSqm || 0; render(avgCache[area]); })
+            .catch(function () { hint.textContent = ""; });
+    }
+    form.addEventListener("input", updateCompleteness);
+    form.addEventListener("change", function () { updateCompleteness(); updateSuggestedPrice(); });
+    updateCompleteness();
+    updateSuggestedPrice();
+});

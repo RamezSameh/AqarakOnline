@@ -179,6 +179,13 @@ public class ListingsController : Controller
         if (!string.IsNullOrWhiteSpace(search))
         {
             query = query.Where(l => l.Title.Contains(search) || l.Area.Contains(search));
+            var term = search.Trim();
+            if (term.Length > 100)
+            {
+                term = term[..100];
+            }
+            _context.SearchLogs.Add(new SearchLog { Term = term });
+            await _context.SaveChangesAsync();
         }
         if (listingType.HasValue)
         {
@@ -320,6 +327,8 @@ public class ListingsController : Controller
             "viewsdesc" => "viewsDesc",
             "pricepersqmasc" => "pricePerSqmAsc",
             "pricepersqmdesc" => "pricePerSqmDesc",
+            "roomsdesc" => "roomsDesc",
+            "roomsasc" => "roomsAsc",
             "oldest" => "oldest",
             _ => "newest"
         };
@@ -332,6 +341,8 @@ public class ListingsController : Controller
             "viewsDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt),
             "pricePerSqmAsc" => query.OrderByDescending(l => l.IsFeatured).ThenBy(l => l.Price / l.AreaSqm).ThenByDescending(l => l.CreatedAt),
             "pricePerSqmDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.Price / l.AreaSqm).ThenByDescending(l => l.CreatedAt),
+            "roomsDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.Rooms).ThenByDescending(l => l.CreatedAt),
+            "roomsAsc" => query.OrderByDescending(l => l.IsFeatured).ThenBy(l => l.Rooms).ThenByDescending(l => l.CreatedAt),
             "oldest" => query.OrderByDescending(l => l.IsFeatured).ThenBy(l => l.LastBumpedAt ?? l.CreatedAt),
             _ => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
         };
@@ -472,6 +483,22 @@ public class ListingsController : Controller
         var listings = idList.Select(id => found.FirstOrDefault(l => l.Id == id))
             .Where(l => l != null).Cast<Listing>().ToList();
         return View(listings);
+    }
+
+    /// <summary>متوسط سعر المتر للإعلانات المقبولة والمتاحة في منطقة — لاقتراح سعر استرشادي في فورم الإضافة.</summary>
+    [HttpGet]
+    public async Task<IActionResult> AreaAverage(string area)
+    {
+        if (string.IsNullOrWhiteSpace(area) || !ListingAreas.All.Contains(area.Trim()))
+        {
+            return Json(new { avgPerSqm = 0 });
+        }
+        var prices = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable && l.Area == area.Trim() && l.AreaSqm > 0)
+            .Select(l => l.Price / l.AreaSqm)
+            .ToListAsync();
+        var avg = prices.Count == 0 ? 0 : (decimal)prices.Average();
+        return Json(new { avgPerSqm = Math.Round(avg, 0) });
     }
 
     [HttpGet]
@@ -737,6 +764,29 @@ public class ListingsController : Controller
 
     [Authorize]
     [HttpGet]
+    /// <summary>إيقاف/تشغيل إعلان بسرعة من «إعلاناتي» — لصاحب الإعلان أو الأدمن.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleAvailability(int id)
+    {
+        var listing = await _context.Listings.FindAsync(id);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        if (listing.OwnerId != CurrentUserId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+        listing.IsAvailable = !listing.IsAvailable;
+        listing.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId,
+            listing.IsAvailable ? "تشغيل" : "إيقاف",
+            listing.IsAvailable ? "تم تشغيل الإعلان من «إعلاناتي»." : "تم إيقاف الإعلان مؤقتًا من «إعلاناتي».");
+        return RedirectToAction(nameof(MyListings));
+    }
+
     public async Task<IActionResult> MyListings(string? status = null, string? search = null, string? sort = null)
     {
         var query = _context.Listings.Include(l => l.Attachments)
@@ -1278,6 +1328,10 @@ public class AdminDashboardViewModel
     public List<ChartPoint> ListingsByArea { get; set; } = new();
     /// <summary>أكثر 5 إعلانات مشاهدة.</summary>
     public List<Listing> TopViewed { get; set; } = new();
+    /// <summary>أكثر كلمات البحث في آخر 30 يومًا (للرسم البياني).</summary>
+    public List<ChartPoint> TopSearchTerms { get; set; } = new();
+    /// <summary>أكثر 5 إعلانات طلب تواصل.</summary>
+    public List<ChartPoint> TopContactedListings { get; set; } = new();
 }
 
 /// <summary>نقطة في رسم بياني: تسمية وعدد.</summary>
@@ -1418,7 +1472,96 @@ public class AdminController : Controller
             .Where(l => l.Approval == ListingApproval.Approved)
             .OrderByDescending(l => l.ViewCount)
             .Take(5).ToList();
+        var searchSince = DateTime.UtcNow.AddDays(-30);
+        model.TopSearchTerms = await _context.SearchLogs
+            .Where(s => s.CreatedAt >= searchSince)
+            .GroupBy(s => s.Term)
+            .Select(g => new ChartPoint { Label = g.Key, Count = g.Count() })
+            .OrderByDescending(pt => pt.Count)
+            .Take(10).ToListAsync();
+        var allRequests = await _context.ContactRequests.Include(r => r.Listing).ToListAsync();
+        model.TopContactedListings = allRequests
+            .GroupBy(r => r.ListingId)
+            .Select(g => new ChartPoint
+            {
+                Label = $"{g.First().Listing?.Title ?? g.Key.ToString()} ({g.First().Listing?.AdNumber})",
+                Count = g.Count()
+            })
+            .OrderByDescending(pt => pt.Count)
+            .Take(5).ToList();
         return View(model);
+    }
+
+    /// <summary>إعادة تعيين كلمة مرور مستخدم — كلمة مؤقتة تظهر للأدمن مرة واحدة ليبلغها للمستخدم.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        if (user.Id == CurrentUserId)
+        {
+            TempData["Error"] = "لا يمكنك إعادة تعيين كلمة مرورك من هنا.";
+            return RedirectToAction(nameof(Users));
+        }
+        var temp = "Temp" + System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 1000000);
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await _userManager.ResetPasswordAsync(user, token, temp);
+        if (!result.Succeeded)
+        {
+            TempData["Error"] = "تعذّرت إعادة تعيين كلمة المرور.";
+            return RedirectToAction(nameof(Users));
+        }
+        TempData["Info"] = $"تم تعيين كلمة مرور مؤقتة لـ {user.FullName}: {temp} — أبلغه بها واطلب منه تغييرها بعد الدخول.";
+        return RedirectToAction(nameof(Users));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> BlockedPhones()
+    {
+        var phones = await _context.BlockedPhones.OrderByDescending(b => b.CreatedAt).ToListAsync();
+        return View(phones);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddBlockedPhone(string phoneNumber, string? reason = null)
+    {
+        var phone = PhoneHelper.Normalize(phoneNumber ?? string.Empty);
+        if (!PhoneHelper.IsValidEgyptianMobile(phone))
+        {
+            TempData["Error"] = "رقم الموبايل لازم يكون 11 رقمًا ويبدأ بـ 01.";
+            return RedirectToAction(nameof(BlockedPhones));
+        }
+        if (await _context.BlockedPhones.AnyAsync(b => b.PhoneNumber == phone))
+        {
+            TempData["Info"] = "الرقم محظور بالفعل.";
+            return RedirectToAction(nameof(BlockedPhones));
+        }
+        _context.BlockedPhones.Add(new BlockedPhone
+        {
+            PhoneNumber = phone,
+            Reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim()
+        });
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تم حظر الرقم.";
+        return RedirectToAction(nameof(BlockedPhones));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveBlockedPhone(int id)
+    {
+        var blocked = await _context.BlockedPhones.FindAsync(id);
+        if (blocked != null)
+        {
+            _context.BlockedPhones.Remove(blocked);
+            await _context.SaveChangesAsync();
+        }
+        return RedirectToAction(nameof(BlockedPhones));
     }
 
     [HttpGet]
@@ -1710,12 +1853,25 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Requests()
+    public async Task<IActionResult> Requests(string? search = null)
     {
-        var requests = await _context.ContactRequests
+        var requestsQuery = _context.ContactRequests
             .Include(r => r.Listing)
+            .Include(r => r.Buyer)
+            .AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            requestsQuery = requestsQuery.Where(r =>
+                (r.Listing != null && (r.Listing.Title.Contains(term) || r.Listing.AdNumber.Contains(term)))
+                || r.BuyerName.Contains(term)
+                || (r.BuyerPhone != null && r.BuyerPhone.Contains(term))
+                || (r.Buyer != null && r.Buyer.FullName != null && r.Buyer.FullName.Contains(term)));
+        }
+        var requests = await requestsQuery
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
+        ViewBag.Search = search;
         return View(requests);
     }
 

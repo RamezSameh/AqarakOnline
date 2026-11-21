@@ -22,6 +22,11 @@
     }
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
+    <div class="completeness">
+        <span>@L.T("Completeness"): <strong id="completenessPct">0%</strong></span>
+        <div class="chart-track"><div class="chart-bar" id="completenessBar" style="width:0%"></div></div>
+    </div>
+
     <label>@L.T("Title")</label>
     <input asp-for="Title" />
     <span asp-validation-for="Title" class="field-error"></span>
@@ -73,6 +78,7 @@
     <label>@L.T("Price")</label>
     <input asp-for="Price" type="number" min="0" step="any" />
     <span asp-validation-for="Price" class="field-error"></span>
+    <small id="suggestedPriceHint"></small>
 
     <label>@L.T("AreaSqm")</label>
     <input asp-for="AreaSqm" type="number" min="1" step="1" />

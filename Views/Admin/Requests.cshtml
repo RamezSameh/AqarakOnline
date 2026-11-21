@@ -1,5 +1,10 @@
 @model IEnumerable<ContactRequest>
 <h1>@L.T("AdminRequests")</h1>
+<form class="filter-form" asp-action="Requests" method="get">
+    <input type="text" name="search" value="@ViewBag.Search" placeholder="@L.T("SearchPlaceholder")" />
+    <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
+    <a class="btn btn-ghost" asp-action="Requests">@L.T("ClearFilter")</a>
+</form>
 @if (!Model.Any())
 {
     <p>@L.T("NoResults")</p>

@@ -164,6 +164,11 @@ public class AccountController : Controller
             ModelState.AddModelError(nameof(model.PhoneNumber), "رقم الموبايل يجب أن يكون 11 رقمًا بالضبط ويبدأ بـ 01");
             return View(model);
         }
+        if (await _context.BlockedPhones.AnyAsync(b => b.PhoneNumber == phone))
+        {
+            ModelState.AddModelError(nameof(model.PhoneNumber), "هذا الرقم محظور من التسجيل.");
+            return View(model);
+        }
         if (await _userManager.FindByNameAsync(phone) != null)
         {
             ModelState.AddModelError(nameof(model.PhoneNumber), "رقم الموبايل هذا مسجَّل بالفعل.");

@@ -69,6 +69,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ListingAudit> ListingAudits => Set<ListingAudit>();
     public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
     public DbSet<ViewingAppointment> ViewingAppointments => Set<ViewingAppointment>();
+    public DbSet<SearchLog> SearchLogs => Set<SearchLog>();
+    public DbSet<BlockedPhone> BlockedPhones => Set<BlockedPhone>();
 }
 
 public static class SeedData

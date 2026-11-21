@@ -441,6 +441,31 @@ public class NotificationRead
     public DateTime ReadAt { get; set; } = DateTime.UtcNow;
 }
 
+/// <summary>كلمة بحث كتبها زائر — لإحصائية أكثر كلمات البحث في لوحة الأدمن.</summary>
+public class SearchLog
+{
+    public int Id { get; set; }
+
+    [MaxLength(100)]
+    public string Term { get; set; } = string.Empty;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>رقم موبايل محظور من التسجيل — يحدده الأدمن.</summary>
+public class BlockedPhone
+{
+    public int Id { get; set; }
+
+    [MaxLength(20)]
+    public string PhoneNumber { get; set; } = string.Empty;
+
+    [MaxLength(500)]
+    public string? Reason { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
 /// <summary>سبب البلاغ عن إعلان مخالف.</summary>
 public enum ReportReason
 {

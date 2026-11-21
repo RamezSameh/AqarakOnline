@@ -39,6 +39,10 @@ else
         @foreach (var listing in Model)
         {
             @await Html.PartialAsync("_ListingCard", listing)
+            <form asp-action="ToggleAvailability" method="post" class="inline-form">
+                <input type="hidden" name="id" value="@listing.Id" />
+                <button type="submit" class="btn btn-ghost">@(listing.IsAvailable ? L.T("StopListing") : L.T("StartListing"))</button>
+            </form>
         }
     </div>
 }

@@ -1,0 +1,46 @@
+@model IEnumerable<BlockedPhone>
+<h1>@L.T("BlockedPhones")</h1>
+<p>الأرقام دي مش هتقدر تسجّل حساب جديد.</p>
+<form asp-action="AddBlockedPhone" method="post" class="form">
+    <label>@L.T("PhoneNumber")</label>
+    <input type="tel" name="phoneNumber" dir="ltr" placeholder="01xxxxxxxxx" required />
+    <label>@L.T("RejectionReason")</label>
+    <input type="text" name="reason" maxlength="500" />
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">حظر الرقم</button>
+    </div>
+</form>
+@if (!Model.Any())
+{
+    <p>لا توجد أرقام محظورة.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@L.T("PhoneNumber")</th>
+                <th>@L.T("RejectionReason")</th>
+                <th>@L.T("Date")</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var blocked in Model)
+            {
+                <tr>
+                    <td dir="ltr">@blocked.PhoneNumber</td>
+                    <td>@(blocked.Reason ?? "-")</td>
+                    <td>@blocked.CreatedAt.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        <form asp-action="RemoveBlockedPhone" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@blocked.Id" />
+                            <button type="submit" class="btn btn-ghost">رفع الحظر</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<p><a class="btn btn-ghost" asp-action="Users">المستخدمون</a></p>

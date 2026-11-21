@@ -44,6 +44,10 @@
     {
         <span class="badge badge-urgent">🔥 @L.T("Urgent")</span>
     }
+    @if (Model.CreatedAt >= DateTime.UtcNow.AddDays(-1))
+    {
+        <span class="badge badge-new">🆕 @L.T("New")</span>
+    }
     <span class="ad-number">@L.T("AdNumber"): @Model.AdNumber</span>
     <span class="listing-status @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</span>
 </div>

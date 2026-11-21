@@ -284,6 +284,46 @@ else
         </div>
     }
 </div>
+<h3>@L.T("TopSearchTerms")</h3>
+@if (!Model.TopSearchTerms.Any())
+{
+    <p>لا توجد عمليات بحث بعد.</p>
+}
+else
+{
+    var maxSearch = Model.TopSearchTerms.Max(p => p.Count);
+    <div class="chart">
+        @foreach (var point in Model.TopSearchTerms)
+        {
+            var pct = maxSearch > 0 ? point.Count * 100 / maxSearch : 0;
+            <div class="chart-row">
+                <span class="chart-label">@point.Label</span>
+                <div class="chart-track"><div class="chart-bar" style="width:@pct%"></div></div>
+                <span class="chart-count">@point.Count</span>
+            </div>
+        }
+    </div>
+}
+<h3>@L.T("TopContactedListings")</h3>
+@if (!Model.TopContactedListings.Any())
+{
+    <p>لا توجد طلبات تواصل بعد.</p>
+}
+else
+{
+    var maxContacted = Model.TopContactedListings.Max(p => p.Count);
+    <div class="chart">
+        @foreach (var point in Model.TopContactedListings)
+        {
+            var pct = maxContacted > 0 ? point.Count * 100 / maxContacted : 0;
+            <div class="chart-row">
+                <span class="chart-label">@point.Label</span>
+                <div class="chart-track"><div class="chart-bar" style="width:@pct%"></div></div>
+                <span class="chart-count">@point.Count</span>
+            </div>
+        }
+    </div>
+}
 <h3>أكثر الإعلانات مشاهدة</h3>
 @if (!Model.TopViewed.Any())
 {
