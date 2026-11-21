@@ -34,23 +34,11 @@
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     @* باقي الخصائص ظاهرة عادي في الـ header على اليمين. *@
-                    <div class="user-menu">
-                        <button type="button" class="nav-link user-menu-btn" id="userMenuBtn">👤 @L.T("MyAccount") ▾</button>
-                        <div class="user-menu-dropdown" id="userMenuDropdown" hidden>
-                            <span class="user-menu-name">👤 @displayName</span>
-                            <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">📋 @L.T("MyListings")</a>
-                            <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>
-                            <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">🔔 @L.T("SavedSearches")</a>
-                            <a class="nav-link @(currentController == "Viewings" ? "active" : "")" asp-controller="Viewings" asp-action="Index">📅 @L.T("Viewings")</a>
-                            <a class="nav-link @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">👤 @L.T("MyAccount")</a>
-                        </div>
-                    </div>
                     <a class="nav-cta nav-create-primary @(currentController == "Listings" && currentAction == "Create" ? "active" : "")" asp-controller="Listings" asp-action="Create">➕ @L.T("CreateListing")</a>
                     @* غلاف display:contents حتى تُستبدل الإدارة لحظيًا من غير كسر توزيع الـ flex. *@
                     <span id="adminNavLinks" style="display:contents">@await Component.InvokeAsync("AdminNav")</span>
-                    @* على الموبايل فقط: البروفايل وتسجيل الخروج داخل اللوحة. *@
+                    @* على الموبايل فقط: تسجيل الخروج داخل اللوحة. *@
                     <div class="panel-account mobile-only">
-                        <a class="profile-link" asp-controller="Listings" asp-action="MyListings">👤 @displayName</a>
                         <form asp-controller="Account" asp-action="Logout" method="post" class="inline-form">
                             <button type="submit" class="btn btn-ghost">🚪 @L.T("Logout")</button>
                         </form>
@@ -73,8 +61,18 @@
                 <a class="lang-switch" asp-controller="Language" asp-action="Set" asp-route-lang="@(L.IsArabic ? "en" : "ar")" asp-route-returnUrl="@Context.Request.Path">@(L.IsArabic ? "English" : "العربية")</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
-                    @* جنب اليسار: البروفايل وتسجيل الخروج. *@
-                    <a class="profile-link desktop-only" asp-controller="Listings" asp-action="MyListings">👤 @displayName</a>
+                    @* قائمة الحساب المنسدلة — مكان رابط البروفايل القديم. *@
+                    <div class="user-menu">
+                        <button type="button" class="nav-link user-menu-btn" id="userMenuBtn">👤 @L.T("MyAccount") ▾</button>
+                        <div class="user-menu-dropdown" id="userMenuDropdown" hidden>
+                            <span class="user-menu-name">👤 @displayName</span>
+                            <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">📋 @L.T("MyListings")</a>
+                            <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>
+                            <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">🔔 @L.T("SavedSearches")</a>
+                            <a class="nav-link @(currentController == "Viewings" ? "active" : "")" asp-controller="Viewings" asp-action="Index">📅 @L.T("Viewings")</a>
+                            <a class="nav-link @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">👤 @L.T("MyAccount")</a>
+                        </div>
+                    </div>
                     <form asp-controller="Account" asp-action="Logout" method="post" class="inline-form desktop-only">
                         <button type="submit" class="btn btn-ghost">🚪 @L.T("Logout")</button>
                     </form>
