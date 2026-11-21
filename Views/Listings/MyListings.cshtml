@@ -17,6 +17,7 @@
     };
 }
 <h1>@L.T("MyListings")</h1>
+<p class="my-listings-counts">مقبول: @Model.Count(l => l.Approval == ListingApproval.Approved) • معلّق: @Model.Count(l => l.Approval == ListingApproval.Pending) • مرفوض: @Model.Count(l => l.Approval == ListingApproval.Rejected)</p>
 <form class="filter-form" asp-action="MyListings" method="get">
     <label class="sort-label">
         @L.T("Status")

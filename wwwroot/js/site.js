@@ -434,6 +434,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 showPhoto(current + 1);
             }
         });
+        // تشغيل تلقائي لمعرض التفاصيل (كل 3 ثوانٍ).
+        var autoBtn = document.getElementById("galleryAutoplay");
+        var autoTimer = null;
+        if (autoBtn) {
+            if (urls.length <= 1) {
+                autoBtn.style.display = "none";
+            } else {
+                autoBtn.addEventListener("click", function () {
+                    if (autoTimer) {
+                        clearInterval(autoTimer);
+                        autoTimer = null;
+                        autoBtn.textContent = "▶";
+                    } else {
+                        autoTimer = setInterval(function () { showPhoto(current + 1); }, 3000);
+                        autoBtn.textContent = "⏸";
+                    }
+                });
+            }
+        }
     }
 
     // المقارنة: اختيار حتى 3 إعلانات من الكروت أو التفاصيل، محفوظة في
@@ -566,6 +585,14 @@ document.addEventListener("DOMContentLoaded", function () {
         dropZone.addEventListener("drop", function (e) {
             addPickedFiles(e.dataTransfer.files);
         });
+        var clearPhotosBtn = document.getElementById("clearPhotosBtn");
+        if (clearPhotosBtn) {
+            clearPhotosBtn.addEventListener("click", function () {
+                pickedFiles = new DataTransfer();
+                photoInput.files = pickedFiles.files;
+                renderPhotoPreview();
+            });
+        }
     }
 
     // إعادة ترتيب الصور الحالية بالسحب في صفحة التعديل.
@@ -670,6 +697,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
             result.textContent = fmt.format(Math.round(pay)) + " جنيه شهريًا";
+            var downBar = document.getElementById("calcBarDown");
+            var loanBar = document.getElementById("calcBarLoan");
+            if (downBar && loanBar && price > 0) {
+                var downPct = Math.min(100, Math.max(0, down / price * 100));
+                downBar.style.width = downPct + "%";
+                loanBar.style.width = (100 - downPct) + "%";
+            }
         }
         [priceInput, downInput, yearsInput, rateInput].forEach(function (input) {
             input.addEventListener("input", recalc);
@@ -915,12 +949,17 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-    // ظل الهيدر عند السكرول.
+    // ظل الهيدر عند السكرول + هيدر شفاف فوق الهيرو (وضع داكن بس).
     var header = document.querySelector(".site-header");
     if (header) {
-        window.addEventListener("scroll", function () {
+        var hasHero = !!document.querySelector(".hero");
+        function updateHeader() {
             header.classList.toggle("scrolled", window.scrollY > 10);
-        }, { passive: true });
+            var isLight = document.documentElement.getAttribute("data-theme") === "light";
+            header.classList.toggle("transparent", hasHero && !isLight && window.scrollY <= 10);
+        }
+        window.addEventListener("scroll", updateHeader, { passive: true });
+        updateHeader();
     }
     var backToTop = document.getElementById("backToTop");
     if (!backToTop) { return; }
@@ -985,18 +1024,23 @@ document.addEventListener("DOMContentLoaded", function () {
         var card = box.closest(".listing-card");
         if (!card) { return; }
         var i = 0, timer = null;
+        function show(n) {
+            imgs[i].classList.remove("active");
+            i = (n + imgs.length) % imgs.length;
+            imgs[i].classList.add("active");
+        }
         card.addEventListener("mouseenter", function () {
-            timer = setInterval(function () {
-                imgs[i].classList.remove("active");
-                i = (i + 1) % imgs.length;
-                imgs[i].classList.add("active");
-            }, 1200);
+            timer = setInterval(function () { show(i + 1); }, 1200);
         });
         card.addEventListener("mouseleave", function () {
             clearInterval(timer);
-            imgs.forEach(function (im) { im.classList.remove("active"); });
-            imgs[0].classList.add("active");
-            i = 0;
+            show(0);
+        });
+        card.querySelectorAll(".card-photo-nav").forEach(function (btn) {
+            btn.addEventListener("click", function (event) {
+                event.stopPropagation();
+                show(i + parseInt(btn.getAttribute("data-dir"), 10));
+            });
         });
     });
 });
@@ -1138,4 +1182,110 @@ document.addEventListener("DOMContentLoaded", function () {
             if (form) { form.submit(); }
         });
     });
+});
+
+// Batch 26 — design 8: خطوة مراجعة + تنسيق السعر + تنقل الخطوات + شريط التقدم + فلتر أحدث الإعلانات + عدد الفلاتر + معاينة التنبيه.
+document.addEventListener("DOMContentLoaded", function () {
+    var form = document.getElementById("listingForm");
+    // 18 — خطوة مراجعة قبل حفظ الإعلان.
+    var reviewPanel = document.getElementById("reviewPanel");
+    function renderReview() {
+        if (!form || !reviewPanel) { return; }
+        var title = document.getElementById("Title");
+        var price = document.getElementById("Price");
+        var areaSqm = document.getElementById("AreaSqm");
+        var type = document.getElementById("PropertyType");
+        var area = document.getElementById("Area");
+        var newPhotos = document.querySelectorAll("#photoPreview .photo-preview-item").length;
+        var existingPhotos = document.querySelectorAll("#existingPhotos li").length;
+        reviewPanel.innerHTML = ""
+            + "<p><strong>العنوان:</strong> " + (title ? title.value : "") + "</p>"
+            + "<p><strong>السعر:</strong> " + (price && price.value ? Number(price.value).toLocaleString("en-US") + " جنيه" : "-") + "</p>"
+            + "<p><strong>المساحة:</strong> " + (areaSqm && areaSqm.value ? areaSqm.value + " م²" : "-") + "</p>"
+            + "<p><strong>النوع:</strong> " + (type ? type.options[type.selectedIndex].text : "") + "</p>"
+            + "<p><strong>المنطقة:</strong> " + (area ? area.options[area.selectedIndex].text : "") + "</p>"
+            + "<p><strong>عدد الصور:</strong> " + (newPhotos + existingPhotos) + "</p>";
+    }
+    if (form && reviewPanel) {
+        form.addEventListener("input", renderReview);
+        form.addEventListener("change", renderReview);
+        renderReview();
+    }
+    // 20 — السعر بتنسيق آلاف تلقائي (قراءة فقط تحت الحقل).
+    var priceInput = document.getElementById("Price");
+    var priceFormatted = document.getElementById("priceFormatted");
+    if (priceInput && priceFormatted) {
+        function updatePriceFormatted() {
+            var v = parseFloat(priceInput.value);
+            priceFormatted.textContent = isNaN(v) ? "" : v.toLocaleString("en-US") + " جنيه";
+        }
+        priceInput.addEventListener("input", updatePriceFormatted);
+        updatePriceFormatted();
+    }
+    // 23 — أزرار التالي/السابق بين خطوات النموذج.
+    document.querySelectorAll(".step-next, .step-prev").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var target = document.querySelector(".form-step." + btn.getAttribute("data-target"));
+            if (target) { target.scrollIntoView({ behavior: "smooth", block: "start" }); }
+        });
+    });
+    // 24 — شريط تقدم الخطوات.
+    var stepsBar = document.getElementById("stepsProgressBar");
+    var stepHeads = document.querySelectorAll(".form-step");
+    function updateStepsProgress() {
+        if (!stepsBar || !stepHeads.length) { return; }
+        var current = 0;
+        stepHeads.forEach(function (h, i) {
+            if (h.getBoundingClientRect().top < 200) { current = i; }
+        });
+        stepsBar.style.width = ((current + 1) / stepHeads.length * 100) + "%";
+    }
+    if (stepsBar) {
+        window.addEventListener("scroll", updateStepsProgress, { passive: true });
+        updateStepsProgress();
+    }
+    // 33 — فلتر سريع (بيع/إيجار) على سلايدر أحدث الإعلانات.
+    var latestSlider = document.getElementById("latestSlider");
+    document.querySelectorAll(".latest-filter .sort-chip").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+            document.querySelectorAll(".latest-filter .sort-chip").forEach(function (c) { c.classList.remove("active"); });
+            chip.classList.add("active");
+            var filter = chip.getAttribute("data-filter");
+            if (!latestSlider) { return; }
+            latestSlider.querySelectorAll(".listing-card").forEach(function (card) {
+                card.style.display = (filter === "All" || card.getAttribute("data-listing-type") === filter) ? "" : "none";
+            });
+        });
+    });
+    // 37 — عدد الفلاتر المفعّلة على عنوان الفلاتر.
+    var filtersBox = document.querySelector(".filters-box");
+    if (filtersBox) {
+        var summary = filtersBox.querySelector("summary");
+        var filterForm = filtersBox.querySelector(".filter-form");
+        if (summary && filterForm) {
+            var activeCount = 0;
+            filterForm.querySelectorAll("input, select").forEach(function (el) {
+                if (el.name === "sort" || el.type === "submit" || el.type === "button") { return; }
+                if (el.type === "checkbox") { if (el.checked) { activeCount++; } }
+                else if (el.value) { activeCount++; }
+            });
+            if (activeCount > 0) {
+                var badge = document.createElement("span");
+                badge.className = "filter-count";
+                badge.textContent = activeCount;
+                summary.appendChild(badge);
+            }
+        }
+    }
+    // 47 — معاينة حية لشكل التنبيه.
+    var notifTitle = document.getElementById("Title");
+    var notifMessage = document.getElementById("Message");
+    var previewTitle = document.getElementById("previewTitle");
+    var previewMessage = document.getElementById("previewMessage");
+    if (notifTitle && previewTitle) {
+        notifTitle.addEventListener("input", function () { previewTitle.textContent = notifTitle.value || "عنوان التنبيه"; });
+    }
+    if (notifMessage && previewMessage) {
+        notifMessage.addEventListener("input", function () { previewMessage.textContent = notifMessage.value || "نص التنبيه"; });
+    }
 });

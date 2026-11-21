@@ -1,5 +1,16 @@
 @model IEnumerable<ListingReport>
 <h1>@L.T("Reports")</h1>
+<form class="filter-form" asp-action="Reports" method="get">
+    <label class="sort-label">
+        الحالة
+        <select name="status">
+            <option value="" selected="@(string.IsNullOrWhiteSpace(ViewBag.Status))">الكل</option>
+            <option value="pending" selected="@(ViewBag.Status == "pending")">قيد المراجعة</option>
+            <option value="reviewed" selected="@(ViewBag.Status == "reviewed")">تمت المراجعة</option>
+        </select>
+    </label>
+    <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
+</form>
 @if (!Model.Any())
 {
     <p>@L.T("NoReports")</p>

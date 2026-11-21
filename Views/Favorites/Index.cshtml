@@ -16,7 +16,7 @@
         typeOptions.Add(new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(L.PropertyTypeText(pt), pt.ToString(), ViewBag.PropertyType == pt.ToString()));
     }
 }
-<h1>@L.T("Favorites")</h1>
+<h1>@L.T("Favorites") (@Model.Count())</h1>
 @if (!Model.Any())
 {
     <p>@L.T("NoFavorites")</p>

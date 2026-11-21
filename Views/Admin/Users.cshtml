@@ -22,6 +22,10 @@ else
         {
             <article class="admin-card user-card">
                 <h3>@(row.User.FullName ?? row.User.UserName)</h3>
+                @if (row.IsAdmin)
+                {
+                    <span class="admin-badge">👑 أدمن</span>
+                }
                 <p>@row.User.PhoneNumber</p>
                 <p>@(row.User.Email ?? "-")</p>
                 <p>@row.Role • @row.User.AccountStatus</p>

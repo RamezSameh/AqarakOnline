@@ -2,6 +2,14 @@
 <h1>@L.T("AdminRequests")</h1>
 <form class="filter-form" asp-action="Requests" method="get">
     <input type="text" name="search" value="@ViewBag.Search" placeholder="@L.T("SearchPlaceholder")" />
+    <label class="sort-label">
+        الحالة
+        <select name="status">
+            <option value="" selected="@(string.IsNullOrWhiteSpace(ViewBag.Status))">الكل</option>
+            <option value="unreplied" selected="@(ViewBag.Status == "unreplied")">لم يُرد عليها</option>
+            <option value="replied" selected="@(ViewBag.Status == "replied")">تم الرد</option>
+        </select>
+    </label>
     <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
     <a class="btn btn-ghost" asp-action="Requests">@L.T("ClearFilter")</a>
 </form>

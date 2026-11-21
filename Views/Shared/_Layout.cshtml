@@ -38,7 +38,7 @@
                     <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">🔔 @L.T("SavedSearches")</a>
                     <a class="nav-link @(currentController == "Viewings" ? "active" : "")" asp-controller="Viewings" asp-action="Index">📅 @L.T("Viewings")</a>
                     <a class="nav-link @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">👤 @L.T("MyAccount")</a>
-                    <a class="nav-cta @(currentController == "Listings" && currentAction == "Create" ? "active" : "")" asp-controller="Listings" asp-action="Create">➕ @L.T("CreateListing")</a>
+                    <a class="nav-cta nav-create-primary @(currentController == "Listings" && currentAction == "Create" ? "active" : "")" asp-controller="Listings" asp-action="Create">➕ @L.T("CreateListing")</a>
                     @* غلاف display:contents حتى تُستبدل الإدارة لحظيًا من غير كسر توزيع الـ flex. *@
                     <span id="adminNavLinks" style="display:contents">@await Component.InvokeAsync("AdminNav")</span>
                     @* على الموبايل فقط: البروفايل وتسجيل الخروج داخل اللوحة. *@
@@ -104,6 +104,8 @@
                 <p><a asp-controller="Home" asp-action="BuyingMistakes">@L.T("BuyingMistakes")</a></p>
                 <p><a asp-controller="Home" asp-action="Terms">@L.T("TermsOfUse")</a></p>
                 <p><a asp-controller="Home" asp-action="Privacy">@L.T("PrivacyPolicy")</a></p>
+                <p><a asp-controller="Listings" asp-action="Index" asp-route-sort="newest">أحدث الإعلانات</a></p>
+                <p><a asp-controller="Listings" asp-action="Index" asp-route-sort="viewsDesc">الأكثر مشاهدة</a></p>
             </div>
             <div class="footer-col">
                 <p class="footer-heading">تواصل معنا</p>

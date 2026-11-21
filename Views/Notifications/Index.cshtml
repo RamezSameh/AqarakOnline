@@ -13,6 +13,9 @@ else
         <form asp-controller="Notifications" asp-action="DeleteAll" method="post" class="inline-form" onsubmit="return confirm('حذف كل التنبيهات؟');">
             <button type="submit" class="btn btn-ghost">@L.T("DeleteAllNotifications")</button>
         </form>
+        <form asp-controller="Notifications" asp-action="DeleteRead" method="post" class="inline-form" onsubmit="return confirm('حذف التنبيهات المقروءة فقط؟');">
+            <button type="submit" class="btn btn-ghost">حذف المقروءة فقط</button>
+        </form>
     </div>
         var today = DateTime.Today;
         var notifGroups = new[]

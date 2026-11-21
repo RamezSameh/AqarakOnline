@@ -6,6 +6,15 @@
     var pageUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/Listings/Details/{Model.Id}";
     var firstPhoto = Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id).FirstOrDefault();
     var shareText = $"{Model.Title} - {L.PriceText(Model.Price, Model.ListingType)} - {pageUrl}";
+    var typeIcon = Model.PropertyType switch
+    {
+        PropertyType.Apartment => "🏢",
+        PropertyType.House => "🏠",
+        PropertyType.Building => "🏗️",
+        PropertyType.Shop => "🏪",
+        PropertyType.Villa => "🏰",
+        _ => ""
+    };
     var jsonLd = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
     {
         ["@context"] = "https://schema.org",
@@ -34,7 +43,7 @@
     <script type="application/ld+json">@Html.Raw(jsonLd)</script>
 }
 <div class="details-back-wrap"><a class="btn btn-ghost" asp-action="Index">← @L.T("BackToList")</a></div>
-<h1>@Model.Title</h1>
+<h1 class="details-title">@typeIcon @Model.Title</h1>
 <div class="listing-meta">
     <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
     <span class="badge badge-pt-@Model.PropertyType">@L.PropertyTypeText(Model.PropertyType)</span>
@@ -58,6 +67,17 @@
     <span class="listing-status @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</span>
 </div>
 
+<div class="details-quick-summary">
+    <span>💰 @L.PriceText(Model.Price, Model.ListingType)</span>
+    <span>📐 @Model.AreaSqm م²</span>
+    @if (Model.Rooms.HasValue)
+    {
+        <span>🛏️ @Model.Rooms</span>
+    }
+    <span>@typeIcon @L.PropertyTypeText(Model.PropertyType)</span>
+    <span>📍 @Model.Area</span>
+</div>
+
 @{
     var photos = Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id).ToList();
     var video = Model.Attachments.FirstOrDefault(a => a.Kind == AttachmentKind.Video);
@@ -68,6 +88,7 @@
         <div class="gallery-main">
             <img id="galleryMain" class="gallery-main-photo" src="/@photos[0].FilePath" alt="@Model.Title" />
             <span id="galleryCounter" class="gallery-counter">1 / @photos.Count</span>
+            <button type="button" id="galleryAutoplay" class="gallery-autoplay" aria-label="تشغيل تلقائي">▶</button>
             <button type="button" id="galleryPrev" class="gallery-nav gallery-prev" aria-label="@L.T("Previous")">‹</button>
             <button type="button" id="galleryNext" class="gallery-nav gallery-next" aria-label="@L.T("Next")">›</button>
         </div>
@@ -249,6 +270,10 @@ else
         {
             <button type="button" class="details-tab-btn" data-tab="tab-features">@L.T("Features")</button>
         }
+        @if (photos.Any())
+        {
+            <button type="button" class="details-tab-btn" data-tab="tab-photos">الصور</button>
+        }
         @if (Model.ListingType == ListingType.Sale)
         {
             <button type="button" class="details-tab-btn" data-tab="tab-calc">@L.T("Calculator")</button>
@@ -268,6 +293,17 @@ else
             </ul>
         </div>
     }
+    @if (photos.Any())
+    {
+        <div class="details-tab-panel" id="tab-photos" hidden>
+            <div class="tab-photos-grid">
+                @foreach (var photo in photos)
+                {
+                    <img src="/@photo.FilePath" class="tab-photo" alt="@Model.Title" loading="lazy" />
+                }
+            </div>
+        </div>
+    }
     @if (Model.ListingType == ListingType.Sale)
     {
         <div class="details-tab-panel" id="tab-calc" hidden>
@@ -283,6 +319,8 @@ else
                     <label>@L.T("InterestRate")</label>
                     <input id="calcRate" type="number" min="0" max="100" step="any" value="18" />
                     <p><strong>@L.T("MonthlyInstallment"):</strong> <span id="calcResult">-</span></p>
+                    <div class="calc-bar"><div class="calc-bar-down" id="calcBarDown"></div><div class="calc-bar-loan" id="calcBarLoan"></div></div>
+                    <p class="calc-legend"><span class="calc-legend-down">■ الدفعة الأولى</span> <span class="calc-legend-loan">■ المبلغ المتبقي</span></p>
                     <small>@L.T("CalculatorNote")</small>
                 </div>
             </section>
@@ -329,7 +367,7 @@ else
         }
         <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id">@L.T("ContactUs")</a>
         <a class="btn btn-ghost" href="tel:@ContactOptions.Value.Phone">📞 @L.T("CallUs")</a>
-        <a class="btn btn-ghost" asp-action="Report" asp-route-id="@Model.Id">🚩 @L.T("ReportListing")</a>
+        <a class="btn btn-ghost report-btn" asp-action="Report" asp-route-id="@Model.Id">🚩 @L.T("ReportListing")</a>
     }
     @if (User.Identity?.IsAuthenticated == true && (Model.OwnerId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value || User.IsInRole("Admin")))
     {
@@ -349,6 +387,7 @@ else
     <a class="btn btn-ghost share-icon" href="https://www.facebook.com/sharer/sharer.php?u=@Uri.EscapeDataString(pageUrl)" target="_blank" rel="noopener" title="فيسبوك">f</a>
     <a class="btn btn-ghost share-icon" href="https://t.me/share/url?url=@Uri.EscapeDataString(pageUrl)&text=@Uri.EscapeDataString(shareText)" target="_blank" rel="noopener" title="تيليجرام">✈️</a>
     <button type="button" class="btn btn-ghost share-icon share-copy" data-url="@pageUrl" title="@L.T("CopyLink")">🔗</button>
+    <button type="button" class="btn btn-ghost share-icon share-copy" data-url="@Model.AdNumber" title="نسخ رقم الإعلان">🔢</button>
     <button type="button" class="btn btn-ghost share-icon compare-toggle" data-id="@Model.Id" data-add="⚖️" data-added="✓" data-max="@L.T("CompareMax")" title="@L.T("AddToCompare")">⚖️</button>
 </div>
 
@@ -375,7 +414,7 @@ else
 {
     <section>
         <h2>@L.T("SimilarListings")</h2>
-        <div class="cards-slider">
+        <div class="cards-slider similar-compact">
             @foreach (var item in similar)
             {
                 @await Html.PartialAsync("_ListingCard", item)
@@ -400,3 +439,5 @@ else
     </div>
 }
 
+
+<button type="button" class="fab-share share-copy" data-url="@pageUrl" title="@L.T("Share")">🔗</button>

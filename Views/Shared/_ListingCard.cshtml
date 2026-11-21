@@ -23,6 +23,19 @@ if (Model.LandAreaSqm.HasValue) { facts.Add($"{L.T("LandArea")}: {Model.LandArea
 if (Model.BuildingFloors.HasValue) { facts.Add($"{L.T("BuildingFloors")}: {Model.BuildingFloors}"); }
 if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Model.ApartmentsCount}"); }
 }
+@{
+    var typeIcon = Model.PropertyType switch
+    {
+        PropertyType.Apartment => "🏢",
+        PropertyType.House => "🏠",
+        PropertyType.Building => "🏗️",
+        PropertyType.Shop => "🏪",
+        PropertyType.Villa => "🏰",
+        _ => ""
+    };
+    var newAge = DateTime.UtcNow - Model.CreatedAt;
+    var newBadgeClass = newAge.TotalHours < 6 ? "badge-new-fresh" : "badge-new-old";
+}
 <article class="listing-card@(Model.IsEffectivelyFeatured ? " featured-card" : "")@(Model.IsUrgent ? " urgent-card" : "")" data-listing-id="@Model.Id" data-listing-type="@Model.ListingType">
     <div class="availability-bar @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</div>
     <div class="card-photo-wrap">
@@ -34,6 +47,11 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
                 <img class="listing-photo @(i == 0 ? "active" : "")" src="/@photos[i].FilePath" alt="@Model.Title" loading="lazy" />
             }
         </div>
+        @if (photos.Count > 1)
+        {
+            <button type="button" class="card-photo-nav card-photo-prev" data-dir="-1" aria-label="السابق">‹</button>
+            <button type="button" class="card-photo-nav card-photo-next" data-dir="1" aria-label="التالي">›</button>
+        }
     }
     else
     {
@@ -62,7 +80,7 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
     <div class="listing-body">
         <div class="listing-meta">
             <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
-            <span class="badge badge-pt-@Model.PropertyType">@L.PropertyTypeText(Model.PropertyType)</span>
+            <span class="badge badge-pt-@Model.PropertyType">@typeIcon @L.PropertyTypeText(Model.PropertyType)</span>
             <span class="badge">@L.AdvertiserTypeText(Model.AdvertiserType)</span>
             @if (Model.IsEffectivelyFeatured)
             {
@@ -82,7 +100,7 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
             }
             @if (Model.CreatedAt >= DateTime.UtcNow.AddDays(-1))
             {
-                <span class="badge badge-new">🆕 @L.T("New")</span>
+                <span class="badge badge-new @newBadgeClass">🆕 @L.T("New")</span>
             }
             <span class="ad-number">@L.T("AdNumber"): @Model.AdNumber</span>
             <span class="listing-views">👁 @Model.ViewCount</span>
@@ -95,7 +113,7 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
             <p class="listing-facts">@string.Join(" • ", facts)</p>
         }
         <p class="listing-price">@L.PriceText(Model.Price, Model.ListingType)</p>
-        <p class="listing-published">📅 @Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</p>
+        <p class="listing-published">📅 @L.RelativeTime(Model.CreatedAt)</p>
         <p class="listing-views">@L.T("Views"): @Model.ViewCount • @L.RelativeTime(Model.CreatedAt)</p>
         @if (Model.Approval != ListingApproval.Approved)
         {

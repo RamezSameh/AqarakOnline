@@ -9,6 +9,11 @@
     <div class="hero-actions">
         <a class="btn btn-primary" asp-controller="Listings" asp-action="Index">تصفح الإعلانات</a>
         <a class="btn btn-ghost" asp-controller="Listings" asp-action="Create">@L.T("CreateListing")</a>
+        <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index">بحث متقدم ←</a>
+    </div>
+    <div class="hero-stats">
+        <span>🏠 @ViewBag.AvailableListingsCount إعلان متاح</span>
+        <span>📍 @ViewBag.AreasCount منطقة</span>
     </div>
 </section>
 
@@ -62,13 +67,50 @@
         <h2>@L.T("LatestListings")</h2>
         <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index">@L.T("SeeAll")</a>
     </div>
-    <div class="cards-slider">
+    <div class="latest-filter">
+        <button type="button" class="btn sort-chip active" data-filter="All">الكل</button>
+        <button type="button" class="btn sort-chip" data-filter="Sale">بيع</button>
+        <button type="button" class="btn sort-chip" data-filter="Rent">إيجار</button>
+    </div>
+    <div class="cards-slider" id="latestSlider">
         @foreach (var listing in Model)
         {
             @await Html.PartialAsync("_ListingCard", listing)
         }
     </div>
 </section>
+
+@if (ViewBag.LatestSale != null && ((List<Listing>)ViewBag.LatestSale).Any())
+{
+    <section>
+        <div class="section-head">
+            <h2>أحدث إعلانات البيع</h2>
+            <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index" asp-route-listingType="Sale">@L.T("SeeAll")</a>
+        </div>
+        <div class="cards-slider">
+            @foreach (var listing in (List<Listing>)ViewBag.LatestSale)
+            {
+                @await Html.PartialAsync("_ListingCard", listing)
+            }
+        </div>
+    </section>
+}
+
+@if (ViewBag.LatestRent != null && ((List<Listing>)ViewBag.LatestRent).Any())
+{
+    <section>
+        <div class="section-head">
+            <h2>أحدث إعلانات الإيجار</h2>
+            <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index" asp-route-listingType="Rent">@L.T("SeeAll")</a>
+        </div>
+        <div class="cards-slider">
+            @foreach (var listing in (List<Listing>)ViewBag.LatestRent)
+            {
+                @await Html.PartialAsync("_ListingCard", listing)
+            }
+        </div>
+    </section>
+}
 
 @if (ViewBag.MostViewed != null && ((List<Listing>)ViewBag.MostViewed).Any())
 {

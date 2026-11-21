@@ -63,6 +63,20 @@
 </section>
 
 <section class="dash-tab" id="dash-listings" hidden>
+<h2>آخر الإعلانات</h2>
+@if (ViewBag.LatestListings is List<Listing> latestListings && latestListings.Any())
+{
+    <ul class="latest-list">
+        @foreach (var listing in latestListings)
+        {
+            <li><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a> — @listing.AdNumber • @L.RelativeTime(listing.CreatedAt)</li>
+        }
+    </ul>
+}
+else
+{
+    <p>لا توجد إعلانات بعد.</p>
+}
 <h2>عدد الإعلانات لكل مستخدم</h2>
 @if (!Model.UserRows.Any())
 {
@@ -274,6 +288,15 @@ else
 
 <section class="dash-tab" id="dash-stats" hidden>
 <h2>إحصائيات</h2>
+<div class="donut-wrap">
+    @{
+        var saleTotal = Model.SaleListings + Model.RentListings;
+        var salePct = saleTotal > 0 ? Model.SaleListings * 100 / saleTotal : 0;
+    }
+    <div class="donut" style="--sale:@(salePct)%"></div>
+    <div class="donut-center">@salePct% بيع</div>
+</div>
+<p>بيع: @Model.SaleListings • إيجار: @Model.RentListings</p>
 @{
     var maxMonthly = Model.MonthlyListings.Any() ? Model.MonthlyListings.Max(p => p.Count) : 0;
     var maxArea = Model.ListingsByArea.Any() ? Model.ListingsByArea.Max(p => p.Count) : 0;

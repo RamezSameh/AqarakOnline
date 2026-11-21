@@ -1,6 +1,7 @@
 @model IEnumerable<ViewingAppointment>
 <h1>@L.T("Viewings")</h1>
 <p>المعاينات بتتنسق عن طريقك: أكّد أو ارفض، وكلم الطرفين بالتليفون — المشتري والمعلن لا يتواصلان مباشرة.</p>
+<p>معاينات اليوم: @Model.Count(v => v.RequestedAt.Date == DateTime.Today)</p>
 @if (!Model.Any())
 {
     <p>@L.T("NoViewings")</p>

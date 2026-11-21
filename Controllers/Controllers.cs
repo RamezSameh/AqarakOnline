@@ -48,6 +48,14 @@ public class HomeController : Controller
             .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved && l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow))
             .OrderByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
             .Take(6).ToListAsync();
+        ViewBag.LatestSale = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
+            .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved && l.ListingType == ListingType.Sale)
+            .OrderByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
+            .Take(4).ToListAsync();
+        ViewBag.LatestRent = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
+            .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved && l.ListingType == ListingType.Rent)
+            .OrderByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
+            .Take(4).ToListAsync();
         ViewBag.PopularAreas = await _context.Listings
             .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
             .GroupBy(l => l.Area)
@@ -1438,6 +1446,8 @@ public class AdminDashboardViewModel
     public int ApprovedListings { get; set; }
     public int PendingListings { get; set; }
     public int AvailableListings { get; set; }
+    public int SaleListings { get; set; }
+    public int RentListings { get; set; }
     public long TotalViews { get; set; }
     public int TotalRequests { get; set; }
     public int UnrepliedRequests { get; set; }
@@ -1710,6 +1720,9 @@ public class AdminController : Controller
             .Select(g => new ChartPoint { Label = _language.ListingTypeText(g.Key), Count = g.Count() })
             .OrderByDescending(pt => pt.Count)
             .ToList();
+        model.SaleListings = allListings.Count(l => l.ListingType == ListingType.Sale);
+        model.RentListings = allListings.Count(l => l.ListingType == ListingType.Rent);
+        ViewBag.LatestListings = allListings.OrderByDescending(l => l.CreatedAt).Take(5).ToList();
         model.ListingsByAdvertiserType = allListings
             .GroupBy(l => l.AdvertiserType)
             .Select(g => new ChartPoint { Label = _language.AdvertiserTypeText(g.Key), Count = g.Count() })
@@ -2539,12 +2552,20 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Requests(string? search = null)
+    public async Task<IActionResult> Requests(string? search = null, string? status = null)
     {
         var requestsQuery = _context.ContactRequests
             .Include(r => r.Listing)
             .Include(r => r.Buyer)
             .AsQueryable();
+        if (status == "replied")
+        {
+            requestsQuery = requestsQuery.Where(r => r.IsReplied);
+        }
+        else if (status == "unreplied")
+        {
+            requestsQuery = requestsQuery.Where(r => !r.IsReplied);
+        }
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();
@@ -2558,6 +2579,7 @@ public class AdminController : Controller
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
         ViewBag.Search = search;
+        ViewBag.Status = status;
         return View(requests);
     }
 
@@ -2696,12 +2718,23 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Reports()
+    public async Task<IActionResult> Reports(string? status = null)
     {
-        var reports = await _context.ListingReports
+        var query = _context.ListingReports
             .Include(r => r.Listing).Include(r => r.Reporter)
+            .AsQueryable();
+        if (status == "reviewed")
+        {
+            query = query.Where(r => r.Status == ReportStatus.Reviewed);
+        }
+        else if (status == "pending")
+        {
+            query = query.Where(r => r.Status == ReportStatus.Pending);
+        }
+        var reports = await query
             .OrderBy(r => r.Status).ThenByDescending(r => r.CreatedAt)
             .ToListAsync();
+        ViewBag.Status = status;
         return View(reports);
     }
 
@@ -3224,6 +3257,22 @@ public class NotificationsController : Controller
                 ReadAt = DateTime.UtcNow
             });
         }
+        await _context.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteRead()
+    {
+        var readIds = await _context.NotificationReads
+            .Where(r => r.UserId == CurrentUserId)
+            .Select(r => r.NotificationId)
+            .ToListAsync();
+        var mine = await _context.Notifications
+            .Where(n => n.TargetUserId == CurrentUserId && readIds.Contains(n.Id))
+            .ToListAsync();
+        _context.Notifications.RemoveRange(mine);
         await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }

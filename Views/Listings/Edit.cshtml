@@ -32,11 +32,12 @@
         <span class="form-step-item">2 — السعر والمواصفات</span>
         <span class="form-step-item">3 — الصور والفيديو</span>
     </div>
+    <div class="steps-progress"><div class="steps-progress-bar" id="stepsProgressBar"></div></div>
 
     <h2 class="form-step step-1"><span class="step-num">1</span> بيانات الإعلان</h2>
 
     <label>@L.T("Title")</label>
-    <input asp-for="Title" />
+    <input asp-for="Title" placeholder="مثال: شقة 3 غرف في مدينة نصر" />
     <small id="titleCounter" class="char-counter"></small>
     <span asp-validation-for="Title" class="field-error"></span>
 
@@ -71,7 +72,7 @@
     <span asp-validation-for="DetailedAddress" class="field-error"></span>
 
     <label>@L.T("Details")</label>
-    <textarea asp-for="Description" rows="4"></textarea>
+    <textarea asp-for="Description" rows="4" placeholder="اكتب وصفًا واضحًا للعقار..."></textarea>
     <small id="descCounter" class="char-counter"></small>
     <span asp-validation-for="Description" class="field-error"></span>
 
@@ -85,18 +86,23 @@
     <label>@L.T("CustomFeature")</label>
     <input type="text" name="customFeatures" value="@string.Join("، ", Model.FeaturesList.Except(AqarakOnline.Models.ListingFeatures.All))" placeholder="اكتب ميزة مش موجودة في الاختيارات (افصل بين الميزات بفاصلة)" />
 
+    <div class="step-nav">
+        <button type="button" class="btn btn-primary step-next" data-target="step-2">التالي ←</button>
+    </div>
+
     <h2 class="form-step step-2"><span class="step-num">2</span> السعر والمواصفات</h2>
 
     <div class="form-row">
         <div>
     <label>@L.T("Price")</label>
-    <input asp-for="Price" type="number" min="0" step="any" />
+    <input asp-for="Price" type="number" min="0" step="any" placeholder="مثال: 1500000" />
     <span asp-validation-for="Price" class="field-error"></span>
     <small id="suggestedPriceHint"></small>
+    <small id="priceFormatted" class="price-formatted"></small>
         </div>
         <div>
     <label>@L.T("AreaSqm")</label>
-    <input asp-for="AreaSqm" type="number" min="1" step="1" />
+    <div class="input-unit"><input asp-for="AreaSqm" type="number" min="1" step="1" placeholder="مثال: 120" /><span>م²</span></div>
     <span asp-validation-for="AreaSqm" class="field-error"></span>
         </div>
     </div>
@@ -179,6 +185,11 @@
         <label><input asp-for="IsAvailable" type="checkbox" /> @L.T("Available")</label>
     }
 
+    <div class="step-nav">
+        <button type="button" class="btn btn-ghost step-prev" data-target="step-1">→ السابق</button>
+        <button type="button" class="btn btn-primary step-next" data-target="step-3">التالي ←</button>
+    </div>
+
     <h2 class="form-step step-3"><span class="step-num">3</span> الصور والفيديو</h2>
 
     <label>صور توضيحية (حتى 5 صور)</label>
@@ -186,6 +197,7 @@
         <span>@L.T("DropPhotosHere")</span>
         <input asp-for="PhotoFiles" type="file" accept="image/*" multiple />
         <div id="photoPreview" class="photo-preview"></div>
+        <button type="button" id="clearPhotosBtn" class="btn btn-ghost">حذف كل الصور المختارة</button>
     </div>
     <small>الصور بتتصغّر وتتضغط تلقائيًا عند الرفع، وحجم الصورة الواحدة 10 ميجا بحد أقصى.</small>
     <label>فيديو (حتى 25 ميجا)</label>
@@ -234,6 +246,14 @@
     }
 
     <div id="uploadStatus" class="upload-progress" hidden><div class="upload-progress-bar"></div><span>@L.T("UploadingListing")</span></div>
+
+    <div class="step-nav">
+        <button type="button" class="btn btn-ghost step-prev" data-target="step-2">→ السابق</button>
+        <button type="button" class="btn btn-primary step-next" data-target="step-4">مراجعة ←</button>
+    </div>
+
+    <h2 class="form-step step-4"><span class="step-num">4</span> مراجعة الإعلان</h2>
+    <div id="reviewPanel" class="review-panel"></div>
 
     <div class="actions">
         <button type="button" id="previewListingBtn" class="btn btn-ghost">👁 @L.T("PreviewListing")</button>

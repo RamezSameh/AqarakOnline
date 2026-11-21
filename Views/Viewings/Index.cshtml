@@ -13,6 +13,13 @@ else
             <article class="viewing-card status-@viewing.Status">
                 <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@viewing.ListingId">@viewing.Listing?.Title</a></h3>
                 <p>@L.T("ViewingDate"): @viewing.RequestedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                @{
+                    var daysLeft = (viewing.RequestedAt.Date - DateTime.Now.Date).Days;
+                }
+                @if (daysLeft >= 0 && (viewing.Status == ViewingStatus.Pending || viewing.Status == ViewingStatus.Confirmed))
+                {
+                    <p>متبقٍ @daysLeft يوم</p>
+                }
                 <p><span class="viewing-status">@L.ViewingStatusText(viewing.Status)</span></p>
                 @if (viewing.Status == ViewingStatus.Pending || viewing.Status == ViewingStatus.Confirmed)
                 {

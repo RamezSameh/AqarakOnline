@@ -73,6 +73,9 @@
         new(L.T("Yearly"), "Yearly", ViewBag.RentPeriod == RentPeriod.Yearly)
     };
     var currentPage = (int)(ViewBag.Page ?? 1);
+    var dynamicTitle = L.T("Listings");
+    if (!string.IsNullOrWhiteSpace(ViewBag.Search as string)) { dynamicTitle = "نتائج البحث عن \"" + ViewBag.Search + "\""; }
+    else if (Enum.TryParse<ListingType>(ViewBag.ListingType?.ToString(), out ListingType titleType)) { dynamicTitle = L.ListingTypeText(titleType) + " — " + L.T("Listings"); }
     var totalPages = (int)(ViewBag.TotalPages ?? 1);
     var totalCount = (int)(ViewBag.TotalCount ?? 0);
 }
@@ -85,7 +88,7 @@
 }
 else
 {
-    <h1>@L.T("Listings")</h1>
+    <h1>@dynamicTitle</h1>
 }
 
 <div class="search-layout">
