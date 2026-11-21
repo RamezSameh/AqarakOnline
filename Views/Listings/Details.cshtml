@@ -129,6 +129,39 @@ else
 {
     <p><strong>@L.T("LastUpdated"):</strong> @L.RelativeTime(Model.UpdatedAt.Value)</p>
 }
+@if (Model.IsPriceNegotiable)
+{
+    <p><strong>@L.T("Negotiable")</strong></p>
+}
+@if (Model.ListingType == ListingType.Rent)
+{
+    if (Model.RentPeriod.HasValue)
+    {
+        <p><strong>@L.T("RentPeriod"):</strong> @(Model.RentPeriod.Value == RentPeriod.Monthly ? L.T("Monthly") : L.T("Yearly"))</p>
+    }
+    if (Model.DepositMonths.HasValue)
+    {
+        <p><strong>@L.T("DepositMonths"):</strong> @Model.DepositMonths</p>
+    }
+}
+@{
+    var meterNames = new List<string>();
+    if (Model.HasElectricityMeter) { meterNames.Add(L.T("ElectricityMeter")); }
+    if (Model.HasGasMeter) { meterNames.Add(L.T("GasMeter")); }
+    if (Model.HasWaterMeter) { meterNames.Add(L.T("WaterMeter")); }
+}
+@if (meterNames.Any())
+{
+    <p><strong>@L.T("Meters"):</strong> @string.Join(" • ", meterNames)</p>
+}
+@if (Model.LandAreaSqm.HasValue)
+{
+    <p><strong>@L.T("LandArea"):</strong> @Model.LandAreaSqm م²</p>
+}
+@if (Model.BuildingFloors.HasValue)
+{
+    <p><strong>@L.T("BuildingFloors"):</strong> @Model.BuildingFloors</p>
+}
 <p><strong>@L.T("Price"):</strong> @L.PriceText(Model.Price, Model.ListingType)</p>
 @{
     var avgSqm = ViewBag.AreaAvgPricePerSqm as decimal?;

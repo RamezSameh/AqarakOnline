@@ -17,10 +17,14 @@ namespace AqarakOnline.Controllers;
 public class HomeController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly IConfiguration _configuration;
+    private readonly Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> _hub;
 
-    public HomeController(ApplicationDbContext context)
+    public HomeController(ApplicationDbContext context, IConfiguration configuration, Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub)
     {
         _context = context;
+        _configuration = configuration;
+        _hub = hub;
     }
 
     public async Task<IActionResult> Index()
@@ -36,6 +40,10 @@ public class HomeController : Controller
         ViewBag.AreasCount = await _context.Listings
             .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
             .Select(l => l.Area).Distinct().CountAsync();
+        ViewBag.MostViewed = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
+            .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
+            .OrderByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt)
+            .Take(5).ToListAsync();
         if (User.Identity?.IsAuthenticated == true)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -48,6 +56,52 @@ public class HomeController : Controller
     }
 
     public IActionResult Error()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult Contact()
+    {
+        return View(new ContactMessage());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Contact(ContactMessage model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+        model.CreatedAt = DateTime.UtcNow;
+        _context.ContactMessages.Add(model);
+        await _context.SaveChangesAsync();
+        var adminEmail = _configuration["AdminEmail"];
+        var admin = !string.IsNullOrWhiteSpace(adminEmail)
+            ? await _context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail)
+            : null;
+        if (admin != null)
+        {
+            _context.Notifications.Add(new Notification
+            {
+                Title = "رسالة تواصل جديدة",
+                Message = $"{model.Name} أرسل رسالة عبر «تواصل معنا».",
+                TargetUserId = admin.Id,
+                Url = "/Admin/ContactMessages",
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            await _context.SaveChangesAsync();
+        }
+        await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
+        await _hub.Clients.All.SendAsync("refreshBell");
+        TempData["Info"] = "تم إرسال رسالتك، وسيتواصل معك فريق الموقع.";
+        return RedirectToAction(nameof(Contact));
+    }
+
+    [HttpGet]
+    public IActionResult SellGuide()
     {
         return View();
     }
@@ -96,7 +150,10 @@ public class ListingsController : Controller
         string? adNumber = null, string? recency = null, bool directOwnerOnly = false,
         FinishingLevel? finishing = null, int? minFloor = null, int? maxFloor = null,
         bool hasParking = false, bool hasElevator = false, bool hasBalcony = false,
-        bool hasAirConditioning = false, bool hasSecurity = false, bool installmentsOnly = false)
+        bool hasAirConditioning = false, bool hasSecurity = false, bool installmentsOnly = false,
+        bool negotiableOnly = false, RentPeriod? rentPeriod = null,
+        bool hasElectricityMeter = false, bool hasGasMeter = false, bool hasWaterMeter = false,
+        int? minBuildingFloors = null)
     {
         var query = _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.Approval == ListingApproval.Approved).AsQueryable();
@@ -177,6 +234,30 @@ public class ListingsController : Controller
         {
             query = query.Where(l => l.AcceptsInstallments);
         }
+        if (negotiableOnly)
+        {
+            query = query.Where(l => l.IsPriceNegotiable);
+        }
+        if (rentPeriod.HasValue)
+        {
+            query = query.Where(l => l.RentPeriod == rentPeriod.Value);
+        }
+        if (hasElectricityMeter)
+        {
+            query = query.Where(l => l.HasElectricityMeter);
+        }
+        if (hasGasMeter)
+        {
+            query = query.Where(l => l.HasGasMeter);
+        }
+        if (hasWaterMeter)
+        {
+            query = query.Where(l => l.HasWaterMeter);
+        }
+        if (minBuildingFloors.HasValue)
+        {
+            query = query.Where(l => l.BuildingFloors >= minBuildingFloors.Value);
+        }
         if (!string.IsNullOrWhiteSpace(adNumber))
         {
             var adTerm = adNumber.Trim().ToUpperInvariant();
@@ -221,6 +302,7 @@ public class ListingsController : Controller
             "viewsdesc" => "viewsDesc",
             "pricepersqmasc" => "pricePerSqmAsc",
             "pricepersqmdesc" => "pricePerSqmDesc",
+            "oldest" => "oldest",
             _ => "newest"
         };
         // الإعلانات المميزة أولًا دائمًا، ثم الترتيب المختار.
@@ -232,6 +314,7 @@ public class ListingsController : Controller
             "viewsDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt),
             "pricePerSqmAsc" => query.OrderByDescending(l => l.IsFeatured).ThenBy(l => l.Price / l.AreaSqm).ThenByDescending(l => l.CreatedAt),
             "pricePerSqmDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.Price / l.AreaSqm).ThenByDescending(l => l.CreatedAt),
+            "oldest" => query.OrderByDescending(l => l.IsFeatured).ThenBy(l => l.LastBumpedAt ?? l.CreatedAt),
             _ => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
         };
 
@@ -263,6 +346,12 @@ public class ListingsController : Controller
         ViewBag.HasAirConditioning = hasAirConditioning;
         ViewBag.HasSecurity = hasSecurity;
         ViewBag.InstallmentsOnly = installmentsOnly;
+        ViewBag.NegotiableOnly = negotiableOnly;
+        ViewBag.RentPeriod = rentPeriod;
+        ViewBag.HasElectricityMeter = hasElectricityMeter;
+        ViewBag.HasGasMeter = hasGasMeter;
+        ViewBag.HasWaterMeter = hasWaterMeter;
+        ViewBag.MinBuildingFloors = minBuildingFloors;
         // عدد الإعلانات المتاحة في كل منطقة — يظهر جنب اسم المنطقة في الفلتر.
         ViewBag.AreaCounts = await _context.Listings
             .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable)
@@ -497,6 +586,14 @@ public class ListingsController : Controller
         listing.HasAirConditioning = model.HasAirConditioning;
         listing.HasSecurity = model.HasSecurity;
         listing.AcceptsInstallments = model.AcceptsInstallments;
+        listing.IsPriceNegotiable = model.IsPriceNegotiable;
+        listing.RentPeriod = model.ListingType == ListingType.Rent ? model.RentPeriod : null;
+        listing.DepositMonths = model.DepositMonths;
+        listing.HasElectricityMeter = model.HasElectricityMeter;
+        listing.HasGasMeter = model.HasGasMeter;
+        listing.HasWaterMeter = model.HasWaterMeter;
+        listing.LandAreaSqm = model.LandAreaSqm;
+        listing.BuildingFloors = model.BuildingFloors;
         listing.UpdatedAt = DateTime.UtcNow;
         listing.IsAvailable = model.IsAvailable;
         if (!User.IsInRole("Admin"))
@@ -709,6 +806,14 @@ public class ListingsController : Controller
             HasAirConditioning = source.HasAirConditioning,
             HasSecurity = source.HasSecurity,
             AcceptsInstallments = source.AcceptsInstallments,
+            IsPriceNegotiable = source.IsPriceNegotiable,
+            RentPeriod = source.RentPeriod,
+            DepositMonths = source.DepositMonths,
+            HasElectricityMeter = source.HasElectricityMeter,
+            HasGasMeter = source.HasGasMeter,
+            HasWaterMeter = source.HasWaterMeter,
+            LandAreaSqm = source.LandAreaSqm,
+            BuildingFloors = source.BuildingFloors,
             UpdatedAt = null,
             IsAvailable = true,
             IsFeatured = false,
@@ -1731,6 +1836,28 @@ public class AdminController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> ContactMessages()
+    {
+        var messages = await _context.ContactMessages
+            .OrderBy(m => m.IsRead).ThenByDescending(m => m.CreatedAt).ToListAsync();
+        return View(messages);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkMessageRead(int id)
+    {
+        var message = await _context.ContactMessages.FindAsync(id);
+        if (message == null)
+        {
+            return NotFound();
+        }
+        message.IsRead = true;
+        await _context.SaveChangesAsync();
+        return RedirectToAction(nameof(ContactMessages));
+    }
+
+    [HttpGet]
     public async Task<IActionResult> ExportListings()
     {
         var listings = await _context.Listings.Include(l => l.Owner)
@@ -1774,6 +1901,103 @@ public class AdminController : Controller
         }
         var bytes = Encoding.UTF8.GetBytes(sb.ToString());
         return File(bytes, "text/csv", $"aqarak-listings-{DateTime.UtcNow:yyyy-MM-dd}.csv");
+    }
+
+    /// <summary>
+    /// نسخة احتياطية: ملف ZIP فيه CSV للإعلانات والمستخدمين وطلبات التواصل
+    /// ورسائل «تواصل معنا» — للأدمن فقط.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> ExportBackup()
+    {
+        string Cell(string? value) => "\"" + (value ?? "").Replace("\"", "\"\"") + "\"";
+        var memory = new MemoryStream();
+        using (var zip = new System.IO.Compression.ZipArchive(memory, System.IO.Compression.ZipArchiveMode.Create, leaveOpen: true))
+        {
+            var listings = await _context.Listings.Include(l => l.Owner)
+                .OrderByDescending(l => l.CreatedAt).ToListAsync();
+            var listingsCsv = new StringBuilder();
+            listingsCsv.Append('\uFEFF');
+            listingsCsv.AppendLine("رقم الإعلان,العنوان,النوع,نوع العقار,المنطقة,المساحة (م²),السعر,المعلن,الهاتف,متاح,الموافقة,المشاهدات,تاريخ النشر");
+            foreach (var listing in listings)
+            {
+                listingsCsv.AppendLine(string.Join(",", new[]
+                {
+                    Cell(listing.AdNumber), Cell(listing.Title),
+                    Cell(listing.ListingType == ListingType.Sale ? "بيع" : "إيجار"),
+                    Cell(listing.PropertyType.ToString()), Cell(listing.Area),
+                    listing.AreaSqm.ToString(), listing.Price.ToString("0.##"),
+                    Cell(listing.Owner?.FullName ?? listing.Owner?.UserName),
+                    Cell(listing.Owner?.PhoneNumber),
+                    Cell(listing.IsAvailable ? "متاح" : "غير متاح"),
+                    Cell(listing.Approval.ToString()), listing.ViewCount.ToString(),
+                    listing.CreatedAt.ToString("yyyy-MM-dd")
+                }));
+            }
+            var listingsEntry = zip.CreateEntry("Listings.csv");
+            using (var writer = new StreamWriter(listingsEntry.Open(), Encoding.UTF8))
+            {
+                await writer.WriteAsync(listingsCsv.ToString());
+            }
+
+            var users = await _context.Users.OrderBy(u => u.FullName).ToListAsync();
+            var usersCsv = new StringBuilder();
+            usersCsv.Append('\uFEFF');
+            usersCsv.AppendLine("الاسم,الهاتف,الإيميل,الحالة");
+            foreach (var user in users)
+            {
+                usersCsv.AppendLine(string.Join(",", new[]
+                {
+                    Cell(user.FullName), Cell(user.PhoneNumber), Cell(user.Email),
+                    Cell(user.AccountStatus.ToString())
+                }));
+            }
+            var usersEntry = zip.CreateEntry("Users.csv");
+            using (var writer = new StreamWriter(usersEntry.Open(), Encoding.UTF8))
+            {
+                await writer.WriteAsync(usersCsv.ToString());
+            }
+
+            var requests = await _context.ContactRequests.Include(r => r.Listing)
+                .OrderByDescending(r => r.CreatedAt).ToListAsync();
+            var requestsCsv = new StringBuilder();
+            requestsCsv.Append('\uFEFF');
+            requestsCsv.AppendLine("الإعلان,الاسم,الهاتف,النوع,تم الرد,التاريخ");
+            foreach (var request in requests)
+            {
+                requestsCsv.AppendLine(string.Join(",", new[]
+                {
+                    Cell(request.Listing?.AdNumber), Cell(request.BuyerName), Cell(request.BuyerPhone),
+                    Cell(request.Intent.ToString()), Cell(request.IsReplied ? "نعم" : "لا"),
+                    request.CreatedAt.ToString("yyyy-MM-dd")
+                }));
+            }
+            var requestsEntry = zip.CreateEntry("ContactRequests.csv");
+            using (var writer = new StreamWriter(requestsEntry.Open(), Encoding.UTF8))
+            {
+                await writer.WriteAsync(requestsCsv.ToString());
+            }
+
+            var messages = await _context.ContactMessages
+                .OrderByDescending(m => m.CreatedAt).ToListAsync();
+            var messagesCsv = new StringBuilder();
+            messagesCsv.Append('\uFEFF');
+            messagesCsv.AppendLine("الاسم,الهاتف,الرسالة,تمت القراءة,التاريخ");
+            foreach (var message in messages)
+            {
+                messagesCsv.AppendLine(string.Join(",", new[]
+                {
+                    Cell(message.Name), Cell(message.Phone), Cell(message.Message),
+                    Cell(message.IsRead ? "نعم" : "لا"), message.CreatedAt.ToString("yyyy-MM-dd")
+                }));
+            }
+            var messagesEntry = zip.CreateEntry("ContactMessages.csv");
+            using (var writer = new StreamWriter(messagesEntry.Open(), Encoding.UTF8))
+            {
+                await writer.WriteAsync(messagesCsv.ToString());
+            }
+        }
+        return File(memory.ToArray(), "application/zip", $"aqarak-backup-{DateTime.UtcNow:yyyy-MM-dd}.zip");
     }
 
     /// <summary>
@@ -2566,6 +2790,7 @@ public class AdminBadgeCounts
     public int UnrepliedRequests { get; set; }
     public int PendingReports { get; set; }
     public int PendingViewings { get; set; }
+    public int UnreadContactMessages { get; set; }
 }
 
 public class AdminNavViewComponent : ViewComponent
@@ -2592,7 +2817,8 @@ public class AdminNavViewComponent : ViewComponent
             PendingListings = await _context.Listings.CountAsync(l => l.Approval == ListingApproval.Pending),
             UnrepliedRequests = await _context.ContactRequests.CountAsync(r => !r.IsReplied),
             PendingReports = await _context.ListingReports.CountAsync(r => r.Status == ReportStatus.Pending),
-            PendingViewings = await _context.ViewingAppointments.CountAsync(v => v.Status == ViewingStatus.Pending)
+            PendingViewings = await _context.ViewingAppointments.CountAsync(v => v.Status == ViewingStatus.Pending),
+            UnreadContactMessages = await _context.ContactMessages.CountAsync(m => !m.IsRead)
         };
         return View(model);
     }

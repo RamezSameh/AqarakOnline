@@ -247,6 +247,26 @@ public class Listing
     /// <summary>آخر مرة عدّل فيها صاحب الإعلان (أو الأدمن) بيانات الإعلان.</summary>
     public DateTime? UpdatedAt { get; set; }
 
+    /// <summary>السعر قابل للتفاوض أم لا.</summary>
+    public bool IsPriceNegotiable { get; set; }
+
+    /// <summary>مدة الإيجار (للإيجارات فقط).</summary>
+    public RentPeriod? RentPeriod { get; set; }
+
+    /// <summary>عدد شهور التأمين (للإيجارات فقط).</summary>
+    public int? DepositMonths { get; set; }
+
+    /// <summary>عدادات (اختيارية) — تظهر في التفاصيل ويُفلتر بها.</summary>
+    public bool HasElectricityMeter { get; set; }
+    public bool HasGasMeter { get; set; }
+    public bool HasWaterMeter { get; set; }
+
+    /// <summary>مساحة الأرض بالمتر المربع (للفيلا والعمارة).</summary>
+    public int? LandAreaSqm { get; set; }
+
+    /// <summary>عدد أدوار العمارة أو الفيلا.</summary>
+    public int? BuildingFloors { get; set; }
+
     /// <summary>عدد مرات مشاهدة صفحة تفاصيل الإعلان (من غير الأدمن وصاحب الإعلان).</summary>
     public int ViewCount { get; set; }
 
@@ -500,4 +520,33 @@ public class ListingAudit
     public string? Details { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>مدة الإيجار (للإيجارات فقط).</summary>
+public enum RentPeriod
+{
+    Monthly = 0,
+    Yearly = 1
+}
+
+/// <summary>رسالة من زائر عبر صفحة «تواصل معنا» — تصل للأدمن فقط.</summary>
+public class ContactMessage
+{
+    public int Id { get; set; }
+
+    [Required(ErrorMessage = "الاسم مطلوب")]
+    [MaxLength(200)]
+    public string Name { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "رقم الموبايل مطلوب")]
+    [MaxLength(50)]
+    public string Phone { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "الرسالة مطلوبة")]
+    [MaxLength(2000)]
+    public string Message { get; set; } = string.Empty;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public bool IsRead { get; set; }
 }

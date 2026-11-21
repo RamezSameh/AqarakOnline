@@ -49,3 +49,19 @@
         }
     </div>
 </section>
+
+@if (ViewBag.MostViewed != null && ((List<Listing>)ViewBag.MostViewed).Any())
+{
+    <section>
+        <div class="section-head">
+            <h2>@L.T("MostViewed")</h2>
+            <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index" asp-route-sort="viewsDesc">@L.T("SeeAll")</a>
+        </div>
+        <div class="cards-grid">
+            @foreach (var listing in (List<Listing>)ViewBag.MostViewed)
+            {
+                @await Html.PartialAsync("_ListingCard", listing)
+            }
+        </div>
+    </section>
+}

@@ -67,6 +67,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
     public DbSet<ListingReport> ListingReports => Set<ListingReport>();
     public DbSet<ListingAudit> ListingAudits => Set<ListingAudit>();
+    public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
     public DbSet<ViewingAppointment> ViewingAppointments => Set<ViewingAppointment>();
 }
 

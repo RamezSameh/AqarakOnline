@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using AqarakOnline.Data;
 using AqarakOnline.Models;
+using Microsoft.EntityFrameworkCore;
 using AqarakOnline.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -61,17 +63,20 @@ public class AccountController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _configuration;
     private readonly Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> _hub;
+    private readonly ApplicationDbContext _context;
 
     public AccountController(
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
         IConfiguration configuration,
-        Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub)
+        Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub,
+        ApplicationDbContext context)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _configuration = configuration;
         _hub = hub;
+        _context = context;
     }
 
     [HttpGet]
@@ -190,10 +195,25 @@ public class AccountController : Controller
 
         await _userManager.AddToRoleAsync(user, isAdminAccount ? "Admin" : "User");
 
-        // حساب جديد قيد المراجعة = رقم جديد عند الأدمن، لحظيًا.
+        // حساب جديد قيد المراجعة = تنبيه موجَّه للأدمن + رقم جديد عند الأدمن، لحظيًا.
         if (!isAdminAccount)
         {
+            var admin = await _context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
+            if (admin != null)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    Title = "مستخدم جديد سجّل",
+                    Message = $"{user.FullName} سجّل حسابًا جديدًا بانتظار الموافقة.",
+                    TargetUserId = admin.Id,
+                    Url = "/Admin/Users",
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                });
+                await _context.SaveChangesAsync();
+            }
             await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
+            await _hub.Clients.All.SendAsync("refreshBell");
         }
 
         if (isAdminAccount)

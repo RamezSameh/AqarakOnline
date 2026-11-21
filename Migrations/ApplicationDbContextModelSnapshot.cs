@@ -98,6 +98,40 @@ namespace AqarakOnline.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("AqarakOnline.Models.ContactMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ContactMessages");
+                });
+
             modelBuilder.Entity("AqarakOnline.Models.ContactRequest", b =>
                 {
                     b.Property<int>("Id")
@@ -208,8 +242,14 @@ namespace AqarakOnline.Migrations
                     b.Property<int?>("Bathrooms")
                         .HasColumnType("int");
 
+                    b.Property<int?>("BuildingFloors")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("DepositMonths")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -236,13 +276,22 @@ namespace AqarakOnline.Migrations
                     b.Property<bool>("HasBalcony")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("HasElectricityMeter")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("HasElevator")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasGasMeter")
                         .HasColumnType("bit");
 
                     b.Property<bool>("HasParking")
                         .HasColumnType("bit");
 
                     b.Property<bool>("HasSecurity")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasWaterMeter")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsAvailable")
@@ -253,6 +302,12 @@ namespace AqarakOnline.Migrations
 
                     b.Property<bool>("IsFurnished")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsPriceNegotiable")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("LandAreaSqm")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("LastBumpedAt")
                         .HasColumnType("datetime2");
@@ -268,6 +323,9 @@ namespace AqarakOnline.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("PropertyType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RentPeriod")
                         .HasColumnType("int");
 
                     b.Property<int?>("Rooms")

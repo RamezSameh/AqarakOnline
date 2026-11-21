@@ -1,0 +1,44 @@
+@model IEnumerable<ContactMessage>
+<h1>@L.T("ContactMessages")</h1>
+@if (!Model.Any())
+{
+    <p>لا توجد رسائل.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>الاسم</th>
+                <th>الهاتف</th>
+                <th>الرسالة</th>
+                <th>التاريخ</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var message in Model)
+            {
+                <tr>
+                    <td>@message.Name</td>
+                    <td>@message.Phone</td>
+                    <td>@message.Message</td>
+                    <td>@L.RelativeTime(message.CreatedAt)</td>
+                    <td>
+                        @if (!message.IsRead)
+                        {
+                            <form asp-action="MarkMessageRead" method="post" class="inline-form">
+                                <input type="hidden" name="id" value="@message.Id" />
+                                <button type="submit" class="btn btn-ghost">@L.T("MarkAsRead")</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span>✓</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

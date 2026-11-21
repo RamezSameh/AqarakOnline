@@ -15,6 +15,9 @@ if (Model.HasBalcony) { facts.Add(L.T("Balcony")); }
 if (Model.HasAirConditioning) { facts.Add(L.T("AirConditioning")); }
 if (Model.HasSecurity) { facts.Add(L.T("Security")); }
 if (Model.AcceptsInstallments) { facts.Add(L.T("AcceptsInstallments")); }
+if (Model.IsPriceNegotiable) { facts.Add(L.T("Negotiable")); }
+if (Model.LandAreaSqm.HasValue) { facts.Add($"{L.T("LandArea")}: {Model.LandAreaSqm}"); }
+if (Model.BuildingFloors.HasValue) { facts.Add($"{L.T("BuildingFloors")}: {Model.BuildingFloors}"); }
 }
 <article class="listing-card" data-listing-id="@Model.Id">
     <div class="availability-bar @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</div>

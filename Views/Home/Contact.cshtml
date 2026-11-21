@@ -1,0 +1,18 @@
+@model ContactMessage
+<h1>@L.T("ContactUs")</h1>
+<p>عندك سؤال أو استفسار؟ ابعت رسالتك وهنرد عليك.</p>
+<form asp-action="Contact" method="post" class="form">
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+    <label>@L.T("YourName")</label>
+    <input asp-for="Name" />
+    <span asp-validation-for="Name" class="field-error"></span>
+    <label>@L.T("YourPhone")</label>
+    <input asp-for="Phone" />
+    <span asp-validation-for="Phone" class="field-error"></span>
+    <label>@L.T("YourMessage")</label>
+    <textarea asp-for="Message" rows="5"></textarea>
+    <span asp-validation-for="Message" class="field-error"></span>
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">@L.T("SendMessage")</button>
+    </div>
+</form>

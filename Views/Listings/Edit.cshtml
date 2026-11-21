@@ -103,6 +103,28 @@
     <label><input asp-for="HasAirConditioning" type="checkbox" /> @L.T("AirConditioning")</label>
     <label><input asp-for="HasSecurity" type="checkbox" /> @L.T("Security")</label>
     <label><input asp-for="AcceptsInstallments" type="checkbox" /> @L.T("AcceptsInstallments")</label>
+    <label><input asp-for="IsPriceNegotiable" type="checkbox" /> @L.T("Negotiable")</label>
+
+    <label>@L.T("RentPeriod")</label>
+    <select asp-for="RentPeriod">
+        <option value="">—</option>
+        <option value="Monthly" selected="@(Model.RentPeriod == RentPeriod.Monthly)">@L.T("Monthly")</option>
+        <option value="Yearly" selected="@(Model.RentPeriod == RentPeriod.Yearly)">@L.T("Yearly")</option>
+    </select>
+
+    <label>@L.T("DepositMonths")</label>
+    <input asp-for="DepositMonths" type="number" min="0" max="24" step="1" />
+
+    <label>@L.T("Meters")</label>
+    <label><input asp-for="HasElectricityMeter" type="checkbox" /> @L.T("ElectricityMeter")</label>
+    <label><input asp-for="HasGasMeter" type="checkbox" /> @L.T("GasMeter")</label>
+    <label><input asp-for="HasWaterMeter" type="checkbox" /> @L.T("WaterMeter")</label>
+
+    <label>@L.T("LandArea")</label>
+    <input asp-for="LandAreaSqm" type="number" min="0" step="1" />
+
+    <label>@L.T("BuildingFloors")</label>
+    <input asp-for="BuildingFloors" type="number" min="0" max="100" step="1" />
 
     @if (isEdit)
     {

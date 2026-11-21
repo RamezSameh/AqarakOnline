@@ -32,7 +32,8 @@
         new(L.T("SortAreaDesc"), "areaDesc", ViewBag.Sort == "areaDesc"),
         new(L.T("SortViewsDesc"), "viewsDesc", ViewBag.Sort == "viewsDesc"),
         new(L.T("SortPricePerSqmAsc"), "pricePerSqmAsc", ViewBag.Sort == "pricePerSqmAsc"),
-        new(L.T("SortPricePerSqmDesc"), "pricePerSqmDesc", ViewBag.Sort == "pricePerSqmDesc")
+        new(L.T("SortPricePerSqmDesc"), "pricePerSqmDesc", ViewBag.Sort == "pricePerSqmDesc"),
+        new(L.T("SortOldest"), "oldest", ViewBag.Sort == "oldest")
     };
     var listingTypeValue = ViewBag.ListingType?.ToString() ?? "";
     var propertyTypeValue = ViewBag.PropertyType?.ToString() ?? "";
@@ -62,6 +63,12 @@
         new(L.T("RecencyToday"), "today", ViewBag.Recency == "today"),
         new(L.T("RecencyWeek"), "week", ViewBag.Recency == "week"),
         new(L.T("RecencyMonth"), "month", ViewBag.Recency == "month")
+    };
+    var rentPeriodOptions = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+    {
+        new(L.T("All"), ""),
+        new(L.T("Monthly"), "Monthly", ViewBag.RentPeriod == RentPeriod.Monthly),
+        new(L.T("Yearly"), "Yearly", ViewBag.RentPeriod == RentPeriod.Yearly)
     };
     var currentPage = (int)(ViewBag.Page ?? 1);
     var totalPages = (int)(ViewBag.TotalPages ?? 1);
@@ -97,6 +104,12 @@
         <label><input type="checkbox" name="hasAirConditioning" value="true" checked="@(ViewBag.HasAirConditioning == true)" /> @L.T("AirConditioning")</label>
         <label><input type="checkbox" name="hasSecurity" value="true" checked="@(ViewBag.HasSecurity == true)" /> @L.T("Security")</label>
         <label><input type="checkbox" name="installmentsOnly" value="true" checked="@(ViewBag.InstallmentsOnly == true)" /> @L.T("InstallmentsOnly")</label>
+        <label><input type="checkbox" name="negotiableOnly" value="true" checked="@(ViewBag.NegotiableOnly == true)" /> @L.T("NegotiableOnly")</label>
+        <select name="rentPeriod" asp-items="rentPeriodOptions"></select>
+        <label><input type="checkbox" name="hasElectricityMeter" value="true" checked="@(ViewBag.HasElectricityMeter == true)" /> @L.T("ElectricityMeter")</label>
+        <label><input type="checkbox" name="hasGasMeter" value="true" checked="@(ViewBag.HasGasMeter == true)" /> @L.T("GasMeter")</label>
+        <label><input type="checkbox" name="hasWaterMeter" value="true" checked="@(ViewBag.HasWaterMeter == true)" /> @L.T("WaterMeter")</label>
+        <input type="number" name="minBuildingFloors" value="@ViewBag.MinBuildingFloors" placeholder="@L.T("MinBuildingFloors")" min="0" step="1" />
         <label class="sort-label">
             @L.T("SortBy")
             <select name="sort" asp-items="sortOptions"></select>
@@ -150,18 +163,18 @@ else
             <a class="btn btn-ghost @(currentPage <= 1 ? "disabled" : "")"
                asp-action="Index" asp-route-search="@ViewBag.Search" asp-route-listingType="@listingTypeValue" asp-route-propertyType="@propertyTypeValue" asp-route-area="@areaValue"
                asp-route-minPrice="@ViewBag.MinPrice" asp-route-maxPrice="@ViewBag.MaxPrice" asp-route-minArea="@ViewBag.MinArea" asp-route-maxArea="@ViewBag.MaxArea"
-               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-adNumber="@ViewBag.AdNumber" asp-route-recency="@ViewBag.Recency" asp-route-directOwnerOnly="@ViewBag.DirectOwnerOnly" asp-route-finishing="@ViewBag.Finishing" asp-route-minFloor="@ViewBag.MinFloor" asp-route-maxFloor="@ViewBag.MaxFloor" asp-route-hasParking="@ViewBag.HasParking" asp-route-hasElevator="@ViewBag.HasElevator" asp-route-hasBalcony="@ViewBag.HasBalcony" asp-route-hasAirConditioning="@ViewBag.HasAirConditioning" asp-route-hasSecurity="@ViewBag.HasSecurity" asp-route-installmentsOnly="@ViewBag.InstallmentsOnly" asp-route-page="@(currentPage - 1)">@L.T("Previous")</a>
+               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-adNumber="@ViewBag.AdNumber" asp-route-recency="@ViewBag.Recency" asp-route-directOwnerOnly="@ViewBag.DirectOwnerOnly" asp-route-finishing="@ViewBag.Finishing" asp-route-minFloor="@ViewBag.MinFloor" asp-route-maxFloor="@ViewBag.MaxFloor" asp-route-hasParking="@ViewBag.HasParking" asp-route-hasElevator="@ViewBag.HasElevator" asp-route-hasBalcony="@ViewBag.HasBalcony" asp-route-hasAirConditioning="@ViewBag.HasAirConditioning" asp-route-hasSecurity="@ViewBag.HasSecurity" asp-route-installmentsOnly="@ViewBag.InstallmentsOnly" asp-route-negotiableOnly="@ViewBag.NegotiableOnly" asp-route-rentPeriod="@ViewBag.RentPeriod" asp-route-hasElectricityMeter="@ViewBag.HasElectricityMeter" asp-route-hasGasMeter="@ViewBag.HasGasMeter" asp-route-hasWaterMeter="@ViewBag.HasWaterMeter" asp-route-minBuildingFloors="@ViewBag.MinBuildingFloors" asp-route-page="@(currentPage - 1)">@L.T("Previous")</a>
             @for (var p = 1; p <= totalPages; p++)
             {
                 <a class="btn btn-ghost" aria-current="@(p == currentPage ? "page" : null)"
                    asp-action="Index" asp-route-search="@ViewBag.Search" asp-route-listingType="@listingTypeValue" asp-route-propertyType="@propertyTypeValue" asp-route-area="@areaValue"
                    asp-route-minPrice="@ViewBag.MinPrice" asp-route-maxPrice="@ViewBag.MaxPrice" asp-route-minArea="@ViewBag.MinArea" asp-route-maxArea="@ViewBag.MaxArea"
-                   asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-adNumber="@ViewBag.AdNumber" asp-route-recency="@ViewBag.Recency" asp-route-directOwnerOnly="@ViewBag.DirectOwnerOnly" asp-route-finishing="@ViewBag.Finishing" asp-route-minFloor="@ViewBag.MinFloor" asp-route-maxFloor="@ViewBag.MaxFloor" asp-route-hasParking="@ViewBag.HasParking" asp-route-hasElevator="@ViewBag.HasElevator" asp-route-hasBalcony="@ViewBag.HasBalcony" asp-route-hasAirConditioning="@ViewBag.HasAirConditioning" asp-route-hasSecurity="@ViewBag.HasSecurity" asp-route-installmentsOnly="@ViewBag.InstallmentsOnly" asp-route-page="@p">@p</a>
+                   asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-adNumber="@ViewBag.AdNumber" asp-route-recency="@ViewBag.Recency" asp-route-directOwnerOnly="@ViewBag.DirectOwnerOnly" asp-route-finishing="@ViewBag.Finishing" asp-route-minFloor="@ViewBag.MinFloor" asp-route-maxFloor="@ViewBag.MaxFloor" asp-route-hasParking="@ViewBag.HasParking" asp-route-hasElevator="@ViewBag.HasElevator" asp-route-hasBalcony="@ViewBag.HasBalcony" asp-route-hasAirConditioning="@ViewBag.HasAirConditioning" asp-route-hasSecurity="@ViewBag.HasSecurity" asp-route-installmentsOnly="@ViewBag.InstallmentsOnly" asp-route-negotiableOnly="@ViewBag.NegotiableOnly" asp-route-rentPeriod="@ViewBag.RentPeriod" asp-route-hasElectricityMeter="@ViewBag.HasElectricityMeter" asp-route-hasGasMeter="@ViewBag.HasGasMeter" asp-route-hasWaterMeter="@ViewBag.HasWaterMeter" asp-route-minBuildingFloors="@ViewBag.MinBuildingFloors" asp-route-page="@p">@p</a>
             }
             <a class="btn btn-ghost @(currentPage >= totalPages ? "disabled" : "")"
                asp-action="Index" asp-route-search="@ViewBag.Search" asp-route-listingType="@listingTypeValue" asp-route-propertyType="@propertyTypeValue" asp-route-area="@areaValue"
                asp-route-minPrice="@ViewBag.MinPrice" asp-route-maxPrice="@ViewBag.MaxPrice" asp-route-minArea="@ViewBag.MinArea" asp-route-maxArea="@ViewBag.MaxArea"
-               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-adNumber="@ViewBag.AdNumber" asp-route-recency="@ViewBag.Recency" asp-route-directOwnerOnly="@ViewBag.DirectOwnerOnly" asp-route-finishing="@ViewBag.Finishing" asp-route-minFloor="@ViewBag.MinFloor" asp-route-maxFloor="@ViewBag.MaxFloor" asp-route-hasParking="@ViewBag.HasParking" asp-route-hasElevator="@ViewBag.HasElevator" asp-route-hasBalcony="@ViewBag.HasBalcony" asp-route-hasAirConditioning="@ViewBag.HasAirConditioning" asp-route-hasSecurity="@ViewBag.HasSecurity" asp-route-installmentsOnly="@ViewBag.InstallmentsOnly" asp-route-page="@(currentPage + 1)">@L.T("Next")</a>
+               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-adNumber="@ViewBag.AdNumber" asp-route-recency="@ViewBag.Recency" asp-route-directOwnerOnly="@ViewBag.DirectOwnerOnly" asp-route-finishing="@ViewBag.Finishing" asp-route-minFloor="@ViewBag.MinFloor" asp-route-maxFloor="@ViewBag.MaxFloor" asp-route-hasParking="@ViewBag.HasParking" asp-route-hasElevator="@ViewBag.HasElevator" asp-route-hasBalcony="@ViewBag.HasBalcony" asp-route-hasAirConditioning="@ViewBag.HasAirConditioning" asp-route-hasSecurity="@ViewBag.HasSecurity" asp-route-installmentsOnly="@ViewBag.InstallmentsOnly" asp-route-negotiableOnly="@ViewBag.NegotiableOnly" asp-route-rentPeriod="@ViewBag.RentPeriod" asp-route-hasElectricityMeter="@ViewBag.HasElectricityMeter" asp-route-hasGasMeter="@ViewBag.HasGasMeter" asp-route-hasWaterMeter="@ViewBag.HasWaterMeter" asp-route-minBuildingFloors="@ViewBag.MinBuildingFloors" asp-route-page="@(currentPage + 1)">@L.T("Next")</a>
         </nav>
     }
 }
