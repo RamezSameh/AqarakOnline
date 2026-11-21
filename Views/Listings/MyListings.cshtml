@@ -1,5 +1,34 @@
 @model IEnumerable<Listing>
+@{
+    var statusOptions = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+    {
+        new(L.T("StatusAll"), "all", ViewBag.Status == "all"),
+        new(L.T("StatusAvailable"), "available", ViewBag.Status == "available"),
+        new(L.T("StatusUnavailable"), "unavailable", ViewBag.Status == "unavailable"),
+        new(L.T("StatusPending"), "pending", ViewBag.Status == "pending")
+    };
+    var sortOptions = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+    {
+        new(L.T("SortNewest"), "newest", ViewBag.Sort == "newest"),
+        new(L.T("SortOldest"), "oldest", ViewBag.Sort == "oldest"),
+        new(L.T("SortPriceAsc"), "priceAsc", ViewBag.Sort == "priceAsc"),
+        new(L.T("SortPriceDesc"), "priceDesc", ViewBag.Sort == "priceDesc")
+    };
+}
 <h1>@L.T("MyListings")</h1>
+<form class="filter-form" asp-action="MyListings" method="get">
+    <label class="sort-label">
+        @L.T("Status")
+        <select name="status" asp-items="statusOptions"></select>
+    </label>
+    <input type="text" name="search" value="@ViewBag.Search" placeholder="@L.T("SearchPlaceholder")" />
+    <label class="sort-label">
+        @L.T("SortBy")
+        <select name="sort" asp-items="sortOptions"></select>
+    </label>
+    <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
+    <a class="btn btn-ghost" asp-action="MyListings">@L.T("ClearFilter")</a>
+</form>
 @if (!Model.Any())
 {
     <p>@L.T("NoResults")</p>

@@ -466,8 +466,9 @@ public class ListingsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(100_000_000)]
-    public async Task<IActionResult> Create(Listing listing)
+    public async Task<IActionResult> Create(Listing listing, string[]? selectedFeatures = null, string? customFeatures = null)
     {
+        listing.Features = ListingFeatureComposer.ComposeFeatures(selectedFeatures, customFeatures);
         ValidateAttachments(listing.PhotoFiles, listing.VideoFile, existingPhotoCount: 0, existingVideo: false);
         if (listing.PropertyType == PropertyType.Apartment && !listing.Floor.HasValue)
         {
@@ -530,7 +531,7 @@ public class ListingsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(100_000_000)]
-    public async Task<IActionResult> Edit(int id, Listing model, string? photoOrder)
+    public async Task<IActionResult> Edit(int id, Listing model, string? photoOrder, string[]? selectedFeatures = null, string? customFeatures = null)
     {
         var listing = await _context.Listings.Include(l => l.Attachments)
             .FirstOrDefaultAsync(l => l.Id == id);
@@ -551,6 +552,7 @@ public class ListingsController : Controller
         {
             ModelState.AddModelError(nameof(Listing.Floor), "الدور مطلوب عند إضافة شقة.");
         }
+        model.Features = ListingFeatureComposer.ComposeFeatures(selectedFeatures, customFeatures);
         if (!ModelState.IsValid)
         {
             model.Attachments = listing.Attachments;
@@ -571,7 +573,7 @@ public class ListingsController : Controller
         listing.Area = model.Area;
         listing.DetailedAddress = model.DetailedAddress;
         listing.Description = model.Description;
-        listing.Features = model.Features;
+        listing.Features = ListingFeatureComposer.ComposeFeatures(selectedFeatures, customFeatures);
         listing.Price = model.Price;
         listing.AreaSqm = model.AreaSqm;
         listing.AdvertiserType = model.AdvertiserType;
@@ -715,12 +717,52 @@ public class ListingsController : Controller
 
     [Authorize]
     [HttpGet]
-    public async Task<IActionResult> MyListings()
+    public async Task<IActionResult> MyListings(string? status = null, string? search = null, string? sort = null)
     {
-        var listings = await _context.Listings.Include(l => l.Attachments)
-            .Where(l => l.OwnerId == CurrentUserId)
-            .OrderByDescending(l => l.CreatedAt)
-            .ToListAsync();
+        var query = _context.Listings.Include(l => l.Attachments)
+            .Where(l => l.OwnerId == CurrentUserId);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(l => l.Title.Contains(term) || l.AdNumber.Contains(term));
+        }
+        var statusKey = (status ?? "all").ToLowerInvariant() switch
+        {
+            "available" => "available",
+            "unavailable" => "unavailable",
+            "pending" => "pending",
+            _ => "all"
+        };
+        if (statusKey == "available")
+        {
+            query = query.Where(l => l.IsAvailable);
+        }
+        else if (statusKey == "unavailable")
+        {
+            query = query.Where(l => !l.IsAvailable);
+        }
+        else if (statusKey == "pending")
+        {
+            query = query.Where(l => l.Approval == ListingApproval.Pending);
+        }
+        var sortKey = (sort ?? "newest").ToLowerInvariant() switch
+        {
+            "priceasc" => "priceAsc",
+            "pricedesc" => "priceDesc",
+            "oldest" => "oldest",
+            _ => "newest"
+        };
+        query = sortKey switch
+        {
+            "priceAsc" => query.OrderBy(l => l.Price).ThenByDescending(l => l.CreatedAt),
+            "priceDesc" => query.OrderByDescending(l => l.Price).ThenByDescending(l => l.CreatedAt),
+            "oldest" => query.OrderBy(l => l.CreatedAt),
+            _ => query.OrderByDescending(l => l.CreatedAt)
+        };
+        ViewBag.Status = statusKey;
+        ViewBag.Search = search;
+        ViewBag.Sort = sortKey;
+        var listings = await query.ToListAsync();
         ViewBag.FavoriteListingIds = (await _context.Favorites
             .Where(f => f.UserId == CurrentUserId)
             .Select(f => f.ListingId)
@@ -1209,6 +1251,8 @@ public class AdminDashboardViewModel
     public List<Listing> RenewalListings { get; set; } = new();
     /// <summary>إعلانات جديدة في آخر 6 شهور (للرسم البياني).</summary>
     public List<ChartPoint> MonthlyListings { get; set; } = new();
+    /// <summary>تسجيلات مستخدمين جديدة في آخر 6 شهور (للرسم البياني).</summary>
+    public List<ChartPoint> MonthlyUsers { get; set; } = new();
     /// <summary>توزيع الإعلانات حسب المنطقة — أعلى 8 مناطق.</summary>
     public List<ChartPoint> ListingsByArea { get; set; } = new();
     /// <summary>أكثر 5 إعلانات مشاهدة.</summary>
@@ -1336,6 +1380,14 @@ public class AdminController : Controller
                 Label = $"{arabicMonths[m.Month - 1]} {m.Year}",
                 Count = allListings.Count(l => l.CreatedAt.Year == m.Year && l.CreatedAt.Month == m.Month)
             }).ToList();
+        var allUsers = await _context.Users.ToListAsync();
+        model.MonthlyUsers = Enumerable.Range(0, 6)
+            .Select(i => DateTime.UtcNow.AddMonths(-5 + i))
+            .Select(m => new ChartPoint
+            {
+                Label = $"{arabicMonths[m.Month - 1]} {m.Year}",
+                Count = allUsers.Count(u => u.CreatedAt.Year == m.Year && u.CreatedAt.Month == m.Month)
+            }).ToList();
         model.ListingsByArea = allListings
             .GroupBy(l => l.Area)
             .Select(g => new ChartPoint { Label = g.Key, Count = g.Count() })
@@ -1389,8 +1441,23 @@ public class AdminController : Controller
             TempData["Error"] = "لا يمكنك إيقاف أو حظر حسابك أنت.";
             return RedirectToAction(nameof(Users));
         }
+        var wasPending = user.AccountStatus == AccountStatus.Pending;
         user.AccountStatus = status;
         await _userManager.UpdateAsync(user);
+        if (wasPending && status == AccountStatus.Active)
+        {
+            _context.Notifications.Add(new Notification
+            {
+                Title = "تم تفعيل حسابك",
+                Message = "حسابك اتفعّل، تقدر دلوقتي تضيف إعلاناتك وتستخدم كل مزايا الموقع.",
+                TargetUserId = user.Id,
+                Url = "/Listings/Create",
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            await _context.SaveChangesAsync();
+            await NotifyBellAsync();
+        }
         await NotifyAdminsAsync();
         TempData["Info"] = doneMessage;
         return RedirectToAction(nameof(Users));
@@ -2221,6 +2288,32 @@ public class NotificationsController : Controller
 
 [Authorize]
 /// <summary>
+/// <summary>تجميع المميزات من الاختيارات الجاهزة + الميزات المخصصة المكتوبة، مفصولة بسطر لكل ميزة.</summary>
+public static class ListingFeatureComposer
+{
+    public static string? ComposeFeatures(string[]? selectedFeatures, string? customFeatures)
+    {
+        var features = new List<string>();
+        if (selectedFeatures != null)
+        {
+            features.AddRange(selectedFeatures.Where(f => ListingFeatures.All.Contains(f)));
+        }
+        if (!string.IsNullOrWhiteSpace(customFeatures))
+        {
+            features.AddRange(customFeatures
+                .Split(new[] { '\n', '\r', ',', '،' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(f => f.Trim())
+                .Where(f => f.Length > 0 && !ListingFeatures.All.Contains(f)));
+        }
+        var joined = string.Join("\n", features.Distinct());
+        if (string.IsNullOrEmpty(joined))
+        {
+            return null;
+        }
+        return joined.Length > 2000 ? joined[..2000] : joined;
+    }
+}
+
 /// <summary>سجل تعديلات الإعلانات (للأدمن): يسجّل من قام بالإجراء واسمه وقتها.</summary>
 public static class AuditLogHelper
 {

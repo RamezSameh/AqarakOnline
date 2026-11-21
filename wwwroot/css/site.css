@@ -248,3 +248,7 @@ input, select, textarea { padding: 10px 12px; border: 1px solid #475569; border-
 
 /* معاينة الإعلان قبل النشر. */
 .listing-preview { margin-top: 20px; }
+
+/* اختيار المميزات من قائمة جاهزة في نموذج الإعلان. */
+.features-picker { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 8px; }
+.features-picker label { display: inline-flex; align-items: center; gap: 6px; }

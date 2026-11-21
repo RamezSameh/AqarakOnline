@@ -257,6 +257,21 @@ else
         </div>
     }
 </div>
+<h3>تسجيلات جديدة — آخر 6 شهور</h3>
+@{
+    var maxUsers = Model.MonthlyUsers.Any() ? Model.MonthlyUsers.Max(p => p.Count) : 0;
+}
+<div class="chart">
+    @foreach (var point in Model.MonthlyUsers)
+    {
+        var pct = maxUsers > 0 ? point.Count * 100 / maxUsers : 0;
+        <div class="chart-row">
+            <span class="chart-label">@point.Label</span>
+            <div class="chart-track"><div class="chart-bar" style="width:@pct%"></div></div>
+            <span class="chart-count">@point.Count</span>
+        </div>
+    }
+</div>
 <h3>الإعلانات حسب المنطقة (أعلى 8)</h3>
 <div class="chart">
     @foreach (var point in Model.ListingsByArea)

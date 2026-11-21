@@ -28,6 +28,9 @@ public class ApplicationUser : IdentityUser
     public string? Address { get; set; }
 
     public AccountStatus AccountStatus { get; set; } = AccountStatus.Pending;
+
+    /// <summary>تاريخ إنشاء الحساب — يُستخدم في رسم التسجيلات الجديدة بالداشبورد.</summary>
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
 /// <summary>
@@ -84,6 +87,28 @@ public enum FinishingLevel
 }
 
 /// <summary>قائمة جاهزة للمناطق (القاهرة والجيزة). تُستخدم في نماذج إضافة/تعديل الإعلان بدل الكتابة الحرة.</summary>
+/// <summary>قائمة جاهزة للمميزات في نموذج الإضافة — اختيارات من متعدد بدل الكتابة الحرة.</summary>
+public static class ListingFeatures
+{
+    public static readonly string[] All =
+    {
+        "مطبخ مجهز",
+        "دولاب حائط",
+        "شبابيك ألوميتال",
+        "أبواب مصفحة",
+        "أرضيات بورسلين",
+        "أرضيات باركيه",
+        "جبس بورد",
+        "سخان",
+        "كاميرات مراقبة",
+        "حارس عقار",
+        "مدخل رخام",
+        "قريب من المواصلات",
+        "قريب من المدارس",
+        "هادئ"
+    };
+}
+
 public static class ListingAreas
 {
     public static readonly string[] All =

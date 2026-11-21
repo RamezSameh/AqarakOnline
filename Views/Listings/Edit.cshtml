@@ -61,7 +61,14 @@
     <span asp-validation-for="Description" class="field-error"></span>
 
     <label>@L.T("Features")</label>
-    <textarea asp-for="Features" rows="4" placeholder="اكتب كل ميزة في سطر"></textarea>
+    <div class="features-picker">
+        @foreach (var feature in AqarakOnline.Models.ListingFeatures.All)
+        {
+            <label><input type="checkbox" name="selectedFeatures" value="@feature" checked="@(Model.FeaturesList.Contains(feature))" /> @feature</label>
+        }
+    </div>
+    <label>@L.T("CustomFeature")</label>
+    <input type="text" name="customFeatures" value="@string.Join("، ", Model.FeaturesList.Except(AqarakOnline.Models.ListingFeatures.All))" placeholder="اكتب ميزة مش موجودة في الاختيارات (افصل بين الميزات بفاصلة)" />
 
     <label>@L.T("Price")</label>
     <input asp-for="Price" type="number" min="0" step="any" />
