@@ -1472,6 +1472,16 @@ public class AdminController : Controller
             .Where(l => l.Approval == ListingApproval.Approved)
             .OrderByDescending(l => l.ViewCount)
             .Take(5).ToList();
+        // تنظيف تلقائي: حذف سجلات البحث الأقدم من 90 يومًا عند كل فتح للوحة.
+        var logCutoff = DateTime.UtcNow.AddDays(-90);
+        var oldLogs = await _context.SearchLogs.Where(s => s.CreatedAt < logCutoff).ToListAsync();
+        if (oldLogs.Count > 0)
+        {
+            _context.SearchLogs.RemoveRange(oldLogs);
+            await _context.SaveChangesAsync();
+        }
+        ViewBag.SearchLogsCleaned = oldLogs.Count;
+
         var searchSince = DateTime.UtcNow.AddDays(-30);
         model.TopSearchTerms = await _context.SearchLogs
             .Where(s => s.CreatedAt >= searchSince)
@@ -1517,6 +1527,352 @@ public class AdminController : Controller
         }
         TempData["Info"] = $"تم تعيين كلمة مرور مؤقتة لـ {user.FullName}: {temp} — أبلغه بها واطلب منه تغييرها بعد الدخول.";
         return RedirectToAction(nameof(Users));
+    }
+
+    [HttpGet]
+    public IActionResult ImportListings()
+    {
+        return View();
+    }
+
+    /// <summary>قالب CSV للاستيراد — بترميز UTF-8 مع BOM عشان Excel يعرض العربي صح.</summary>
+    [HttpGet]
+    public IActionResult ImportTemplate()
+    {
+        var header = "Title,ListingType,PropertyType,Area,Price,AreaSqm,Rooms,Bathrooms,Floor,IsFurnished,Finishing,Description,Features,AdvertiserType,OwnerPhone";
+        var example = "شقة للبيع في مدينة نصر,Sale,Apartment,مدينة نصر، القاهرة,2500000,120,3,2,4,yes,SuperLux,شقة مشطبة سوبر لوكس قريبة من المواصلات,مطبخ مجهز;أرضيات بورسلين;جبس بورد,Owner,01xxxxxxxxx";
+        var csv = "\uFEFF" + header + "\r\n" + example + "\r\n";
+        return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv", "aqarak-import-template.csv");
+    }
+
+    /// <summary>
+    /// استيراد إعلانات دفعة واحدة من ملف CSV (يحفظه Excel بصيغة CSV).
+    /// كل صف إعلان مستقل: الصف الغلط بيتخطى مع سبب، والصح بيتنشر فورًا
+    /// (الاستيراد من الأدمن = موافقة فورية زي الإنشاء اليدوي)، بلا صور —
+    /// الصور تتضاف بعدها من التعديل. صاحب الإعلان لازم يكون مسجَّلًا.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(10_000_000)]
+    public async Task<IActionResult> ImportListings(Microsoft.AspNetCore.Http.IFormFile file)
+    {
+        var errors = new List<string>();
+        var imported = new List<Listing>();
+        if (file == null || file.Length == 0)
+        {
+            ViewBag.Errors = new List<string> { "اختار ملف CSV أولًا." };
+            ViewBag.Imported = 0;
+            return View();
+        }
+        var lines = new List<string>();
+        using (var reader = new System.IO.StreamReader(file.OpenReadStream(), System.Text.Encoding.UTF8, true))
+        {
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    lines.Add(line.TrimStart('\uFEFF'));
+                }
+            }
+        }
+        if (lines.Count < 2)
+        {
+            ViewBag.Errors = new List<string> { "الملف فاضي أو فيه الهيدر بس — ضيف صف إعلان واحد على الأقل." };
+            ViewBag.Imported = 0;
+            return View();
+        }
+        var expectedHeader = new[] { "Title", "ListingType", "PropertyType", "Area", "Price", "AreaSqm", "Rooms", "Bathrooms", "Floor", "IsFurnished", "Finishing", "Description", "Features", "AdvertiserType", "OwnerPhone" };
+        var headerCells = ParseCsvLine(lines[0]);
+        var headerOk = headerCells.Count == expectedHeader.Length
+            && !expectedHeader.Where((h, i) => !string.Equals(h, headerCells[i].Trim(), StringComparison.OrdinalIgnoreCase)).Any();
+        if (!headerOk)
+        {
+            ViewBag.Errors = new List<string> { "هيدر الملف غير مطابق للقالب — حمّل القالب من نفس الصفحة واملأه." };
+            ViewBag.Imported = 0;
+            return View();
+        }
+        if (lines.Count - 1 > 200)
+        {
+            ViewBag.Errors = new List<string> { "الحد الأقصى 200 إعلان في الملف الواحد." };
+            ViewBag.Imported = 0;
+            return View();
+        }
+        var rowNumber = 1;
+        foreach (var line in lines.Skip(1))
+        {
+            rowNumber++;
+            var cells = ParseCsvLine(line);
+            if (cells.Count != expectedHeader.Length)
+            {
+                errors.Add($"الصف {rowNumber}: عدد الأعمدة غلط (متوقع {expectedHeader.Length}).");
+                continue;
+            }
+            var (listing, error) = await BuildImportedListingAsync(cells);
+            if (error != null)
+            {
+                errors.Add($"الصف {rowNumber}: {error}");
+                continue;
+            }
+            imported.Add(listing!);
+        }
+        foreach (var listing in imported)
+        {
+            listing.CreatedAt = DateTime.UtcNow;
+            listing.IsAvailable = true;
+            listing.Approval = ListingApproval.Approved;
+            listing.AdNumber = "TEMP";
+            _context.Listings.Add(listing);
+        }
+        await _context.SaveChangesAsync();
+        foreach (var listing in imported)
+        {
+            listing.AdNumber = $"AQ-{listing.Id:D4}";
+            await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId, "استيراد", "تم استيراد الإعلان من ملف CSV.");
+            await SavedSearchAlerts.NotifyMatchingAsync(_context, listing, _hub);
+        }
+        await _context.SaveChangesAsync();
+        ViewBag.Imported = imported.Count;
+        ViewBag.Errors = errors;
+        if (imported.Count > 0)
+        {
+            TempData["Info"] = $"تم استيراد {imported.Count} إعلانًا ونشرهم فورًا.";
+        }
+        return View();
+    }
+
+    private static List<string> ParseCsvLine(string line)
+    {
+        var cells = new List<string>();
+        var current = new System.Text.StringBuilder();
+        var inQuotes = false;
+        for (var i = 0; i < line.Length; i++)
+        {
+            var c = line[i];
+            if (inQuotes)
+            {
+                if (c == '"')
+                {
+                    if (i + 1 < line.Length && line[i + 1] == '"')
+                    {
+                        current.Append('"');
+                        i++;
+                    }
+                    else
+                    {
+                        inQuotes = false;
+                    }
+                }
+                else
+                {
+                    current.Append(c);
+                }
+            }
+            else if (c == '"')
+            {
+                inQuotes = true;
+            }
+            else if (c == ',')
+            {
+                cells.Add(current.ToString());
+                current.Clear();
+            }
+            else
+            {
+                current.Append(c);
+            }
+        }
+        cells.Add(current.ToString());
+        return cells;
+    }
+
+    private async Task<(Listing? listing, string? error)> BuildImportedListingAsync(List<string> c)
+    {
+        string Cell(int i) => c[i].Trim();
+        var title = Cell(0);
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return (null, "العنوان مطلوب.");
+        }
+        if (title.Length > 200)
+        {
+            return (null, "العنوان أطول من 200 حرف.");
+        }
+        if (!TryParseListingType(Cell(1), out var listingType))
+        {
+            return (null, "نوع الإعلان لازم يكون Sale (بيع) أو Rent (إيجار).");
+        }
+        if (!TryParsePropertyType(Cell(2), out var propertyType))
+        {
+            return (null, "نوع العقار لازم يكون Apartment أو House أو Building أو Shop أو Villa.");
+        }
+        var area = Cell(3);
+        if (!ListingAreas.All.Contains(area))
+        {
+            return (null, "المنطقة مش من قائمة المناطق المعتمدة.");
+        }
+        if (!decimal.TryParse(Cell(4), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var price) || price <= 0)
+        {
+            return (null, "السعر لازم يكون رقمًا أكبر من صفر.");
+        }
+        if (!int.TryParse(Cell(5), out var areaSqm) || areaSqm <= 0)
+        {
+            return (null, "المساحة لازم تكون رقمًا أكبر من صفر.");
+        }
+        if (!int.TryParse(Cell(6), out var rooms) || rooms < 0)
+        {
+            return (null, "عدد الغرف لازم يكون رقمًا.");
+        }
+        if (!int.TryParse(Cell(7), out var bathrooms) || bathrooms < 0)
+        {
+            return (null, "عدد الحمامات لازم يكون رقمًا.");
+        }
+        int? floor = null;
+        if (propertyType == PropertyType.Apartment)
+        {
+            if (!int.TryParse(Cell(8), out var floorValue))
+            {
+                return (null, "الدور مطلوب للشقة.");
+            }
+            floor = floorValue;
+        }
+        if (!TryParseYesNo(Cell(9), out var isFurnished))
+        {
+            return (null, "مفروش لازم يكون yes أو no.");
+        }
+        FinishingLevel? finishing = null;
+        if (!string.IsNullOrWhiteSpace(Cell(10)))
+        {
+            if (!TryParseFinishing(Cell(10), out var finishingValue))
+            {
+                return (null, "التشطيب لازم يكون SuperLux أو Lux أو SemiFinished أو RedBrick أو فاضي.");
+            }
+            finishing = finishingValue;
+        }
+        var description = Cell(11);
+        if (description.Length > 2000)
+        {
+            return (null, "الوصف أطول من 2000 حرف.");
+        }
+        var features = Cell(12);
+        if (features.Length > 2000)
+        {
+            return (null, "المميزات أطول من 2000 حرف.");
+        }
+        if (!TryParseAdvertiserType(Cell(13), out var advertiserType))
+        {
+            return (null, "نوع المعلن لازم يكون Owner (مالك) أو Broker (وسيط).");
+        }
+        var ownerPhone = PhoneHelper.Normalize(Cell(14));
+        if (!PhoneHelper.IsValidEgyptianMobile(ownerPhone))
+        {
+            return (null, "رقم موبايل صاحب الإعلان لازم يكون 11 رقمًا ويبدأ بـ 01.");
+        }
+        var owner = await _context.Users.FirstOrDefaultAsync(u => u.UserName == ownerPhone);
+        if (owner == null)
+        {
+            return (null, "صاحب الإعلان مش مسجَّل — رقم الموبايل ده مالوش حساب.");
+        }
+        var listing = new Listing
+        {
+            Title = title,
+            ListingType = listingType,
+            PropertyType = propertyType,
+            Area = area,
+            Price = price,
+            AreaSqm = areaSqm,
+            Rooms = rooms,
+            Bathrooms = bathrooms,
+            Floor = floor,
+            IsFurnished = isFurnished,
+            Finishing = finishing,
+            Description = description,
+            Features = string.Join("\n", features.Split(new[] { ';', '،', ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)),
+            AdvertiserType = advertiserType,
+            OwnerId = owner.Id
+        };
+        return (listing, null);
+    }
+
+    private static bool TryParseListingType(string value, out ListingType result)
+    {
+        result = default;
+        if (Enum.TryParse<ListingType>(value, true, out result))
+        {
+            return true;
+        }
+        if (value == "بيع") { result = ListingType.Sale; return true; }
+        if (value == "إيجار") { result = ListingType.Rent; return true; }
+        return false;
+    }
+
+    private static bool TryParsePropertyType(string value, out PropertyType result)
+    {
+        result = default;
+        if (Enum.TryParse<PropertyType>(value, true, out result))
+        {
+            return true;
+        }
+        result = value switch
+        {
+            "شقة" => PropertyType.Apartment,
+            "بيت" => PropertyType.House,
+            "عمارة" => PropertyType.Building,
+            "محل" => PropertyType.Shop,
+            "فيلا" => PropertyType.Villa,
+            _ => PropertyType.Apartment
+        };
+        return value is "شقة" or "بيت" or "عمارة" or "محل" or "فيلا";
+    }
+
+    private static bool TryParseYesNo(string value, out bool result)
+    {
+        result = false;
+        if (value.Equals("yes", StringComparison.OrdinalIgnoreCase)
+            || value.Equals("true", StringComparison.OrdinalIgnoreCase)
+            || value == "1" || value == "نعم")
+        {
+            result = true;
+            return true;
+        }
+        if (value.Equals("no", StringComparison.OrdinalIgnoreCase)
+            || value.Equals("false", StringComparison.OrdinalIgnoreCase)
+            || value == "0" || value == "لا" || value == string.Empty)
+        {
+            result = false;
+            return true;
+        }
+        return false;
+    }
+
+    private static bool TryParseFinishing(string value, out FinishingLevel result)
+    {
+        result = default;
+        if (Enum.TryParse<FinishingLevel>(value, true, out result))
+        {
+            return true;
+        }
+        result = value switch
+        {
+            "سوبر لوكس" => FinishingLevel.SuperLux,
+            "لوكس" => FinishingLevel.Lux,
+            "نصف تشطيب" => FinishingLevel.SemiFinished,
+            "طوب أحمر" => FinishingLevel.RedBrick,
+            _ => FinishingLevel.Lux
+        };
+        return value is "سوبر لوكس" or "لوكس" or "نصف تشطيب" or "طوب أحمر";
+    }
+
+    private static bool TryParseAdvertiserType(string value, out AdvertiserType result)
+    {
+        result = default;
+        if (Enum.TryParse<AdvertiserType>(value, true, out result))
+        {
+            return true;
+        }
+        if (value == "مالك") { result = AdvertiserType.Owner; return true; }
+        if (value == "وسيط") { result = AdvertiserType.Broker; return true; }
+        return false;
     }
 
     [HttpGet]

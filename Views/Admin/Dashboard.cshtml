@@ -284,6 +284,10 @@ else
         </div>
     }
 </div>
+@if (ViewBag.SearchLogsCleaned is int cleaned && cleaned > 0)
+{
+    <p>تم تنظيف @cleaned سجل بحث أقدم من 90 يومًا.</p>
+}
 <h3>@L.T("TopSearchTerms")</h3>
 @if (!Model.TopSearchTerms.Any())
 {

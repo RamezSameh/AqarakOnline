@@ -1,0 +1,40 @@
+<h1>@L.T("ImportListings")</h1>
+<p>استيراد إعلانات دفعة واحدة من ملف CSV (احفظ ملف Excel بصيغة CSV UTF-8). الإعلانات المستوردة بتتنشر فورًا، بلا صور — الصور تتضاف بعدها من التعديل. صاحب كل إعلان لازم يكون مسجَّلًا على الموقع برقم موبايله.</p>
+<p><a class="btn btn-primary" asp-action="ImportTemplate">⬇ @L.T("ImportTemplate")</a></p>
+<h2>الأعمدة (بالترتيب)</h2>
+<ul>
+    <li><strong>Title</strong> — عنوان الإعلان (مطلوب).</li>
+    <li><strong>ListingType</strong> — Sale للبيع أو Rent للإيجار.</li>
+    <li><strong>PropertyType</strong> — Apartment شقة، House بيت، Building عمارة، Shop محل، Villa فيلا.</li>
+    <li><strong>Area</strong> — لازم تكون من قائمة المناطق المعتمدة (زي فورم الإضافة).</li>
+    <li><strong>Price</strong> — السعر بالجنيه (رقم أكبر من صفر). <strong>AreaSqm</strong> — المساحة بالمتر.</li>
+    <li><strong>Rooms</strong> — عدد الغرف. <strong>Bathrooms</strong> — عدد الحمامات.</li>
+    <li><strong>Floor</strong> — الدور (مطلوب للشقة بس).</li>
+    <li><strong>IsFurnished</strong> — yes أو no. <strong>Finishing</strong> — SuperLux أو Lux أو SemiFinished أو RedBrick أو فاضي.</li>
+    <li><strong>Description</strong> — الوصف. <strong>Features</strong> — المميزات مفصولة بفاصلة منقوطة (؛).</li>
+    <li><strong>AdvertiserType</strong> — Owner مالك أو Broker وسيط.</li>
+    <li><strong>OwnerPhone</strong> — موبايل صاحب الإعلان (11 رقمًا، ولازم يكون مسجَّلًا).</li>
+</ul>
+<p>الحد الأقصى 200 إعلان في الملف الواحد. الصف الغلط بيتخطى وبيظهر سببه تحت.</p>
+<form asp-action="ImportListings" method="post" enctype="multipart/form-data" class="form">
+    <label>ملف CSV</label>
+    <input type="file" name="file" accept=".csv" required />
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">@L.T("ImportListings")</button>
+    </div>
+</form>
+@if (ViewBag.Imported is int imported)
+{
+    <p>تم استيراد <strong>@imported</strong> إعلانًا.</p>
+}
+@if (ViewBag.Errors is List<string> errors && errors.Count > 0)
+{
+    <h2>صفوف متخطاة</h2>
+    <ul>
+        @foreach (var error in errors)
+        {
+            <li>@error</li>
+        }
+    </ul>
+}
+<p><a class="btn btn-ghost" asp-action="Listings">الإعلانات</a></p>

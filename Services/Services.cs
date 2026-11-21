@@ -176,6 +176,8 @@ public class LanguageService
         ["StatusAvailable"] = ("متاح", "Available"),
         ["StatusUnavailable"] = ("غير متاح", "Unavailable"),
         ["StatusPending"] = ("معلّق", "Pending"),
+        ["ImportListings"] = ("استيراد إعلانات", "Import listings"),
+        ["ImportTemplate"] = ("تحميل القالب", "Download template"),
         ["New"] = ("جديد", "New"),
         ["SortRoomsDesc"] = ("عدد الغرف (الأكثر أولًا)", "Most rooms first"),
         ["SortRoomsAsc"] = ("عدد الغرف (الأقل أولًا)", "Fewest rooms first"),
