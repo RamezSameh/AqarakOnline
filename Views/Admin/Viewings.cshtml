@@ -1,0 +1,56 @@
+@model IEnumerable<ViewingAppointment>
+<h1>@L.T("Viewings")</h1>
+<p>المعاينات بتتنسق عن طريقك: أكّد أو ارفض، وكلم الطرفين بالتليفون — المشتري والمعلن لا يتواصلان مباشرة.</p>
+@if (!Model.Any())
+{
+    <p>@L.T("NoViewings")</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@L.T("Title")</th>
+                <th>@L.T("FullName")</th>
+                <th>@L.T("PhoneNumber")</th>
+                <th>@L.T("ViewingDate")</th>
+                <th>@L.T("ViewingMessage")</th>
+                <th>@L.T("ApprovalStatus")</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var viewing in Model)
+            {
+                <tr>
+                    <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@viewing.ListingId">@viewing.Listing?.Title</a></td>
+                    <td>@(viewing.Requester?.FullName ?? viewing.Requester?.UserName ?? "-")</td>
+                    <td>@(viewing.Requester?.PhoneNumber ?? "-")</td>
+                    <td>@viewing.RequestedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@(viewing.Message ?? "-")</td>
+                    <td>@L.ViewingStatusText(viewing.Status)</td>
+                    <td>
+                        @if (viewing.Status == ViewingStatus.Pending)
+                        {
+                            <form asp-action="ConfirmViewing" method="post" class="inline-form">
+                                <input type="hidden" name="id" value="@viewing.Id" />
+                                <button type="submit" class="btn btn-primary">@L.T("Confirm")</button>
+                            </form>
+                            <form asp-action="DeclineViewing" method="post" class="inline-form">
+                                <input type="hidden" name="id" value="@viewing.Id" />
+                                <button type="submit" class="btn btn-ghost">@L.T("Decline")</button>
+                            </form>
+                        }
+                        @if (viewing.Status == ViewingStatus.Pending || viewing.Status == ViewingStatus.Confirmed)
+                        {
+                            <form asp-controller="Viewings" asp-action="Cancel" method="post" class="inline-form">
+                                <input type="hidden" name="id" value="@viewing.Id" />
+                                <button type="submit" class="btn btn-ghost">@L.T("Cancel")</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

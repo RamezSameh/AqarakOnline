@@ -1,6 +1,6 @@
 @model AqarakOnline.Controllers.AdminBadgeCounts
 @{
-    var total = Model.PendingUsers + Model.UnrepliedRequests + Model.PendingListings + Model.PendingReports;
+    var total = Model.PendingUsers + Model.UnrepliedRequests + Model.PendingListings + Model.PendingReports + Model.PendingViewings;
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var panelOnly = ViewData["PanelOnly"] as bool? == true;
 }
@@ -46,6 +46,13 @@
             @if (Model.PendingReports > 0)
             {
                 <span class="nav-badge">@Model.PendingReports</span>
+            }
+        </a>
+        <a class="admin-feature @(currentAction == "Viewings" ? "active" : "")" asp-controller="Admin" asp-action="Viewings">
+            <span>@L.T("Viewings")</span>
+            @if (Model.PendingViewings > 0)
+            {
+                <span class="nav-badge">@Model.PendingViewings</span>
             }
         </a>
     </aside>

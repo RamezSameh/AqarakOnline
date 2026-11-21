@@ -210,6 +210,7 @@ else
 {
     <section class="viewing-form">
         <h2>@L.T("BookViewing")</h2>
+        <p><small>المعاينة بتتنسق عن طريق إدارة الموقع — لا يوجد تواصل مباشر مع المعلن.</small></p>
         <form asp-controller="Viewings" asp-action="Create" method="post" class="form">
             <input type="hidden" name="listingId" value="@Model.Id" />
             <label>@L.T("ViewingDate")</label>

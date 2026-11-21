@@ -1403,6 +1403,58 @@ public class AdminController : Controller
         return RedirectToAction(nameof(Reports));
     }
 
+    /// <summary>مواعيد المعاينة — للأدمن فقط: هو من يؤكد أو يرفض وينسّق مع الطرفين.</summary>
+    [HttpGet]
+    public async Task<IActionResult> Viewings()
+    {
+        var viewings = await _context.ViewingAppointments
+            .Include(v => v.Listing).Include(v => v.Requester)
+            .OrderBy(v => v.Status).ThenByDescending(v => v.CreatedAt)
+            .ToListAsync();
+        return View(viewings);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmViewing(int id) =>
+        await DecideViewingAsync(id, ViewingStatus.Confirmed, "تم تأكيد المعاينة.");
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeclineViewing(int id) =>
+        await DecideViewingAsync(id, ViewingStatus.Declined, "تم رفض المعاينة.");
+
+    private async Task<IActionResult> DecideViewingAsync(int id, ViewingStatus status, string doneMessage)
+    {
+        var viewing = await _context.ViewingAppointments
+            .Include(v => v.Listing).FirstOrDefaultAsync(v => v.Id == id);
+        if (viewing == null)
+        {
+            return NotFound();
+        }
+        if (viewing.Status != ViewingStatus.Pending)
+        {
+            TempData["Error"] = "المعاينة دي اتحسمت بالفعل.";
+            return RedirectToAction(nameof(Viewings));
+        }
+        viewing.Status = status;
+        await _context.SaveChangesAsync();
+        var verb = status == ViewingStatus.Confirmed ? "أكّدت إدارة الموقع" : "رفضت إدارة الموقع";
+        _context.Notifications.Add(new Notification
+        {
+            Title = "تحديث على طلب المعاينة",
+            Message = $"{verb} معاينة «{viewing.Listing?.Title}» يوم {viewing.RequestedAt:dd/MM/yyyy HH:mm}.",
+            TargetUserId = viewing.RequesterId,
+            Url = "/Viewings",
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+        await _hub.Clients.All.SendAsync("refreshBell");
+        TempData["Info"] = doneMessage;
+        return RedirectToAction(nameof(Viewings));
+    }
+
     // تنبيهات الأدمن: تظهر لكل المستخدمين على هيئة إشعارات.
     [HttpGet]
     public async Task<IActionResult> Notifications()
@@ -1924,53 +1976,90 @@ public class ReviewsController : Controller
     }
 }
 
-public class ViewingsIndexViewModel
-{
-    public List<ViewingAppointment> Received { get; set; } = new();
-    public List<ViewingAppointment> Mine { get; set; } = new();
-}
-
 /// <summary>
-/// حجز معاينة: مشتري يطلب ميعادًا، والمعلن يؤكد أو يرفض، والطالب يلغي.
+/// حجز معاينة — عبر إدارة الموقع فقط (قاعدة الموقع: لا يوجد تواصل مباشر
+/// بين المشتري والبائع إلا من خلال الأدمن). المشتري يطلب ميعادًا، والأدمن
+/// هو من يؤكد أو يرفض وينسّق مع الطرفين بالتليفون. صاحب الإعلان لا يرى
+/// طلبات المعاينة ولا بيانات المشتري، والمشتري لا يرى بيانات المعلن.
 /// </summary>
 [Authorize]
 public class ViewingsController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> _hub;
+    private readonly IConfiguration _configuration;
 
-    public ViewingsController(ApplicationDbContext context, Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub)
+    public ViewingsController(ApplicationDbContext context,
+        Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub, IConfiguration configuration)
     {
         _context = context;
         _hub = hub;
+        _configuration = configuration;
     }
 
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
+    private async Task<string?> AdminUserIdAsync()
+    {
+        var adminEmail = _configuration["AdminEmail"];
+        if (string.IsNullOrWhiteSpace(adminEmail))
+        {
+            return null;
+        }
+        return await _context.Users.Where(u => u.Email == adminEmail).Select(u => u.Id).FirstOrDefaultAsync();
+    }
+
+    private async Task NotifyAdminAsync(string title, string message)
+    {
+        var adminId = await AdminUserIdAsync();
+        if (adminId != null)
+        {
+            _context.Notifications.Add(new Notification
+            {
+                Title = title,
+                Message = message,
+                TargetUserId = adminId,
+                Url = "/Admin/Viewings",
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            await _context.SaveChangesAsync();
+        }
+        await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
+        await _hub.Clients.All.SendAsync("refreshBell");
+    }
+
+    private async Task NotifyRequesterAsync(ViewingAppointment viewing, string title, string message)
+    {
+        _context.Notifications.Add(new Notification
+        {
+            Title = title,
+            Message = message,
+            TargetUserId = viewing.RequesterId,
+            Url = "/Viewings",
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+        await _hub.Clients.All.SendAsync("refreshBell");
+    }
+
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var myListingIds = await _context.Listings
-            .Where(l => l.OwnerId == CurrentUserId).Select(l => l.Id).ToListAsync();
-        var model = new ViewingsIndexViewModel
-        {
-            Received = await _context.ViewingAppointments
-                .Include(v => v.Listing).Include(v => v.Requester)
-                .Where(v => myListingIds.Contains(v.ListingId))
-                .OrderByDescending(v => v.CreatedAt).ToListAsync(),
-            Mine = await _context.ViewingAppointments
-                .Include(v => v.Listing)
-                .Where(v => v.RequesterId == CurrentUserId)
-                .OrderByDescending(v => v.CreatedAt).ToListAsync()
-        };
-        return View(model);
+        // طلباتي أنا فقط — طلبات الآخرين لا تظهر لي.
+        var mine = await _context.ViewingAppointments
+            .Include(v => v.Listing)
+            .Where(v => v.RequesterId == CurrentUserId)
+            .OrderByDescending(v => v.CreatedAt).ToListAsync();
+        return View(mine);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(int listingId, DateTime requestedAt, string? message)
     {
-        var listing = await _context.Listings.Include(l => l.Owner).FirstOrDefaultAsync(l => l.Id == listingId);
+        var listing = await _context.Listings.FirstOrDefaultAsync(l => l.Id == listingId);
         if (listing == null)
         {
             return NotFound();
@@ -1999,46 +2088,18 @@ public class ViewingsController : Controller
             CreatedAt = DateTime.UtcNow
         });
         await _context.SaveChangesAsync();
-        // تنبيه موجَّه للمعلن.
         var requester = await _context.Users.FindAsync(CurrentUserId);
         var requesterName = (requester?.FullName ?? requester?.UserName ?? "مستخدم").Split(' ')[0];
-        _context.Notifications.Add(new Notification
-        {
-            Title = "طلب معاينة جديد",
-            Message = $"{requesterName} طلب معاينة «{listing.Title}» يوم {requestedAt:dd/MM/yyyy HH:mm}.",
-            TargetUserId = listing.OwnerId,
-            Url = "/Viewings",
-            CreatedAt = DateTime.UtcNow,
-            IsActive = true
-        });
-        await _context.SaveChangesAsync();
-        await _hub.Clients.All.SendAsync("refreshBell");
-        TempData["Info"] = "تم إرسال طلب المعاينة — المعلن هيأكده.";
+        await NotifyAdminAsync("طلب معاينة جديد",
+            $"{requesterName} طلب معاينة «{listing.Title}» يوم {requestedAt:dd/MM/yyyy HH:mm}.");
+        TempData["Info"] = "تم إرسال طلب المعاينة — إدارة الموقع هتنسّق معاك الميعاد.";
         return RedirectToAction("Details", "Listings", new { id = listingId });
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Confirm(int id)
-    {
-        return await DecideAsync(id, ViewingStatus.Confirmed, "تم تأكيد المعاينة.", ownerOnly: true);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Decline(int id)
-    {
-        return await DecideAsync(id, ViewingStatus.Declined, "تم رفض المعاينة.", ownerOnly: true);
-    }
-
+    /// <summary>إلغاء المعاينة: الطالب نفسه أو الأدمن.</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancel(int id)
-    {
-        return await DecideAsync(id, ViewingStatus.Cancelled, "تم إلغاء المعاينة.", ownerOnly: false);
-    }
-
-    private async Task<IActionResult> DecideAsync(int id, ViewingStatus status, string doneMessage, bool ownerOnly)
     {
         var viewing = await _context.ViewingAppointments
             .Include(v => v.Listing).FirstOrDefaultAsync(v => v.Id == id);
@@ -2046,41 +2107,28 @@ public class ViewingsController : Controller
         {
             return NotFound();
         }
-        if (ownerOnly && viewing.Listing?.OwnerId != CurrentUserId)
+        var isAdmin = User.IsInRole("Admin");
+        if (viewing.RequesterId != CurrentUserId && !isAdmin)
         {
             return Forbid();
         }
-        // الإلغاء مسموح للطرفين: الطالب أو صاحب الإعلان.
-        if (!ownerOnly && viewing.RequesterId != CurrentUserId && viewing.Listing?.OwnerId != CurrentUserId)
-        {
-            return Forbid();
-        }
-        if (viewing.Status != ViewingStatus.Pending && !(status == ViewingStatus.Cancelled && viewing.Status == ViewingStatus.Confirmed))
+        if (viewing.Status != ViewingStatus.Pending && viewing.Status != ViewingStatus.Confirmed)
         {
             TempData["Error"] = "المعاينة دي اتحسمت بالفعل.";
             return RedirectToAction(nameof(Index));
         }
-        viewing.Status = status;
+        viewing.Status = ViewingStatus.Cancelled;
         await _context.SaveChangesAsync();
-        // تنبيه للطرف التاني (في الإلغاء: الطرف اللي ما لغاش).
-        var targetUserId = ownerOnly ? viewing.RequesterId
-            : viewing.RequesterId == CurrentUserId ? viewing.Listing?.OwnerId : viewing.RequesterId;
-        if (!string.IsNullOrEmpty(targetUserId))
+        if (isAdmin)
         {
-            var verb = status == ViewingStatus.Confirmed ? "أكّد" : status == ViewingStatus.Declined ? "رفض" : "ألغى";
-            _context.Notifications.Add(new Notification
-            {
-                Title = "تحديث على طلب المعاينة",
-                Message = $"{verb} معاينة «{viewing.Listing?.Title}» يوم {viewing.RequestedAt:dd/MM/yyyy HH:mm}.",
-                TargetUserId = targetUserId,
-                Url = "/Viewings",
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
-            });
-            await _context.SaveChangesAsync();
-            await _hub.Clients.All.SendAsync("refreshBell");
+            await NotifyRequesterAsync(viewing, "تحديث على طلب المعاينة",
+                $"ألغت إدارة الموقع معاينة «{viewing.Listing?.Title}» يوم {viewing.RequestedAt:dd/MM/yyyy HH:mm}.");
+            TempData["Info"] = "تم إلغاء المعاينة.";
+            return RedirectToAction("Viewings", "Admin");
         }
-        TempData["Info"] = doneMessage;
+        await NotifyAdminAsync("إلغاء طلب معاينة",
+            $"ألغى مشتري معاينة «{viewing.Listing?.Title}» يوم {viewing.RequestedAt:dd/MM/yyyy HH:mm}.");
+        TempData["Info"] = "تم إلغاء المعاينة.";
         return RedirectToAction(nameof(Index));
     }
 }
@@ -2197,6 +2245,7 @@ public class AdminBadgeCounts
     public int PendingListings { get; set; }
     public int UnrepliedRequests { get; set; }
     public int PendingReports { get; set; }
+    public int PendingViewings { get; set; }
 }
 
 public class AdminNavViewComponent : ViewComponent
@@ -2222,7 +2271,8 @@ public class AdminNavViewComponent : ViewComponent
             PendingUsers = await _context.Users.CountAsync(u => u.AccountStatus == AccountStatus.Pending),
             PendingListings = await _context.Listings.CountAsync(l => l.Approval == ListingApproval.Pending),
             UnrepliedRequests = await _context.ContactRequests.CountAsync(r => !r.IsReplied),
-            PendingReports = await _context.ListingReports.CountAsync(r => r.Status == ReportStatus.Pending)
+            PendingReports = await _context.ListingReports.CountAsync(r => r.Status == ReportStatus.Pending),
+            PendingViewings = await _context.ViewingAppointments.CountAsync(v => v.Status == ViewingStatus.Pending)
         };
         return View(model);
     }
