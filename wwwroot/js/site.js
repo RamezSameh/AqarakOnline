@@ -500,6 +500,100 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // سحب وإفلات الصور في نماذج الإعلان + معاينة قبل الرفع.
+    var dropZone = document.getElementById("photoDropZone");
+    if (dropZone) {
+        var photoInput = dropZone.querySelector('input[type="file"]');
+        var photoPreview = document.getElementById("photoPreview");
+        var pickedFiles = new DataTransfer();
+        function renderPhotoPreview() {
+            photoPreview.innerHTML = "";
+            Array.from(pickedFiles.files).forEach(function (file, index) {
+                var item = document.createElement("span");
+                item.className = "photo-preview-item";
+                var img = document.createElement("img");
+                img.src = URL.createObjectURL(file);
+                img.alt = file.name;
+                var remove = document.createElement("button");
+                remove.type = "button";
+                remove.className = "photo-preview-remove";
+                remove.textContent = "✕";
+                remove.setAttribute("aria-label", "إزالة " + file.name);
+                remove.addEventListener("click", function () {
+                    pickedFiles.items.remove(index);
+                    photoInput.files = pickedFiles.files;
+                    renderPhotoPreview();
+                });
+                item.appendChild(img);
+                item.appendChild(remove);
+                photoPreview.appendChild(item);
+            });
+        }
+        function addPickedFiles(files) {
+            Array.from(files).forEach(function (file) {
+                if (file.type.startsWith("image/")) {
+                    pickedFiles.items.add(file);
+                }
+            });
+            photoInput.files = pickedFiles.files;
+            renderPhotoPreview();
+        }
+        photoInput.addEventListener("change", function () {
+            addPickedFiles(photoInput.files);
+        });
+        ["dragenter", "dragover"].forEach(function (ev) {
+            dropZone.addEventListener(ev, function (e) {
+                e.preventDefault();
+                dropZone.classList.add("drag-over");
+            });
+        });
+        ["dragleave", "drop"].forEach(function (ev) {
+            dropZone.addEventListener(ev, function (e) {
+                e.preventDefault();
+                dropZone.classList.remove("drag-over");
+            });
+        });
+        dropZone.addEventListener("drop", function (e) {
+            addPickedFiles(e.dataTransfer.files);
+        });
+    }
+
+    // إعادة ترتيب الصور الحالية بالسحب في صفحة التعديل.
+    var sortList = document.getElementById("existingPhotos");
+    if (sortList) {
+        var orderInput = document.getElementById("photoOrderInput");
+        var draggedPhoto = null;
+        function updatePhotoOrder() {
+            var ids = Array.from(sortList.querySelectorAll("li")).map(function (li) {
+                return li.getAttribute("data-id");
+            });
+            orderInput.value = ids.join(",");
+        }
+        sortList.querySelectorAll("li").forEach(function (li) {
+            li.addEventListener("dragstart", function () {
+                draggedPhoto = li;
+                li.classList.add("dragging");
+            });
+            li.addEventListener("dragend", function () {
+                draggedPhoto = null;
+                li.classList.remove("dragging");
+                updatePhotoOrder();
+            });
+            li.addEventListener("dragover", function (e) {
+                e.preventDefault();
+                if (draggedPhoto && draggedPhoto !== li) {
+                    var rect = li.getBoundingClientRect();
+                    var after = (e.clientX - rect.left) > rect.width / 2;
+                    sortList.insertBefore(draggedPhoto, after ? li.nextSibling : li);
+                }
+            });
+            li.addEventListener("drop", function (e) {
+                e.preventDefault();
+                updatePhotoOrder();
+            });
+        });
+    }
+
     // نسخ رابط الإعلان: زر "نسخ الرابط" في الكارت والتفاصيل.
     // بتفويض الأحداث حتى يعمل بعد استبدال شبكة الكروت لحظيًا.
     document.addEventListener("click", function (event) {

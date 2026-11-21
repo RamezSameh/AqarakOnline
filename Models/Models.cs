@@ -228,6 +228,9 @@ public class Listing
     /// <summary>إعلان مميز يثبّته الأدمن: يظهر أولًا في نتائج البحث وبشارة «مميز».</summary>
     public bool IsFeatured { get; set; }
 
+    /// <summary>آخر مرة جدّد فيها صاحب الإعلان ظهوره أول النتائج (ترتيب «الأحدث» يستخدمها بدل تاريخ النشر).</summary>
+    public DateTime? LastBumpedAt { get; set; }
+
     public bool IsAvailable { get; set; } = true;
 
     /// <summary>موافقة الأدمن على النشر. الافتراضي معلّق.</summary>
@@ -383,6 +386,79 @@ public class AdvertiserReview
 
     [MaxLength(1000)]
     public string? Comment { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>سبب البلاغ عن إعلان مخالف.</summary>
+public enum ReportReason
+{
+    Misleading,
+    WrongInfo,
+    Scam,
+    Offensive,
+    Other
+}
+
+/// <summary>حالة البلاغ: قيد المراجعة حتى يراجعه الأدمن.</summary>
+public enum ReportStatus
+{
+    Pending,
+    Reviewed
+}
+
+/// <summary>
+/// بلاغ عن إعلان مخالف من مستخدم مسجَّل. يراجعه الأدمن من صفحة البلاغات.
+/// </summary>
+public class ListingReport
+{
+    public int Id { get; set; }
+
+    public int ListingId { get; set; }
+    public Listing? Listing { get; set; }
+
+    public string ReporterId { get; set; } = string.Empty;
+    public ApplicationUser? Reporter { get; set; }
+
+    public ReportReason Reason { get; set; }
+
+    [MaxLength(1000)]
+    public string? Details { get; set; }
+
+    public ReportStatus Status { get; set; } = ReportStatus.Pending;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>حالة طلب معاينة عقار.</summary>
+public enum ViewingStatus
+{
+    Pending,
+    Confirmed,
+    Declined,
+    Cancelled
+}
+
+/// <summary>
+/// طلب معاينة: مشتري يطلب ميعادًا لمعاينة عقار، والمعلن يؤكد أو يرفض.
+/// </summary>
+public class ViewingAppointment
+{
+    public int Id { get; set; }
+
+    public int ListingId { get; set; }
+    public Listing? Listing { get; set; }
+
+    public string RequesterId { get; set; } = string.Empty;
+    public ApplicationUser? Requester { get; set; }
+
+    /// <summary>الميعاد المطلوب (بتوقيت المستخدم المحلي كما أدخله).</summary>
+    public DateTime RequestedAt { get; set; }
+
+    public ViewingStatus Status { get; set; } = ViewingStatus.Pending;
+
+    [MaxLength(500)]
+    public string? Message { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

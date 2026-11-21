@@ -274,6 +274,9 @@ namespace AqarakOnline.Migrations
                     b.Property<bool>("IsFurnished")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("LastBumpedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("ListingType")
                         .HasColumnType("int");
 
@@ -345,6 +348,43 @@ namespace AqarakOnline.Migrations
                     b.HasIndex("ListingId");
 
                     b.ToTable("ListingAttachments");
+                });
+
+            modelBuilder.Entity("AqarakOnline.Models.ListingReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ListingId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Reason")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReporterId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId");
+
+                    b.HasIndex("ReporterId");
+
+                    b.ToTable("ListingReports");
                 });
 
             modelBuilder.Entity("AqarakOnline.Models.Notification", b =>
@@ -499,6 +539,43 @@ namespace AqarakOnline.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("SavedSearches");
+                });
+
+            modelBuilder.Entity("AqarakOnline.Models.ViewingAppointment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ListingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RequesterId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId");
+
+                    b.HasIndex("RequesterId");
+
+                    b.ToTable("ViewingAppointments");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -717,6 +794,25 @@ namespace AqarakOnline.Migrations
                     b.Navigation("Listing");
                 });
 
+            modelBuilder.Entity("AqarakOnline.Models.ListingReport", b =>
+                {
+                    b.HasOne("AqarakOnline.Models.Listing", "Listing")
+                        .WithMany()
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AqarakOnline.Models.ApplicationUser", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+
+                    b.Navigation("Reporter");
+                });
+
             modelBuilder.Entity("AqarakOnline.Models.NotificationRead", b =>
                 {
                     b.HasOne("AqarakOnline.Models.Notification", "Notification")
@@ -756,6 +852,25 @@ namespace AqarakOnline.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AqarakOnline.Models.ViewingAppointment", b =>
+                {
+                    b.HasOne("AqarakOnline.Models.Listing", "Listing")
+                        .WithMany()
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AqarakOnline.Models.ApplicationUser", "Requester")
+                        .WithMany()
+                        .HasForeignKey("RequesterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+
+                    b.Navigation("Requester");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

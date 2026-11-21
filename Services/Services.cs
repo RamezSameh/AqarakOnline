@@ -200,6 +200,41 @@ public class LanguageService
         ["Comment"] = ("تعليق", "Comment"),
         ["SubmitReview"] = ("إرسال التقييم", "Submit review"),
         ["NoReviews"] = ("لا توجد تقييمات بعد — كن أول من يقيّم هذا المعلن.", "No reviews yet — be the first to rate this advertiser."),
+        ["RenewListing"] = ("جدّد الإعلان", "Renew listing"),
+        ["Renewed"] = ("تم تجديد الإعلان — ظهر أول النتائج.", "Listing renewed — now at the top of results."),
+        ["RenewCooldown"] = ("تقدر تجدّد الإعلان مرة كل 7 أيام.", "You can renew a listing once every 7 days."),
+        ["ReportListing"] = ("الإبلاغ عن الإعلان", "Report this listing"),
+        ["ReportReason"] = ("السبب", "Reason"),
+        ["ReportDetails"] = ("تفاصيل إضافية", "Additional details"),
+        ["ReportSubmitted"] = ("تم إرسال البلاغ — هنراجعه في أقرب وقت.", "Report submitted — we'll review it soon."),
+        ["ReportAlreadySent"] = ("بلّغت عن الإعلان ده قبل كده، ولسه قيد المراجعة.", "You already reported this listing; it's still under review."),
+        ["ReportReasonMisleading"] = ("إعلان مضلل", "Misleading listing"),
+        ["ReportReasonWrongInfo"] = ("معلومات غير صحيحة", "Incorrect information"),
+        ["ReportReasonScam"] = ("احتيال أو نصب", "Scam or fraud"),
+        ["ReportReasonOffensive"] = ("محتوى مسيء", "Offensive content"),
+        ["ReportReasonOther"] = ("سبب آخر", "Other reason"),
+        ["Reports"] = ("البلاغات", "Reports"),
+        ["MarkReviewed"] = ("تمت المراجعة", "Reviewed"),
+        ["ReportPending"] = ("قيد المراجعة", "Under review"),
+        ["ReportReviewed"] = ("تمت المراجعة", "Reviewed"),
+        ["NoReports"] = ("لا توجد بلاغات.", "No reports."),
+        ["BookViewing"] = ("احجز معاينة", "Book a viewing"),
+        ["ViewingDate"] = ("ميعاد المعاينة", "Viewing date & time"),
+        ["ViewingMessage"] = ("رسالة للمعلن (اختياري)", "Message for the advertiser (optional)"),
+        ["ViewingRequested"] = ("تم إرسال طلب المعاينة — المعلن هيأكده.", "Viewing request sent — the advertiser will confirm it."),
+        ["ViewingDatePast"] = ("ميعاد المعاينة لازم يكون في المستقبل.", "The viewing date must be in the future."),
+        ["Viewings"] = ("مواعيد المعاينة", "Viewing appointments"),
+        ["MyViewingRequests"] = ("طلباتي", "My requests"),
+        ["ReceivedViewingRequests"] = ("طلبات وصلتني", "Requests received"),
+        ["ViewingPending"] = ("بانتظار التأكيد", "Awaiting confirmation"),
+        ["ViewingConfirmed"] = ("مؤكدة", "Confirmed"),
+        ["ViewingDeclined"] = ("مرفوضة", "Declined"),
+        ["ViewingCancelled"] = ("ملغاة", "Cancelled"),
+        ["Confirm"] = ("تأكيد", "Confirm"),
+        ["Decline"] = ("رفض", "Decline"),
+        ["NoViewings"] = ("لا توجد مواعيد معاينة.", "No viewing appointments."),
+        ["DropPhotosHere"] = ("اسحب الصور هنا أو دوس للاختيار", "Drag photos here or tap to choose"),
+        ["CurrentPhotos"] = ("الصور الحالية — اسحب لإعادة ترتيبها", "Current photos — drag to reorder"),
         ["Email"] = ("البريد الإلكتروني", "Email"),
         ["Password"] = ("كلمة المرور", "Password"),
         ["ConfirmPassword"] = ("تأكيد كلمة المرور", "Confirm password"),
@@ -240,6 +275,23 @@ public class LanguageService
 
     public string AdvertiserTypeText(Models.AdvertiserType type) =>
         type == Models.AdvertiserType.Broker ? T("FromBroker") : T("FromOwner");
+
+    public string ReportReasonText(Models.ReportReason reason) => reason switch
+    {
+        Models.ReportReason.Misleading => T("ReportReasonMisleading"),
+        Models.ReportReason.WrongInfo => T("ReportReasonWrongInfo"),
+        Models.ReportReason.Scam => T("ReportReasonScam"),
+        Models.ReportReason.Offensive => T("ReportReasonOffensive"),
+        _ => T("ReportReasonOther")
+    };
+
+    public string ViewingStatusText(Models.ViewingStatus status) => status switch
+    {
+        Models.ViewingStatus.Confirmed => T("ViewingConfirmed"),
+        Models.ViewingStatus.Declined => T("ViewingDeclined"),
+        Models.ViewingStatus.Cancelled => T("ViewingCancelled"),
+        _ => T("ViewingPending")
+    };
 
     /// <summary>تاريخ نسبي: «منذ يومين» / «منذ 3 ساعات». التاريخ المخزّن UTC.</summary>
     public string RelativeTime(DateTime utc)

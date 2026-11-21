@@ -152,6 +152,11 @@ else
     @if (isOwnListing)
     {
         <p class="alert-info">@L.T("OwnListingNote")</p>
+        <form asp-action="Bump" method="post" class="inline-form">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+            <button type="submit" class="btn btn-ghost">🔄 @L.T("RenewListing")</button>
+        </form>
     }
     else if (Model.IsAvailable)
     {
@@ -164,6 +169,7 @@ else
             <a class="btn btn-primary" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id" asp-route-intent="rent">@L.T("RentIt")</a>
         }
         <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id">@L.T("ContactUs")</a>
+        <a class="btn btn-ghost" asp-action="Report" asp-route-id="@Model.Id">🚩 @L.T("ReportListing")</a>
     }
     @if (User.Identity?.IsAuthenticated == true && (Model.OwnerId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value || User.IsInRole("Admin")))
     {
@@ -197,6 +203,21 @@ else
             <p><strong>@L.T("MonthlyInstallment"):</strong> <span id="calcResult">-</span></p>
             <small>@L.T("CalculatorNote")</small>
         </div>
+    </section>
+}
+
+@if (User.Identity?.IsAuthenticated == true && !isOwnListing && Model.IsAvailable && Model.Approval == ListingApproval.Approved)
+{
+    <section class="viewing-form">
+        <h2>@L.T("BookViewing")</h2>
+        <form asp-controller="Viewings" asp-action="Create" method="post" class="form">
+            <input type="hidden" name="listingId" value="@Model.Id" />
+            <label>@L.T("ViewingDate")</label>
+            <input type="datetime-local" name="requestedAt" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" required />
+            <label>@L.T("ViewingMessage")</label>
+            <textarea name="message" rows="2" maxlength="500"></textarea>
+            <button type="submit" class="btn btn-primary">@L.T("BookViewing")</button>
+        </form>
     </section>
 }
 

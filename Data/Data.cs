@@ -52,6 +52,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<AdvertiserReview>()
             .HasOne(r => r.Listing).WithMany().HasForeignKey(r => r.ListingId)
             .OnDelete(DeleteBehavior.Cascade);
+        // حذف إعلان يحذف بلاغاته وطلبات معاينته؛ وحذف مستخدم يحذف ما أرسله منهما.
+        builder.Entity<ListingReport>()
+            .HasOne(r => r.Listing).WithMany().HasForeignKey(r => r.ListingId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<ListingReport>()
+            .HasOne(r => r.Reporter).WithMany().HasForeignKey(r => r.ReporterId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<ViewingAppointment>()
+            .HasOne(v => v.Listing).WithMany().HasForeignKey(v => v.ListingId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<ViewingAppointment>()
+            .HasOne(v => v.Requester).WithMany().HasForeignKey(v => v.RequesterId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     public DbSet<Listing> Listings => Set<Listing>();
@@ -63,6 +76,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Favorite> Favorites => Set<Favorite>();
     public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
     public DbSet<AdvertiserReview> AdvertiserReviews => Set<AdvertiserReview>();
+    public DbSet<ListingReport> ListingReports => Set<ListingReport>();
+    public DbSet<ViewingAppointment> ViewingAppointments => Set<ViewingAppointment>();
 }
 
 public static class SeedData

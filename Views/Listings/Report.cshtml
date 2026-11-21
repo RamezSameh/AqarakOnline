@@ -1,0 +1,18 @@
+@model Listing
+<h1>@L.T("ReportListing")</h1>
+<p><a asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a> — @Model.Area</p>
+<form asp-action="Report" asp-route-id="@Model.Id" method="post" class="form">
+    <label>@L.T("ReportReason")</label>
+    <select name="reason">
+        @foreach (ReportReason reason in Enum.GetValues(typeof(ReportReason)))
+        {
+            <option value="@reason">@L.ReportReasonText(reason)</option>
+        }
+    </select>
+    <label>@L.T("ReportDetails")</label>
+    <textarea name="details" rows="4" maxlength="1000" placeholder="اكتب أي تفاصيل تساعد الأدمن يراجع البلاغ"></textarea>
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">@L.T("ReportListing")</button>
+        <a class="btn btn-ghost" asp-action="Details" asp-route-id="@Model.Id">@L.T("Cancel")</a>
+    </div>
+</form>

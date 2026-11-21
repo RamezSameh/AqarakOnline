@@ -93,19 +93,40 @@
     }
 
     <label>صور توضيحية (حتى 5 صور)</label>
-    <input asp-for="PhotoFiles" type="file" accept="image/*" multiple />
+    <div id="photoDropZone" class="drop-zone">
+        <span>@L.T("DropPhotosHere")</span>
+        <input asp-for="PhotoFiles" type="file" accept="image/*" multiple />
+        <div id="photoPreview" class="photo-preview"></div>
+    </div>
     <small>الصور بتتصغّر وتتضغط تلقائيًا عند الرفع، وحجم الصورة الواحدة 10 ميجا بحد أقصى.</small>
     <label>فيديو (حتى 25 ميجا)</label>
     <input asp-for="VideoFile" type="file" accept="video/*" />
 
-    @if (isEdit && Model.Attachments.Any())
+    @if (isEdit && Model.Attachments.Any(a => a.Kind == AttachmentKind.Photo))
     {
-        <h3>المرفقات الحالية</h3>
-        @foreach (var attachment in Model.Attachments.OrderBy(a => a.Kind).ThenBy(a => a.Order))
+        <h3>@L.T("CurrentPhotos")</h3>
+        <input type="hidden" name="photoOrder" id="photoOrderInput" value="@string.Join(",", Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id).Select(a => a.Id))" />
+        <ul id="existingPhotos" class="photo-sort-list">
+            @foreach (var attachment in Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id))
+            {
+                <li draggable="true" data-id="@attachment.Id">
+                    <img src="/@attachment.FilePath" alt="@attachment.OriginalFileName" loading="lazy" />
+                    <label>
+                        <input type="checkbox" name="DeleteAttachmentIds" value="@attachment.Id" />
+                        حذف
+                    </label>
+                </li>
+            }
+        </ul>
+    }
+    @if (isEdit && Model.Attachments.Any(a => a.Kind == AttachmentKind.Video))
+    {
+        <h3>الفيديو الحالي</h3>
+        @foreach (var attachment in Model.Attachments.Where(a => a.Kind == AttachmentKind.Video))
         {
             <label>
                 <input type="checkbox" name="DeleteAttachmentIds" value="@attachment.Id" />
-                حذف: @(attachment.Kind == AttachmentKind.Photo ? "صورة" : "فيديو") - @attachment.OriginalFileName
+                حذف فيديو - @attachment.OriginalFileName
             </label>
         }
     }

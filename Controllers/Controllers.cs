@@ -26,7 +26,8 @@ public class HomeController : Controller
     {
         var listings = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
-            .OrderByDescending(l => l.CreatedAt)
+            .OrderByDescending(l => l.IsFeatured)
+            .ThenByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
             .Take(6)
             .ToListAsync();
         if (User.Identity?.IsAuthenticated == true)
@@ -152,7 +153,7 @@ public class ListingsController : Controller
             "priceDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.Price).ThenByDescending(l => l.CreatedAt),
             "areaDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.AreaSqm).ThenByDescending(l => l.CreatedAt),
             "viewsDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt),
-            _ => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.CreatedAt)
+            _ => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
         };
 
         const int pageSize = 12;
@@ -364,7 +365,7 @@ public class ListingsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(100_000_000)]
-    public async Task<IActionResult> Edit(int id, Listing model)
+    public async Task<IActionResult> Edit(int id, Listing model, string? photoOrder)
     {
         var listing = await _context.Listings.Include(l => l.Attachments)
             .FirstOrDefaultAsync(l => l.Id == id);
@@ -415,6 +416,23 @@ public class ListingsController : Controller
         {
             AttachmentStorage.DeleteFile(_env.WebRootPath, attachment.FilePath);
             _context.ListingAttachments.Remove(attachment);
+        }
+        // ترتيب الصور من السحب والإفلات في صفحة التعديل.
+        if (!string.IsNullOrWhiteSpace(photoOrder))
+        {
+            var orderedIds = photoOrder.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(v => int.TryParse(v, out var n) ? n : -1)
+                .Where(n => n > 0).ToList();
+            var order = 0;
+            foreach (var attachmentId in orderedIds)
+            {
+                var attachment = listing.Attachments
+                    .FirstOrDefault(a => a.Id == attachmentId && a.Kind == AttachmentKind.Photo);
+                if (attachment != null)
+                {
+                    attachment.Order = order++;
+                }
+            }
         }
         await SaveAttachmentsAsync(listing, model.PhotoFiles, model.VideoFile);
 
@@ -487,6 +505,98 @@ public class ListingsController : Controller
             .Select(f => f.ListingId)
             .ToListAsync()).ToHashSet();
         return View(listings);
+    }
+
+    /// <summary>
+    /// تجديد الإعلان: يرفعه أول نتائج «الأحدث». للمالك فقط، ومرة كل 7 أيام.
+    /// </summary>
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Bump(int id, string? returnUrl = null)
+    {
+        var listing = await _context.Listings.FindAsync(id);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        if (listing.OwnerId != CurrentUserId)
+        {
+            return Forbid();
+        }
+        if (listing.LastBumpedAt.HasValue && listing.LastBumpedAt.Value.AddDays(7) > DateTime.UtcNow)
+        {
+            TempData["Error"] = "تقدر تجدّد الإعلان مرة كل 7 أيام.";
+        }
+        else
+        {
+            listing.LastBumpedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            TempData["Info"] = "تم تجديد الإعلان — ظهر أول النتائج.";
+        }
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return Redirect(returnUrl);
+        }
+        return RedirectToAction(nameof(MyListings));
+    }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> Report(int id)
+    {
+        var listing = await _context.Listings.FindAsync(id);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        if (listing.OwnerId == CurrentUserId)
+        {
+            TempData["Error"] = "لا يمكنك الإبلاغ عن إعلانك.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        return View(listing);
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Report(int id, ReportReason reason, string? details)
+    {
+        var listing = await _context.Listings.FindAsync(id);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        if (listing.OwnerId == CurrentUserId)
+        {
+            return Forbid();
+        }
+        var already = await _context.ListingReports.AnyAsync(r =>
+            r.ListingId == id && r.ReporterId == CurrentUserId && r.Status == ReportStatus.Pending);
+        if (already)
+        {
+            TempData["Info"] = "بلّغت عن الإعلان ده قبل كده، ولسه قيد المراجعة.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        var cleanDetails = string.IsNullOrWhiteSpace(details) ? null : details.Trim();
+        if (cleanDetails != null && cleanDetails.Length > 1000)
+        {
+            cleanDetails = cleanDetails[..1000];
+        }
+        _context.ListingReports.Add(new ListingReport
+        {
+            ListingId = id,
+            ReporterId = CurrentUserId,
+            Reason = reason,
+            Details = cleanDetails,
+            Status = ReportStatus.Pending,
+            CreatedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+        await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
+        TempData["Info"] = "تم إرسال البلاغ — هنراجعه في أقرب وقت.";
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     [Authorize(Roles = "Admin")]
@@ -1251,6 +1361,48 @@ public class AdminController : Controller
         return View(listings);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Reports()
+    {
+        var reports = await _context.ListingReports
+            .Include(r => r.Listing).Include(r => r.Reporter)
+            .OrderBy(r => r.Status).ThenByDescending(r => r.CreatedAt)
+            .ToListAsync();
+        return View(reports);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkReviewed(int id)
+    {
+        var report = await _context.ListingReports.FindAsync(id);
+        if (report == null)
+        {
+            return NotFound();
+        }
+        report.Status = ReportStatus.Reviewed;
+        await _context.SaveChangesAsync();
+        await NotifyAdminsAsync();
+        TempData["Info"] = "تمت مراجعة البلاغ.";
+        return RedirectToAction(nameof(Reports));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteReport(int id)
+    {
+        var report = await _context.ListingReports.FindAsync(id);
+        if (report == null)
+        {
+            return NotFound();
+        }
+        _context.ListingReports.Remove(report);
+        await _context.SaveChangesAsync();
+        await NotifyAdminsAsync();
+        TempData["Info"] = "تم حذف البلاغ.";
+        return RedirectToAction(nameof(Reports));
+    }
+
     // تنبيهات الأدمن: تظهر لكل المستخدمين على هيئة إشعارات.
     [HttpGet]
     public async Task<IActionResult> Notifications()
@@ -1772,6 +1924,167 @@ public class ReviewsController : Controller
     }
 }
 
+public class ViewingsIndexViewModel
+{
+    public List<ViewingAppointment> Received { get; set; } = new();
+    public List<ViewingAppointment> Mine { get; set; } = new();
+}
+
+/// <summary>
+/// حجز معاينة: مشتري يطلب ميعادًا، والمعلن يؤكد أو يرفض، والطالب يلغي.
+/// </summary>
+[Authorize]
+public class ViewingsController : Controller
+{
+    private readonly ApplicationDbContext _context;
+    private readonly Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> _hub;
+
+    public ViewingsController(ApplicationDbContext context, Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub)
+    {
+        _context = context;
+        _hub = hub;
+    }
+
+    private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+
+    [HttpGet]
+    public async Task<IActionResult> Index()
+    {
+        var myListingIds = await _context.Listings
+            .Where(l => l.OwnerId == CurrentUserId).Select(l => l.Id).ToListAsync();
+        var model = new ViewingsIndexViewModel
+        {
+            Received = await _context.ViewingAppointments
+                .Include(v => v.Listing).Include(v => v.Requester)
+                .Where(v => myListingIds.Contains(v.ListingId))
+                .OrderByDescending(v => v.CreatedAt).ToListAsync(),
+            Mine = await _context.ViewingAppointments
+                .Include(v => v.Listing)
+                .Where(v => v.RequesterId == CurrentUserId)
+                .OrderByDescending(v => v.CreatedAt).ToListAsync()
+        };
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(int listingId, DateTime requestedAt, string? message)
+    {
+        var listing = await _context.Listings.Include(l => l.Owner).FirstOrDefaultAsync(l => l.Id == listingId);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        if (listing.OwnerId == CurrentUserId)
+        {
+            return Forbid();
+        }
+        if (requestedAt <= DateTime.Now)
+        {
+            TempData["Error"] = "ميعاد المعاينة لازم يكون في المستقبل.";
+            return RedirectToAction("Details", "Listings", new { id = listingId });
+        }
+        var cleanMessage = string.IsNullOrWhiteSpace(message) ? null : message.Trim();
+        if (cleanMessage != null && cleanMessage.Length > 500)
+        {
+            cleanMessage = cleanMessage[..500];
+        }
+        _context.ViewingAppointments.Add(new ViewingAppointment
+        {
+            ListingId = listingId,
+            RequesterId = CurrentUserId,
+            RequestedAt = requestedAt,
+            Status = ViewingStatus.Pending,
+            Message = cleanMessage,
+            CreatedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+        // تنبيه موجَّه للمعلن.
+        var requester = await _context.Users.FindAsync(CurrentUserId);
+        var requesterName = (requester?.FullName ?? requester?.UserName ?? "مستخدم").Split(' ')[0];
+        _context.Notifications.Add(new Notification
+        {
+            Title = "طلب معاينة جديد",
+            Message = $"{requesterName} طلب معاينة «{listing.Title}» يوم {requestedAt:dd/MM/yyyy HH:mm}.",
+            TargetUserId = listing.OwnerId,
+            Url = "/Viewings",
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+        await _hub.Clients.All.SendAsync("refreshBell");
+        TempData["Info"] = "تم إرسال طلب المعاينة — المعلن هيأكده.";
+        return RedirectToAction("Details", "Listings", new { id = listingId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Confirm(int id)
+    {
+        return await DecideAsync(id, ViewingStatus.Confirmed, "تم تأكيد المعاينة.", ownerOnly: true);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Decline(int id)
+    {
+        return await DecideAsync(id, ViewingStatus.Declined, "تم رفض المعاينة.", ownerOnly: true);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(int id)
+    {
+        return await DecideAsync(id, ViewingStatus.Cancelled, "تم إلغاء المعاينة.", ownerOnly: false);
+    }
+
+    private async Task<IActionResult> DecideAsync(int id, ViewingStatus status, string doneMessage, bool ownerOnly)
+    {
+        var viewing = await _context.ViewingAppointments
+            .Include(v => v.Listing).FirstOrDefaultAsync(v => v.Id == id);
+        if (viewing == null)
+        {
+            return NotFound();
+        }
+        if (ownerOnly && viewing.Listing?.OwnerId != CurrentUserId)
+        {
+            return Forbid();
+        }
+        // الإلغاء مسموح للطرفين: الطالب أو صاحب الإعلان.
+        if (!ownerOnly && viewing.RequesterId != CurrentUserId && viewing.Listing?.OwnerId != CurrentUserId)
+        {
+            return Forbid();
+        }
+        if (viewing.Status != ViewingStatus.Pending && !(status == ViewingStatus.Cancelled && viewing.Status == ViewingStatus.Confirmed))
+        {
+            TempData["Error"] = "المعاينة دي اتحسمت بالفعل.";
+            return RedirectToAction(nameof(Index));
+        }
+        viewing.Status = status;
+        await _context.SaveChangesAsync();
+        // تنبيه للطرف التاني (في الإلغاء: الطرف اللي ما لغاش).
+        var targetUserId = ownerOnly ? viewing.RequesterId
+            : viewing.RequesterId == CurrentUserId ? viewing.Listing?.OwnerId : viewing.RequesterId;
+        if (!string.IsNullOrEmpty(targetUserId))
+        {
+            var verb = status == ViewingStatus.Confirmed ? "أكّد" : status == ViewingStatus.Declined ? "رفض" : "ألغى";
+            _context.Notifications.Add(new Notification
+            {
+                Title = "تحديث على طلب المعاينة",
+                Message = $"{verb} معاينة «{viewing.Listing?.Title}» يوم {viewing.RequestedAt:dd/MM/yyyy HH:mm}.",
+                TargetUserId = targetUserId,
+                Url = "/Viewings",
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            await _context.SaveChangesAsync();
+            await _hub.Clients.All.SendAsync("refreshBell");
+        }
+        TempData["Info"] = doneMessage;
+        return RedirectToAction(nameof(Index));
+    }
+}
+
 public class FavoritesController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -1883,6 +2196,7 @@ public class AdminBadgeCounts
     public int PendingUsers { get; set; }
     public int PendingListings { get; set; }
     public int UnrepliedRequests { get; set; }
+    public int PendingReports { get; set; }
 }
 
 public class AdminNavViewComponent : ViewComponent
@@ -1907,7 +2221,8 @@ public class AdminNavViewComponent : ViewComponent
         {
             PendingUsers = await _context.Users.CountAsync(u => u.AccountStatus == AccountStatus.Pending),
             PendingListings = await _context.Listings.CountAsync(l => l.Approval == ListingApproval.Pending),
-            UnrepliedRequests = await _context.ContactRequests.CountAsync(r => !r.IsReplied)
+            UnrepliedRequests = await _context.ContactRequests.CountAsync(r => !r.IsReplied),
+            PendingReports = await _context.ListingReports.CountAsync(r => r.Status == ReportStatus.Pending)
         };
         return View(model);
     }
