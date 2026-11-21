@@ -38,6 +38,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.Cascade);
         builder.Entity<Favorite>()
             .HasIndex(f => new { f.UserId, f.ListingId }).IsUnique();
+        // سجل التعديلات: حذف الإعلان يحذف سجله.
+        builder.Entity<ListingAudit>()
+            .HasOne(a => a.Listing).WithMany().HasForeignKey(a => a.ListingId)
+            .OnDelete(DeleteBehavior.Cascade);
         // حذف إعلان يحذف بلاغاته وطلبات معاينته؛ وحذف مستخدم يحذف ما أرسله منهما.
         builder.Entity<ListingReport>()
             .HasOne(r => r.Listing).WithMany().HasForeignKey(r => r.ListingId)
@@ -62,6 +66,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Favorite> Favorites => Set<Favorite>();
     public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
     public DbSet<ListingReport> ListingReports => Set<ListingReport>();
+    public DbSet<ListingAudit> ListingAudits => Set<ListingAudit>();
     public DbSet<ViewingAppointment> ViewingAppointments => Set<ViewingAppointment>();
 }
 

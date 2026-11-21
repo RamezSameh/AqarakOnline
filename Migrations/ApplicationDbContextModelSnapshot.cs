@@ -183,6 +183,9 @@ namespace AqarakOnline.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AcceptsInstallments")
+                        .HasColumnType("bit");
+
                     b.Property<string>("AdNumber")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -227,6 +230,21 @@ namespace AqarakOnline.Migrations
                     b.Property<int?>("Floor")
                         .HasColumnType("int");
 
+                    b.Property<bool>("HasAirConditioning")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasBalcony")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasElevator")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasParking")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasSecurity")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
 
@@ -259,6 +277,9 @@ namespace AqarakOnline.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("ViewCount")
                         .HasColumnType("int");
@@ -310,6 +331,45 @@ namespace AqarakOnline.Migrations
                     b.HasIndex("ListingId");
 
                     b.ToTable("ListingAttachments");
+                });
+
+            modelBuilder.Entity("AqarakOnline.Models.ListingAudit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ListingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId");
+
+                    b.ToTable("ListingAudits");
                 });
 
             modelBuilder.Entity("AqarakOnline.Models.ListingReport", b =>
@@ -722,6 +782,17 @@ namespace AqarakOnline.Migrations
                 {
                     b.HasOne("AqarakOnline.Models.Listing", "Listing")
                         .WithMany("Attachments")
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+                });
+
+            modelBuilder.Entity("AqarakOnline.Models.ListingAudit", b =>
+                {
+                    b.HasOne("AqarakOnline.Models.Listing", "Listing")
+                        .WithMany()
                         .HasForeignKey("ListingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

@@ -96,6 +96,14 @@
         }
     </select>
 
+    <label>@L.T("Amenities")</label>
+    <label><input asp-for="HasParking" type="checkbox" /> @L.T("Parking")</label>
+    <label><input asp-for="HasElevator" type="checkbox" /> @L.T("Elevator")</label>
+    <label><input asp-for="HasBalcony" type="checkbox" /> @L.T("Balcony")</label>
+    <label><input asp-for="HasAirConditioning" type="checkbox" /> @L.T("AirConditioning")</label>
+    <label><input asp-for="HasSecurity" type="checkbox" /> @L.T("Security")</label>
+    <label><input asp-for="AcceptsInstallments" type="checkbox" /> @L.T("AcceptsInstallments")</label>
+
     @if (isEdit)
     {
         <label><input asp-for="IsAvailable" type="checkbox" /> @L.T("Available")</label>
@@ -143,7 +151,11 @@
     <p id="uploadStatus" class="alert-info" hidden>@L.T("UploadingListing")</p>
 
     <div class="actions">
+        <button type="button" id="previewListingBtn" class="btn btn-ghost">👁 @L.T("PreviewListing")</button>
         <button type="submit" class="btn btn-primary">@L.T("Save")</button>
         <a class="btn btn-ghost" asp-action="Index">@L.T("Cancel")</a>
     </div>
 </form>
+
+<div id="listingPreview" class="listing-preview" hidden></div>
+

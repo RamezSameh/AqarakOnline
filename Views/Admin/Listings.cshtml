@@ -67,6 +67,7 @@ else
                             </form>
                         }
                         <a class="btn btn-ghost" asp-controller="Listings" asp-action="Delete" asp-route-id="@listing.Id">@L.T("Delete")</a>
+                        <a class="btn btn-ghost" asp-action="AuditLog" asp-route-listingId="@listing.Id">@L.T("AuditLog")</a>
                     </td>
                 </tr>
             }

@@ -759,3 +759,65 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     refreshGuestFavoriteButtons();
 });
+
+// معاينة الإعلان قبل النشر: تعرض شكل الكارت من قيم النموذج الحالية (بدون إرسال).
+document.addEventListener("DOMContentLoaded", function () {
+    var btn = document.getElementById("previewListingBtn");
+    var box = document.getElementById("listingPreview");
+    var form = document.getElementById("listingForm");
+    if (!btn || !box || !form) {
+        return;
+    }
+    function escapeHtml(value) {
+        return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+    function val(id) {
+        var el = document.getElementById(id);
+        return el ? el.value.trim() : "";
+    }
+    function selectedText(id) {
+        var el = document.getElementById(id);
+        return el && el.selectedIndex >= 0 ? el.options[el.selectedIndex].text : "";
+    }
+    function checked(id) {
+        var el = document.getElementById(id);
+        return !!(el && el.checked);
+    }
+    btn.addEventListener("click", function () {
+        var facts = [];
+        if (val("Rooms")) { facts.push("الغرف: " + val("Rooms")); }
+        if (val("Bathrooms")) { facts.push("الحمامات: " + val("Bathrooms")); }
+        if (val("Floor")) { facts.push("الدور: " + val("Floor")); }
+        if (checked("IsFurnished")) { facts.push("مفروش"); }
+        var finishing = selectedText("Finishing");
+        if (finishing && finishing !== "—") { facts.push(finishing); }
+        if (checked("HasParking")) { facts.push("جراج"); }
+        if (checked("HasElevator")) { facts.push("أسانسير"); }
+        if (checked("HasBalcony")) { facts.push("بلكونة"); }
+        if (checked("HasAirConditioning")) { facts.push("تكييف"); }
+        if (checked("HasSecurity")) { facts.push("أمن"); }
+        if (checked("AcceptsInstallments")) { facts.push("يقبل التقسيط"); }
+        // الصورة: أول صورة جديدة مختارة، وإلا أول صورة حالية في التعديل.
+        var photoInput = document.getElementById("PhotoFiles");
+        var photoUrl = "";
+        if (photoInput && photoInput.files && photoInput.files.length > 0) {
+            photoUrl = URL.createObjectURL(photoInput.files[0]);
+        } else {
+            var existing = document.querySelector("#existingPhotos img");
+            if (existing) { photoUrl = existing.getAttribute("src") || ""; }
+        }
+        var html = '<article class="listing-card"><div class="availability-bar available">متاح</div>';
+        html += photoUrl
+            ? '<img class="listing-photo" src="' + escapeHtml(photoUrl) + '" alt="" />'
+            : '<div class="listing-photo placeholder">لا توجد صورة</div>';
+        html += '<div class="listing-body"><h3>' + escapeHtml(val("Title") || "عنوان الإعلان") + '</h3>';
+        html += '<p class="listing-area">' + escapeHtml(selectedText("Area") || val("Area")) + '</p>';
+        html += '<p class="listing-area">المساحة: ' + escapeHtml(val("AreaSqm")) + ' م²</p>';
+        if (facts.length) { html += '<p class="listing-facts">' + facts.map(escapeHtml).join(" • ") + '</p>'; }
+        html += '<p class="listing-price">' + escapeHtml(val("Price")) + ' جنيه</p>';
+        html += '</div></article>';
+        box.innerHTML = html;
+        box.hidden = false;
+        box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+});

@@ -170,6 +170,37 @@ else
     </table>
 }
 
+<h2>طلبات اتصال لم يُرد عليها منذ أكثر من 48 ساعة</h2>
+@if (!Model.StaleRequests.Any())
+{
+    <p>لا توجد طلبات متأخرة.</p>
+}
+else
+{
+    <p>عددها: @Model.StaleRequests.Count — رد عليها من صفحة طلبات التواصل.</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>الاسم</th>
+                <th>الهاتف</th>
+                <th>الإعلان</th>
+                <th>التاريخ</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var contactRequest in Model.StaleRequests)
+            {
+                <tr>
+                    <td>@contactRequest.BuyerName</td>
+                    <td>@contactRequest.BuyerPhone</td>
+                    <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@contactRequest.ListingId">@(contactRequest.Listing?.Title ?? "-")</a></td>
+                    <td>@L.RelativeTime(contactRequest.CreatedAt)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
 <h2>إعلانات تحتاج تجديد (أكثر من 60 يومًا)</h2>
 @if (!Model.RenewalListings.Any())
 {

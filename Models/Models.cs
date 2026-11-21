@@ -234,6 +234,19 @@ public class Listing
     /// <summary>مستوى التشطيب (اختياري).</summary>
     public FinishingLevel? Finishing { get; set; }
 
+    /// <summary>مزايا جاهزة (اختيارية) — تظهر في الكارت والتفاصيل ويُفلتر بها.</summary>
+    public bool HasParking { get; set; }
+    public bool HasElevator { get; set; }
+    public bool HasBalcony { get; set; }
+    public bool HasAirConditioning { get; set; }
+    public bool HasSecurity { get; set; }
+
+    /// <summary>يقبل التقسيط أم لا.</summary>
+    public bool AcceptsInstallments { get; set; }
+
+    /// <summary>آخر مرة عدّل فيها صاحب الإعلان (أو الأدمن) بيانات الإعلان.</summary>
+    public DateTime? UpdatedAt { get; set; }
+
     /// <summary>عدد مرات مشاهدة صفحة تفاصيل الإعلان (من غير الأدمن وصاحب الإعلان).</summary>
     public int ViewCount { get; set; }
 
@@ -461,6 +474,30 @@ public class Favorite
 
     public int ListingId { get; set; }
     public Listing? Listing { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>سجل تعديلات إعلان — للأدمن: مين عدّل إيه وإمتى.</summary>
+public class ListingAudit
+{
+    public int Id { get; set; }
+
+    public int ListingId { get; set; }
+    public Listing? Listing { get; set; }
+
+    public string UserId { get; set; } = string.Empty;
+
+    /// <summary>اسم من قام بالإجراء وقتها (محفوظ نصًا حتى لو اتحذف الحساب).</summary>
+    [MaxLength(200)]
+    public string UserName { get; set; } = string.Empty;
+
+    /// <summary>نوع الإجراء: إنشاء / تعديل / موافقة / رفض / تجديد / نسخ.</summary>
+    [MaxLength(50)]
+    public string Action { get; set; } = string.Empty;
+
+    [MaxLength(1000)]
+    public string? Details { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

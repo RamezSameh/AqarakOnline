@@ -245,3 +245,6 @@ input, select, textarea { padding: 10px 12px; border: 1px solid #475569; border-
 [data-theme="light"] .photo-sort-list li { background: #f8fafc; border-color: #cbd5e1; }
 [data-theme="light"] .admin-side-panel { background: #fff; border-inline-start-color: #cbd5e1; }
 [data-theme="light"] .admin-side-sub { color: #475569; }
+
+/* معاينة الإعلان قبل النشر. */
+.listing-preview { margin-top: 20px; }

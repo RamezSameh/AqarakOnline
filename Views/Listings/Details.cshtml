@@ -109,6 +109,26 @@ else
 {
     <p><strong>@L.T("Finishing"):</strong> @L.FinishingText(Model.Finishing.Value)</p>
 }
+@{
+    var amenityNames = new List<string>();
+    if (Model.HasParking) { amenityNames.Add(L.T("Parking")); }
+    if (Model.HasElevator) { amenityNames.Add(L.T("Elevator")); }
+    if (Model.HasBalcony) { amenityNames.Add(L.T("Balcony")); }
+    if (Model.HasAirConditioning) { amenityNames.Add(L.T("AirConditioning")); }
+    if (Model.HasSecurity) { amenityNames.Add(L.T("Security")); }
+}
+@if (amenityNames.Any())
+{
+    <p><strong>@L.T("Amenities"):</strong> @string.Join(" • ", amenityNames)</p>
+}
+@if (Model.AcceptsInstallments)
+{
+    <p><strong>@L.T("AcceptsInstallments")</strong></p>
+}
+@if (Model.UpdatedAt.HasValue)
+{
+    <p><strong>@L.T("LastUpdated"):</strong> @L.RelativeTime(Model.UpdatedAt.Value)</p>
+}
 <p><strong>@L.T("Price"):</strong> @L.PriceText(Model.Price, Model.ListingType)</p>
 @{
     var avgSqm = ViewBag.AreaAvgPricePerSqm as decimal?;
@@ -200,6 +220,7 @@ else
     <span>@L.T("Share"):</span>
     <a class="btn btn-ghost" href="https://wa.me/?text=@Uri.EscapeDataString(shareText)" target="_blank" rel="noopener">واتساب</a>
     <a class="btn btn-ghost" href="https://www.facebook.com/sharer/sharer.php?u=@Uri.EscapeDataString(pageUrl)" target="_blank" rel="noopener">فيسبوك</a>
+    <a class="btn btn-ghost" href="https://t.me/share/url?url=@Uri.EscapeDataString(pageUrl)&text=@Uri.EscapeDataString(shareText)" target="_blank" rel="noopener">تيليجرام</a>
     <button type="button" class="btn btn-ghost share-copy" data-url="@pageUrl">@L.T("CopyLink")</button>
     <button type="button" class="btn btn-ghost compare-toggle" data-id="@Model.Id" data-add="@L.T("AddToCompare")" data-added="@L.T("InCompare")" data-max="@L.T("CompareMax")">@L.T("AddToCompare")</button>
 </div>

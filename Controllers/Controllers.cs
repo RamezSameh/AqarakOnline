@@ -94,7 +94,9 @@ public class ListingsController : Controller
         int? minArea = null, int? maxArea = null, string? sort = null, int page = 1,
         int? minRooms = null, bool furnishedOnly = false, string? area = null,
         string? adNumber = null, string? recency = null, bool directOwnerOnly = false,
-        FinishingLevel? finishing = null)
+        FinishingLevel? finishing = null, int? minFloor = null, int? maxFloor = null,
+        bool hasParking = false, bool hasElevator = false, bool hasBalcony = false,
+        bool hasAirConditioning = false, bool hasSecurity = false, bool installmentsOnly = false)
     {
         var query = _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.Approval == ListingApproval.Approved).AsQueryable();
@@ -142,6 +144,38 @@ public class ListingsController : Controller
         if (furnishedOnly)
         {
             query = query.Where(l => l.IsFurnished);
+        }
+        if (minFloor.HasValue)
+        {
+            query = query.Where(l => l.Floor >= minFloor.Value);
+        }
+        if (maxFloor.HasValue)
+        {
+            query = query.Where(l => l.Floor <= maxFloor.Value);
+        }
+        if (hasParking)
+        {
+            query = query.Where(l => l.HasParking);
+        }
+        if (hasElevator)
+        {
+            query = query.Where(l => l.HasElevator);
+        }
+        if (hasBalcony)
+        {
+            query = query.Where(l => l.HasBalcony);
+        }
+        if (hasAirConditioning)
+        {
+            query = query.Where(l => l.HasAirConditioning);
+        }
+        if (hasSecurity)
+        {
+            query = query.Where(l => l.HasSecurity);
+        }
+        if (installmentsOnly)
+        {
+            query = query.Where(l => l.AcceptsInstallments);
         }
         if (!string.IsNullOrWhiteSpace(adNumber))
         {
@@ -221,6 +255,14 @@ public class ListingsController : Controller
         ViewBag.Recency = recencyKey;
         ViewBag.DirectOwnerOnly = directOwnerOnly;
         ViewBag.Finishing = finishing;
+        ViewBag.MinFloor = minFloor;
+        ViewBag.MaxFloor = maxFloor;
+        ViewBag.HasParking = hasParking;
+        ViewBag.HasElevator = hasElevator;
+        ViewBag.HasBalcony = hasBalcony;
+        ViewBag.HasAirConditioning = hasAirConditioning;
+        ViewBag.HasSecurity = hasSecurity;
+        ViewBag.InstallmentsOnly = installmentsOnly;
         // عدد الإعلانات المتاحة في كل منطقة — يظهر جنب اسم المنطقة في الفلتر.
         ViewBag.AreaCounts = await _context.Listings
             .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable)
@@ -365,6 +407,7 @@ public class ListingsController : Controller
         listing.AdNumber = $"AQ-{listing.Id:D4}";
         await SaveAttachmentsAsync(listing);
         await _context.SaveChangesAsync();
+        await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId, "إنشاء", "تم إنشاء الإعلان.");
 
         if (listing.Approval == ListingApproval.Pending)
         {
@@ -425,6 +468,14 @@ public class ListingsController : Controller
             return View(model);
         }
 
+        var oldTitle = listing.Title;
+        var oldPrice = listing.Price;
+        var oldAreaSqm = listing.AreaSqm;
+        var oldArea = listing.Area;
+        var oldAvailable = listing.IsAvailable;
+        var oldFinishing = listing.Finishing;
+        var oldListingType = listing.ListingType;
+        var oldPropertyType = listing.PropertyType;
         listing.Title = model.Title;
         listing.ListingType = model.ListingType;
         listing.PropertyType = model.PropertyType;
@@ -440,6 +491,13 @@ public class ListingsController : Controller
         listing.Floor = model.PropertyType == PropertyType.Apartment ? model.Floor : null;
         listing.IsFurnished = model.IsFurnished;
         listing.Finishing = model.Finishing;
+        listing.HasParking = model.HasParking;
+        listing.HasElevator = model.HasElevator;
+        listing.HasBalcony = model.HasBalcony;
+        listing.HasAirConditioning = model.HasAirConditioning;
+        listing.HasSecurity = model.HasSecurity;
+        listing.AcceptsInstallments = model.AcceptsInstallments;
+        listing.UpdatedAt = DateTime.UtcNow;
         listing.IsAvailable = model.IsAvailable;
         if (!User.IsInRole("Admin"))
         {
@@ -471,6 +529,38 @@ public class ListingsController : Controller
         await SaveAttachmentsAsync(listing, model.PhotoFiles, model.VideoFile);
 
         await _context.SaveChangesAsync();
+        var changes = new List<string>();
+        if (listing.Title != oldTitle) changes.Add($"العنوان: من «{oldTitle}» إلى «{listing.Title}»");
+        if (listing.Price != oldPrice) changes.Add($"السعر: من {oldPrice:N0} إلى {listing.Price:N0} جنيه");
+        if (listing.AreaSqm != oldAreaSqm) changes.Add($"المساحة: من {oldAreaSqm} إلى {listing.AreaSqm} م²");
+        if (listing.Area != oldArea) changes.Add($"المنطقة: من {oldArea} إلى {listing.Area}");
+        if (listing.IsAvailable != oldAvailable) changes.Add(listing.IsAvailable ? "أصبح متاحًا" : "أصبح غير متاح");
+        if (listing.Finishing != oldFinishing) changes.Add("التشطيب اتغيّر");
+        if (listing.ListingType != oldListingType || listing.PropertyType != oldPropertyType) changes.Add("نوع الإعلان أو العقار اتغيّر");
+        await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId, "تعديل", changes.Any() ? string.Join("؛ ", changes) : "تعديل بدون تغيير في الحقول الرئيسية.");
+        if (listing.Price < oldPrice)
+        {
+            var favoriterIds = await _context.Favorites
+                .Where(f => f.ListingId == id && f.UserId != listing.OwnerId)
+                .Select(f => f.UserId).Distinct().ToListAsync();
+            foreach (var favoriterId in favoriterIds)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    Title = "انخفض سعر إعلان في مفضلتك",
+                    Message = $"سعر «{listing.Title}» نزل من {oldPrice:N0} إلى {listing.Price:N0} جنيه.",
+                    TargetUserId = favoriterId,
+                    Url = $"/Listings/Details/{listing.Id}",
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                });
+            }
+            if (favoriterIds.Any())
+            {
+                await _context.SaveChangesAsync();
+                await _hub.Clients.All.SendAsync("refreshBell");
+            }
+        }
         await _hub.Clients.All.SendAsync("listingsChanged");
         return RedirectToAction(nameof(Details), new { id });
     }
@@ -566,6 +656,7 @@ public class ListingsController : Controller
         {
             listing.LastBumpedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+            await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId, "تجديد", "تم تجديد الإعلان.");
             TempData["Info"] = "تم تجديد الإعلان — ظهر أول النتائج.";
         }
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -612,6 +703,13 @@ public class ListingsController : Controller
             Floor = source.PropertyType == PropertyType.Apartment ? source.Floor : null,
             IsFurnished = source.IsFurnished,
             Finishing = source.Finishing,
+            HasParking = source.HasParking,
+            HasElevator = source.HasElevator,
+            HasBalcony = source.HasBalcony,
+            HasAirConditioning = source.HasAirConditioning,
+            HasSecurity = source.HasSecurity,
+            AcceptsInstallments = source.AcceptsInstallments,
+            UpdatedAt = null,
             IsAvailable = true,
             IsFeatured = false,
             ViewCount = 0,
@@ -649,6 +747,7 @@ public class ListingsController : Controller
             });
         }
         await _context.SaveChangesAsync();
+        await AuditLogHelper.AddAsync(_context, copy.Id, CurrentUserId, "نسخ", $"نسخة من الإعلان {source.AdNumber}.");
         if (copy.Approval == ListingApproval.Pending)
         {
             await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
@@ -999,6 +1098,8 @@ public class AdminDashboardViewModel
     public List<Listing> StaleListings { get; set; } = new();
     /// <summary>إعلانات معلّقة بقالها أكثر من 3 أيام — تحتاج قرار موافقة/رفض.</summary>
     public List<Listing> StalePendingListings { get; set; } = new();
+    /// <summary>طلبات اتصال لم يُرد عليها منذ أكثر من 48 ساعة.</summary>
+    public List<ContactRequest> StaleRequests { get; set; } = new();
     /// <summary>إعلانات مقبولة ومتاحة بقالها أكثر من 60 يومًا — تحتاج تنبيه تجديد لصاحبها.</summary>
     public List<Listing> RenewalListings { get; set; } = new();
     /// <summary>إعلانات جديدة في آخر 6 شهور (للرسم البياني).</summary>
@@ -1107,6 +1208,11 @@ public class AdminController : Controller
                 .Where(l => l.Approval == ListingApproval.Pending
                     && l.CreatedAt <= DateTime.UtcNow.AddDays(-3))
                 .OrderBy(l => l.CreatedAt)
+                .ToListAsync(),
+            StaleRequests = await _context.ContactRequests
+                .Include(r => r.Listing)
+                .Where(r => !r.IsReplied && r.CreatedAt <= DateTime.UtcNow.AddDays(-2))
+                .OrderBy(r => r.CreatedAt)
                 .ToListAsync(),
             RenewalListings = await _context.Listings.Include(l => l.Owner)
                 .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable
@@ -1457,6 +1563,7 @@ public class AdminController : Controller
             IsActive = true
         });
         await _context.SaveChangesAsync();
+        await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId, "موافقة", "تمت الموافقة على الإعلان.");
         await SavedSearchAlerts.NotifyMatchingAsync(_context, listing, _hub);
         await NotifyAdminsAsync();
         await NotifyBellAsync();
@@ -1485,6 +1592,7 @@ public class AdminController : Controller
             IsActive = true
         });
         await _context.SaveChangesAsync();
+        await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId, "رفض", "تم رفض الإعلان.");
         await NotifyAdminsAsync();
         await NotifyBellAsync();
         await _hub.Clients.All.SendAsync("listingsChanged");
@@ -1610,6 +1718,18 @@ public class AdminController : Controller
     }
 
     /// <summary>تصدير كل الإعلانات في ملف CSV (يفتح في Excel) — للأرشفة والمتابعة.</summary>
+    [HttpGet]
+    public async Task<IActionResult> AuditLog(int listingId)
+    {
+        var listing = await _context.Listings.FindAsync(listingId);
+        if (listing == null) return NotFound();
+        ViewBag.Listing = listing;
+        var audits = await _context.ListingAudits
+            .Where(a => a.ListingId == listingId)
+            .OrderByDescending(a => a.CreatedAt).ToListAsync();
+        return View(audits);
+    }
+
     [HttpGet]
     public async Task<IActionResult> ExportListings()
     {
@@ -1877,6 +1997,30 @@ public class NotificationsController : Controller
 
 [Authorize]
 /// <summary>
+/// <summary>سجل تعديلات الإعلانات (للأدمن): يسجّل من قام بالإجراء واسمه وقتها.</summary>
+public static class AuditLogHelper
+{
+    public static async Task AddAsync(ApplicationDbContext context, int listingId, string userId, string action, string? details)
+    {
+        var user = await context.Users.FindAsync(userId);
+        var cleanDetails = string.IsNullOrWhiteSpace(details) ? null : details.Trim();
+        if (cleanDetails != null && cleanDetails.Length > 1000)
+        {
+            cleanDetails = cleanDetails[..1000];
+        }
+        context.ListingAudits.Add(new ListingAudit
+        {
+            ListingId = listingId,
+            UserId = userId,
+            UserName = user?.FullName ?? user?.UserName ?? "مستخدم",
+            Action = action,
+            Details = cleanDetails,
+            CreatedAt = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+    }
+}
+
 /// تنبيهات البحث المحفوظ: عند نشر إعلان، يُنبَّه أصحاب البحوث المطابقة
 /// بإشعار موجَّه لهم فقط (TargetUserId)، مع رابط لصفحة الإعلان.
 /// </summary>
