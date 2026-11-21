@@ -115,7 +115,7 @@ public static class SeedData
                 AreaSqm = 110,
                 Rooms = 2,
                 Bathrooms = 1,
-                IsFurnished = true,
+                Furnishing = FurnishingLevel.Full,
                 IsAvailable = true,
                 Approval = ListingApproval.Approved,
                 CreatedAt = seedDate

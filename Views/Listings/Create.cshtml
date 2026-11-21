@@ -98,7 +98,23 @@
         <span asp-validation-for="Floor" class="field-error"></span>
     </div>
 
-    <label><input asp-for="IsFurnished" type="checkbox" /> @L.T("Furnished")</label>
+    <label>@L.T("Furnishing")</label>
+    <select asp-for="Furnishing">
+        @foreach (FurnishingLevel level in Enum.GetValues(typeof(FurnishingLevel)))
+        {
+            <option value="@level" selected="@(Model.Furnishing == level)">@L.FurnishingText(level)</option>
+        }
+    </select>
+    <label>@L.T("Finishing")</label>
+    <select asp-for="Finishing">
+        <option value="">—</option>
+        @foreach (FinishingLevel level in Enum.GetValues(typeof(FinishingLevel)))
+        {
+            <option value="@level" selected="@(Model.Finishing == level)">@L.FinishingText(level)</option>
+        }
+    </select>
+    <label>@L.T("SaleReason")</label>
+    <input asp-for="SaleReason" maxlength="200" placeholder="اختياري — للبيع فقط" />
 
     <label>@L.T("Amenities")</label>
     <label><input asp-for="HasParking" type="checkbox" /> @L.T("Parking")</label>

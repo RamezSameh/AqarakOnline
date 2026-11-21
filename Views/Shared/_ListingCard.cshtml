@@ -7,7 +7,7 @@
     if (Model.Rooms.HasValue) { facts.Add($"{L.T("Rooms")}: {Model.Rooms}"); }
     if (Model.Bathrooms.HasValue) { facts.Add($"{L.T("Bathrooms")}: {Model.Bathrooms}"); }
     if (Model.Floor.HasValue) { facts.Add($"{L.T("Floor")}: {Model.Floor}"); }
-    if (Model.IsFurnished) { facts.Add(L.T("Furnished")); }
+    if (Model.Furnishing != FurnishingLevel.None) { facts.Add(L.FurnishingText(Model.Furnishing)); }
     if (Model.Finishing.HasValue) { facts.Add(L.FinishingText(Model.Finishing.Value)); }
 if (Model.HasParking) { facts.Add(L.T("Parking")); }
 if (Model.HasElevator) { facts.Add(L.T("Elevator")); }

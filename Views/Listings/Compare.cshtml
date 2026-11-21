@@ -70,10 +70,10 @@ else
                 }
             </tr>
             <tr>
-                <th>@L.T("Furnished")</th>
+                <th>@L.T("Furnishing")</th>
                 @foreach (var listing in Model)
                 {
-                    <td>@(listing.IsFurnished ? "✓" : "-")</td>
+                    <td>@L.FurnishingText(listing.Furnishing)</td>
                 }
             </tr>
             <tr>

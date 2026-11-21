@@ -86,6 +86,14 @@ public enum FinishingLevel
     RedBrick
 }
 
+/// <summary>مستوى الفرش: غير مفروش / جزئي / كامل.</summary>
+public enum FurnishingLevel
+{
+    None,
+    Partial,
+    Full
+}
+
 /// <summary>قائمة جاهزة للمناطق (القاهرة والجيزة). تُستخدم في نماذج إضافة/تعديل الإعلان بدل الكتابة الحرة.</summary>
 /// <summary>قائمة جاهزة للمميزات في نموذج الإضافة — اختيارات من متعدد بدل الكتابة الحرة.</summary>
 public static class ListingFeatures
@@ -254,7 +262,12 @@ public class Listing
     public int? Floor { get; set; }
 
     /// <summary>مفروش أم لا.</summary>
-    public bool IsFurnished { get; set; }
+    /// <summary>مستوى الفرش: غير مفروش / جزئي / كامل.</summary>
+    public FurnishingLevel Furnishing { get; set; }
+
+    /// <summary>سبب البيع — اختياري، للبيع فقط.</summary>
+    [MaxLength(200)]
+    public string? SaleReason { get; set; }
 
     /// <summary>مستوى التشطيب (اختياري).</summary>
     public FinishingLevel? Finishing { get; set; }
@@ -420,7 +433,8 @@ public class SavedSearch
     public int? MinAreaSqm { get; set; }
     public int? MaxAreaSqm { get; set; }
     public int? MinRooms { get; set; }
-    public bool FurnishedOnly { get; set; }
+    /// <summary>مستوى الفرش المطلوب في البحث المحفوظ: Full أو Partial أو Any (أي مستوى مفروش).</summary>
+    public string? Furnishing { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

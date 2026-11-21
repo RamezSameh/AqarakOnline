@@ -176,6 +176,14 @@ public class LanguageService
         ["StatusAvailable"] = ("متاح", "Available"),
         ["StatusUnavailable"] = ("غير متاح", "Unavailable"),
         ["StatusPending"] = ("معلّق", "Pending"),
+        ["Furnishing"] = ("مستوى الفرش", "Furnishing level"),
+        ["FurnishingFull"] = ("مفروش بالكامل", "Fully furnished"),
+        ["FurnishingPartial"] = ("مفروش جزئيًا", "Partly furnished"),
+        ["FurnishingNone"] = ("غير مفروش", "Unfurnished"),
+        ["FurnishingAny"] = ("مفروش (أي مستوى)", "Furnished (any level)"),
+        ["SaleReason"] = ("سبب البيع", "Reason for selling"),
+        ["BackToTop"] = ("العودة للأعلى", "Back to top"),
+        ["TopPosters"] = ("أكثر المستخدمين إضافة إعلانات", "Top posters"),
         ["ImportListings"] = ("استيراد إعلانات", "Import listings"),
         ["ImportTemplate"] = ("تحميل القالب", "Download template"),
         ["New"] = ("جديد", "New"),
@@ -361,6 +369,13 @@ public class LanguageService
         Models.FinishingLevel.Lux => T("FinishingLux"),
         Models.FinishingLevel.SemiFinished => T("FinishingSemiFinished"),
         _ => T("FinishingRedBrick")
+    };
+
+    public string FurnishingText(Models.FurnishingLevel level) => level switch
+    {
+        Models.FurnishingLevel.Full => T("FurnishingFull"),
+        Models.FurnishingLevel.Partial => T("FurnishingPartial"),
+        _ => T("FurnishingNone")
     };
 
     public string ReportReasonText(Models.ReportReason reason) => reason switch

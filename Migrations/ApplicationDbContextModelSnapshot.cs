@@ -298,6 +298,9 @@ namespace AqarakOnline.Migrations
                     b.Property<int?>("Floor")
                         .HasColumnType("int");
 
+                    b.Property<int>("Furnishing")
+                        .HasColumnType("int");
+
                     b.Property<bool>("HasAirConditioning")
                         .HasColumnType("bit");
 
@@ -326,9 +329,6 @@ namespace AqarakOnline.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsFeatured")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsFurnished")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsPriceNegotiable")
@@ -365,6 +365,10 @@ namespace AqarakOnline.Migrations
 
                     b.Property<int?>("Rooms")
                         .HasColumnType("int");
+
+                    b.Property<string>("SaleReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -615,8 +619,8 @@ namespace AqarakOnline.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("FurnishedOnly")
-                        .HasColumnType("bit");
+                    b.Property<string>("Furnishing")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ListingType")
                         .HasColumnType("int");

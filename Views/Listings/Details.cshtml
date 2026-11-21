@@ -109,9 +109,13 @@ else
 {
     <p><strong>@L.T("Floor"):</strong> @Model.Floor</p>
 }
-@if (Model.IsFurnished)
+@if (Model.Furnishing != FurnishingLevel.None)
 {
-    <p><strong>@L.T("Furnished"):</strong> @L.T("Furnished")</p>
+    <p><strong>@L.T("Furnishing"):</strong> @L.FurnishingText(Model.Furnishing)</p>
+}
+@if (Model.ListingType == ListingType.Sale && !string.IsNullOrWhiteSpace(Model.SaleReason))
+{
+    <p><strong>@L.T("SaleReason"):</strong> @Model.SaleReason</p>
 }
 @if (Model.Finishing.HasValue)
 {

@@ -355,3 +355,24 @@ else
         </tbody>
     </table>
 }
+
+<h3>@L.T("TopPosters")</h3>
+@if (!Model.TopPosters.Any())
+{
+    <p>لا توجد إعلانات بعد.</p>
+}
+else
+{
+    var maxPosters = Model.TopPosters.Max(p => p.Count);
+    <div class="chart">
+        @foreach (var point in Model.TopPosters)
+        {
+            var pct = maxPosters > 0 ? point.Count * 100 / maxPosters : 0;
+            <div class="chart-row">
+                <span class="chart-label">@point.Label</span>
+                <div class="chart-track"><div class="chart-bar" style="width:@pct%"></div></div>
+                <span class="chart-count">@point.Count</span>
+            </div>
+        }
+    </div>
+}

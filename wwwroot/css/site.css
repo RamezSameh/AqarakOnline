@@ -252,3 +252,7 @@ input, select, textarea { padding: 10px 12px; border: 1px solid #475569; border-
 /* اختيار المميزات من قائمة جاهزة في نموذج الإعلان. */
 .features-picker { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 8px; }
 .features-picker label { display: inline-flex; align-items: center; gap: 6px; }
+
+.back-to-top { position: fixed; bottom: 16px; left: 16px; z-index: 60; width: 44px; height: 44px; border-radius: 50%; border: 1px solid #334155; background: #1e293b; color: #f8fafc; font-size: 20px; line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+.back-to-top.visible { display: flex; }
+[data-theme="light"] .back-to-top { background: #fff; color: #0f172a; border-color: #cbd5e1; }

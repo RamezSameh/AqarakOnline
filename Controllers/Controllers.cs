@@ -164,7 +164,7 @@ public class ListingsController : Controller
         string? search, ListingType? listingType, PropertyType? propertyType,
         decimal? minPrice, decimal? maxPrice, bool onlyAvailable = false,
         int? minArea = null, int? maxArea = null, string? sort = null, int page = 1,
-        int? minRooms = null, bool furnishedOnly = false, string? area = null,
+        int? minRooms = null, string? furnishing = null, string? area = null,
         string? adNumber = null, string? recency = null, bool directOwnerOnly = false,
         FinishingLevel? finishing = null, int? minFloor = null, int? maxFloor = null,
         bool hasParking = false, bool hasElevator = false, bool hasBalcony = false,
@@ -223,9 +223,20 @@ public class ListingsController : Controller
         {
             query = query.Where(l => l.Rooms >= minRooms.Value);
         }
-        if (furnishedOnly)
+        if (!string.IsNullOrWhiteSpace(furnishing))
         {
-            query = query.Where(l => l.IsFurnished);
+            if (furnishing == "Full")
+            {
+                query = query.Where(l => l.Furnishing == FurnishingLevel.Full);
+            }
+            else if (furnishing == "Partial")
+            {
+                query = query.Where(l => l.Furnishing == FurnishingLevel.Partial);
+            }
+            else if (furnishing == "Any")
+            {
+                query = query.Where(l => l.Furnishing != FurnishingLevel.None);
+            }
         }
         if (minFloor.HasValue)
         {
@@ -361,7 +372,7 @@ public class ListingsController : Controller
         ViewBag.MinArea = minArea;
         ViewBag.MaxArea = maxArea;
         ViewBag.MinRooms = minRooms;
-        ViewBag.FurnishedOnly = furnishedOnly;
+        ViewBag.Furnishing = furnishing;
         ViewBag.Area = area;
         ViewBag.AdNumber = adNumber;
         ViewBag.Recency = recencyKey;
@@ -466,7 +477,7 @@ public class ListingsController : Controller
         return await Index(search: null, listingType: null, propertyType: null,
             minPrice: null, maxPrice: null, onlyAvailable: false,
             minArea: null, maxArea: null, sort: null, page: 1,
-            minRooms: null, furnishedOnly: false, area: area);
+            minRooms: null, furnishing: null, area: area);
     }
 
     /// <summary>مقارنة حتى 3 إعلانات مقبولة جنب بعض (ids مفصولة بفاصلة).</summary>
@@ -625,7 +636,10 @@ public class ListingsController : Controller
         listing.Rooms = model.Rooms;
         listing.Bathrooms = model.Bathrooms;
         listing.Floor = model.PropertyType == PropertyType.Apartment ? model.Floor : null;
-        listing.IsFurnished = model.IsFurnished;
+        listing.Furnishing = model.Furnishing;
+        listing.SaleReason = model.ListingType == ListingType.Sale && !string.IsNullOrWhiteSpace(model.SaleReason)
+            ? model.SaleReason.Trim()
+            : null;
         listing.Finishing = model.Finishing;
         listing.HasParking = model.HasParking;
         listing.HasElevator = model.HasElevator;
@@ -910,7 +924,8 @@ public class ListingsController : Controller
             Rooms = source.Rooms,
             Bathrooms = source.Bathrooms,
             Floor = source.PropertyType == PropertyType.Apartment ? source.Floor : null,
-            IsFurnished = source.IsFurnished,
+            Furnishing = source.Furnishing,
+            SaleReason = source.SaleReason,
             Finishing = source.Finishing,
             HasParking = source.HasParking,
             HasElevator = source.HasElevator,
@@ -1332,6 +1347,8 @@ public class AdminDashboardViewModel
     public List<ChartPoint> TopSearchTerms { get; set; } = new();
     /// <summary>أكثر 5 إعلانات طلب تواصل.</summary>
     public List<ChartPoint> TopContactedListings { get; set; } = new();
+    /// <summary>أكثر 5 مستخدمين إضافة إعلانات.</summary>
+    public List<ChartPoint> TopPosters { get; set; } = new();
 }
 
 /// <summary>نقطة في رسم بياني: تسمية وعدد.</summary>
@@ -1499,6 +1516,15 @@ public class AdminController : Controller
             })
             .OrderByDescending(pt => pt.Count)
             .Take(5).ToList();
+        model.TopPosters = allListings
+            .GroupBy(l => l.OwnerId)
+            .Select(g => new ChartPoint
+            {
+                Label = users.FirstOrDefault(u => u.Id == g.Key)?.FullName ?? "؟",
+                Count = g.Count()
+            })
+            .OrderByDescending(pt => pt.Count)
+            .Take(5).ToList();
         return View(model);
     }
 
@@ -1539,7 +1565,7 @@ public class AdminController : Controller
     [HttpGet]
     public IActionResult ImportTemplate()
     {
-        var header = "Title,ListingType,PropertyType,Area,Price,AreaSqm,Rooms,Bathrooms,Floor,IsFurnished,Finishing,Description,Features,AdvertiserType,OwnerPhone";
+        var header = "Title,ListingType,PropertyType,Area,Price,AreaSqm,Rooms,Bathrooms,Floor,Furnishing,Finishing,Description,Features,AdvertiserType,OwnerPhone";
         var example = "شقة للبيع في مدينة نصر,Sale,Apartment,مدينة نصر، القاهرة,2500000,120,3,2,4,yes,SuperLux,شقة مشطبة سوبر لوكس قريبة من المواصلات,مطبخ مجهز;أرضيات بورسلين;جبس بورد,Owner,01xxxxxxxxx";
         var csv = "\uFEFF" + header + "\r\n" + example + "\r\n";
         return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv", "aqarak-import-template.csv");
@@ -1582,7 +1608,7 @@ public class AdminController : Controller
             ViewBag.Imported = 0;
             return View();
         }
-        var expectedHeader = new[] { "Title", "ListingType", "PropertyType", "Area", "Price", "AreaSqm", "Rooms", "Bathrooms", "Floor", "IsFurnished", "Finishing", "Description", "Features", "AdvertiserType", "OwnerPhone" };
+        var expectedHeader = new[] { "Title", "ListingType", "PropertyType", "Area", "Price", "AreaSqm", "Rooms", "Bathrooms", "Floor", "Furnishing", "Finishing", "Description", "Features", "AdvertiserType", "OwnerPhone" };
         var headerCells = ParseCsvLine(lines[0]);
         var headerOk = headerCells.Count == expectedHeader.Length
             && !expectedHeader.Where((h, i) => !string.Equals(h, headerCells[i].Trim(), StringComparison.OrdinalIgnoreCase)).Any();
@@ -1736,9 +1762,9 @@ public class AdminController : Controller
             }
             floor = floorValue;
         }
-        if (!TryParseYesNo(Cell(9), out var isFurnished))
+        if (!TryParseFurnishing(Cell(9), out var furnishing))
         {
-            return (null, "مفروش لازم يكون yes أو no.");
+            return (null, "مستوى الفرش لازم يكون Full أو Partial أو None (أو كامل/جزئي/غير مفروش).");
         }
         FinishingLevel? finishing = null;
         if (!string.IsNullOrWhiteSpace(Cell(10)))
@@ -1784,7 +1810,7 @@ public class AdminController : Controller
             Rooms = rooms,
             Bathrooms = bathrooms,
             Floor = floor,
-            IsFurnished = isFurnished,
+            Furnishing = furnishing,
             Finishing = finishing,
             Description = description,
             Features = string.Join("\n", features.Split(new[] { ';', '،', ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)),
@@ -1825,21 +1851,31 @@ public class AdminController : Controller
         return value is "شقة" or "بيت" or "عمارة" or "محل" or "فيلا";
     }
 
-    private static bool TryParseYesNo(string value, out bool result)
+    private static bool TryParseFurnishing(string value, out FurnishingLevel result)
     {
-        result = false;
+        result = default;
+        if (Enum.TryParse<FurnishingLevel>(value, true, out result))
+        {
+            return true;
+        }
+        // توافق مع القالب القديم: yes = كامل، no = غير مفروش.
         if (value.Equals("yes", StringComparison.OrdinalIgnoreCase)
             || value.Equals("true", StringComparison.OrdinalIgnoreCase)
-            || value == "1" || value == "نعم")
+            || value == "1" || value == "نعم" || value == "كامل")
         {
-            result = true;
+            result = FurnishingLevel.Full;
             return true;
         }
         if (value.Equals("no", StringComparison.OrdinalIgnoreCase)
             || value.Equals("false", StringComparison.OrdinalIgnoreCase)
-            || value == "0" || value == "لا" || value == string.Empty)
+            || value == "0" || value == "لا" || value == string.Empty || value == "غير مفروش")
         {
-            result = false;
+            result = FurnishingLevel.None;
+            return true;
+        }
+        if (value == "جزئي")
+        {
+            result = FurnishingLevel.Partial;
             return true;
         }
         return false;
@@ -2949,9 +2985,20 @@ public static class SavedSearchAlerts
         {
             return false;
         }
-        if (s.FurnishedOnly && !l.IsFurnished)
+        if (!string.IsNullOrWhiteSpace(s.Furnishing))
         {
-            return false;
+            if (s.Furnishing == "Full" && l.Furnishing != FurnishingLevel.Full)
+            {
+                return false;
+            }
+            if (s.Furnishing == "Partial" && l.Furnishing != FurnishingLevel.Partial)
+            {
+                return false;
+            }
+            if (s.Furnishing == "Any" && l.Furnishing == FurnishingLevel.None)
+            {
+                return false;
+            }
         }
         return true;
     }
@@ -3024,7 +3071,7 @@ public class SavedSearchesController : Controller
     public async Task<IActionResult> Create(string? search, string? area,
         ListingType? listingType, PropertyType? propertyType,
         decimal? minPrice, decimal? maxPrice, int? minArea, int? maxArea,
-        int? minRooms, bool furnishedOnly = false, string? returnUrl = null)
+        int? minRooms, string? furnishing = null, string? returnUrl = null)
     {
         var candidate = new SavedSearch
         {
@@ -3038,7 +3085,7 @@ public class SavedSearchesController : Controller
             MinAreaSqm = minArea,
             MaxAreaSqm = maxArea,
             MinRooms = minRooms,
-            FurnishedOnly = furnishedOnly,
+            Furnishing = string.IsNullOrWhiteSpace(furnishing) ? null : furnishing.Trim(),
             CreatedAt = DateTime.UtcNow
         };
         var mine = await _context.SavedSearches.Where(s => s.UserId == CurrentUserId).ToListAsync();
@@ -3079,7 +3126,7 @@ public class SavedSearchesController : Controller
             minArea = saved.MinAreaSqm,
             maxArea = saved.MaxAreaSqm,
             minRooms = saved.MinRooms,
-            furnishedOnly = saved.FurnishedOnly
+            furnishing = saved.Furnishing
         });
     }
 
@@ -3102,7 +3149,7 @@ public class SavedSearchesController : Controller
         a.Search == b.Search && a.Area == b.Area && a.ListingType == b.ListingType
         && a.PropertyType == b.PropertyType && a.MinPrice == b.MinPrice && a.MaxPrice == b.MaxPrice
         && a.MinAreaSqm == b.MinAreaSqm && a.MaxAreaSqm == b.MaxAreaSqm
-        && a.MinRooms == b.MinRooms && a.FurnishedOnly == b.FurnishedOnly;
+        && a.MinRooms == b.MinRooms && a.Furnishing == b.Furnishing;
 }
 
 /// <summary>ملفات الـ SEO: خريطة الموقع وrobots.txt — بروابط مطلقة من الدومين الحالي.</summary>

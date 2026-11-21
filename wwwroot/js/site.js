@@ -788,7 +788,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (val("Rooms")) { facts.push("الغرف: " + val("Rooms")); }
         if (val("Bathrooms")) { facts.push("الحمامات: " + val("Bathrooms")); }
         if (val("Floor")) { facts.push("الدور: " + val("Floor")); }
-        if (checked("IsFurnished")) { facts.push("مفروش"); }
+        var furnishing = selectedText("Furnishing");
+        if (furnishing && furnishing !== "غير مفروش") { facts.push(furnishing); }
         var finishing = selectedText("Finishing");
         if (finishing && finishing !== "—") { facts.push(finishing); }
         if (checked("HasParking")) { facts.push("جراج"); }
@@ -884,4 +885,15 @@ document.addEventListener("DOMContentLoaded", function () {
     form.addEventListener("change", function () { updateCompleteness(); updateSuggestedPrice(); });
     updateCompleteness();
     updateSuggestedPrice();
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    var backToTop = document.getElementById("backToTop");
+    if (!backToTop) { return; }
+    window.addEventListener("scroll", function () {
+        backToTop.classList.toggle("visible", window.scrollY > 400);
+    }, { passive: true });
+    backToTop.addEventListener("click", function () {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
 });
