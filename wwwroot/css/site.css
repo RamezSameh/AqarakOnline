@@ -497,3 +497,90 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 /* (10) هيرو صفحة المنطقة */
 .area-hero { padding: 36px 20px; margin-bottom: 20px; }
 .area-hero h1 { font-size: 40px; }
+
+/* Batch 24 — design 6 */
+/* (1) أيقونة فيديو على الكارت */
+.video-badge { position: absolute; top: 10px; inset-inline-start: 10px; z-index: 3; background: rgba(0, 0, 0, .65); color: #fff; border-radius: 999px; padding: 4px 8px; font-size: 14px; }
+/* (2) تاريخ النشر أوضح على الكارت */
+.listing-published { color: #94a3b8; font-size: 13px; margin: 2px 0; }
+/* (5) أزرار مشاركة دائرية في التفاصيل */
+.share-row .share-icon { border-radius: 50%; width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; }
+/* (6) أزرار تنقل المعرض أكبر في الموبايل */
+@media (max-width: 640px) { .gallery-nav { width: 56px; height: 56px; font-size: 32px; } }
+/* (7) عداد صور التفاصيل أوضح */
+.gallery-counter { font-size: 15px; padding: 6px 12px; background: rgba(0, 0, 0, .75); font-weight: 700; }
+/* (8) بطاقة السعر في التفاصيل بخلفية مميزة */
+.details-facts .details-price { background: rgba(99, 102, 241, .15); border-radius: 10px; padding: 12px 16px; }
+[data-theme="light"] .details-facts .details-price { background: #eef2ff; }
+/* (9) زر «رجوع للنتائج» ثابت أعلى التفاصيل */
+.details-back-wrap { position: sticky; top: 72px; z-index: 30; margin-bottom: 8px; }
+/* (11) خطوات مرقمة في نموذج الإعلان */
+.form-steps { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.form-step-item { border: 1px solid #334155; border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 700; color: #cbd5e1; background: #1e293b; }
+.form-step { font-size: 20px; margin: 24px 0 8px; border-bottom: 1px solid #334155; padding-bottom: 6px; }
+.step-num { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: #6366f1; color: #fff; align-items: center; justify-content: center; font-size: 15px; margin-inline-end: 8px; }
+[data-theme="light"] .form-step-item { background: #fff; border-color: #e2e8f0; color: #475569; }
+[data-theme="light"] .form-step { border-bottom-color: #e2e8f0; }
+/* (12) السعر والمساحة جنب بعض */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+/* (15) أرقام على مصغرات الصور */
+.photo-preview-num { position: absolute; top: -6px; inset-inline-start: -6px; width: 22px; height: 22px; border-radius: 50%; background: #6366f1; color: #fff; font-size: 12px; font-weight: 800; display: grid; place-items: center; }
+.photo-sort-list li { position: relative; }
+/* (17) نموذج حجز المعاينة كبطاقة */
+.viewing-form { border: 1px solid #334155; border-radius: 16px; padding: 20px; background: #1e293b; }
+[data-theme="light"] .viewing-form { background: #fff; border-color: #e2e8f0; }
+/* (19-24) الصفحات الثابتة كبطاقات وأقسام مرقمة */
+.guide-page h2 { border: 1px solid #334155; border-radius: 12px 12px 0 0; background: #1e293b; padding: 14px 16px 10px; margin: 20px 0 0; }
+.guide-page h2 + ul { border: 1px solid #334155; border-top: none; border-radius: 0 0 12px 12px; background: #16213a; padding: 12px 16px 12px 36px; margin: 0 0 8px; }
+.guide-page ol { counter-reset: guide-step; list-style: none; padding: 0; }
+.guide-page ol li { counter-increment: guide-step; position: relative; border: 1px solid #334155; border-radius: 12px; padding: 14px 16px; padding-inline-start: 52px; margin-bottom: 10px; background: #1e293b; }
+.guide-page ol li::before { content: counter(guide-step); position: absolute; inset-inline-start: 12px; top: 14px; width: 28px; height: 28px; border-radius: 50%; background: #6366f1; color: #fff; display: grid; place-items: center; font-weight: 800; }
+[data-theme="light"] .guide-page h2 { background: #fff; border-color: #e2e8f0; }
+[data-theme="light"] .guide-page h2 + ul { background: #f8fafc; border-color: #e2e8f0; }
+[data-theme="light"] .guide-page ol li { background: #fff; border-color: #e2e8f0; }
+/* (27-28) أزرار الهيرو */
+.hero-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+/* (30) شريط مناطق فوق نتائج البحث */
+.area-chips-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+/* (31) شريط النتائج أوضح */
+.results-bar { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 10px 16px; font-weight: 700; }
+[data-theme="light"] .results-bar { background: #fff; border-color: #e2e8f0; }
+/* (32) زر «بحث» أكبر في الفلاتر */
+.filter-form .btn-primary[type="submit"] { padding: 12px 28px; font-size: 17px; }
+/* (34) زر «إنشاء إعلان» عائم في الموبايل */
+.fab-create { display: none; }
+@media (max-width: 640px) { .fab-create { display: grid; place-items: center; position: fixed; bottom: 76px; inset-inline-end: 16px; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; font-size: 30px; line-height: 1; text-decoration: none; z-index: 60; box-shadow: 0 8px 20px rgba(0, 0, 0, .45); } }
+/* (35) شريط بحث مصغر في الهيدر */
+.header-search { display: none; }
+@media (min-width: 901px) { .header-search { display: block; } .header-search input { width: 150px; padding: 8px 10px; } }
+/* (36-44) بطاقات الأدمن */
+.admin-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 20px; }
+.admin-card { border: 1px solid #334155; border-inline-start: 4px solid #64748b; border-radius: 12px; padding: 16px; background: #1e293b; }
+.admin-card h3 { margin-top: 0; }
+.admin-card p { margin: 4px 0; color: #cbd5e1; }
+.report-card.pending { border-inline-start-color: #f59e0b; }
+.report-card.reviewed { border-inline-start-color: #22c55e; }
+.message-card.unread { border-inline-start-color: #f59e0b; }
+.message-card.read { border-inline-start-color: #22c55e; }
+[data-theme="light"] .admin-card { background: #fff; border-color: #e2e8f0; }
+[data-theme="light"] .admin-card p { color: #475569; }
+/* (40) سجل التعديلات كـ timeline */
+.audit-timeline { position: relative; margin-top: 20px; padding-inline-start: 24px; border-inline-start: 2px solid #334155; }
+.audit-item { position: relative; padding-bottom: 20px; }
+.audit-item::before { content: ""; position: absolute; inset-inline-start: -30px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #6366f1; border: 2px solid #0f172a; }
+.audit-item p { margin: 4px 0; color: #cbd5e1; }
+/* (43) سحب وإفلات في الاستيراد */
+.drop-zone.drag-over { border-color: #6366f1; background: rgba(99, 102, 241, .12); }
+/* (46) رسوم لوحة الأدمن أكبر */
+.chart .chart-track { height: 22px; }
+.chart-row { font-size: 16px; }
+/* (47) تبويبات لوحة الأدمن */
+.dash-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+.dash-tab-btn { border: 1px solid #334155; border-radius: 999px; padding: 8px 18px; background: #1e293b; color: #cbd5e1; font-weight: 700; cursor: pointer; }
+.dash-tab-btn.active { background: #6366f1; border-color: #6366f1; color: #fff; }
+.dash-tab[hidden] { display: none; }
+/* (48) زر تصدير أوضح */
+.export-btn { padding: 12px 24px; font-size: 17px; }
+/* (50) عداد غير المقروء أوضح على الجرس */
+.bell-badge { min-width: 22px; height: 22px; font-size: 13px; font-weight: 800; border: 2px solid #1e293b; }

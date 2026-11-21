@@ -530,7 +530,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     photoInput.files = pickedFiles.files;
                     renderPhotoPreview();
                 });
+                var num = document.createElement("span");
+                num.className = "photo-preview-num";
+                num.textContent = index + 1;
                 item.appendChild(img);
+                item.appendChild(num);
                 item.appendChild(remove);
                 photoPreview.appendChild(item);
             });
@@ -803,7 +807,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var el = document.getElementById(id);
         return !!(el && el.checked);
     }
-    btn.addEventListener("click", function () {
+    function renderPreview(scroll) {
         var facts = [];
         if (val("Rooms")) { facts.push("الغرف: " + val("Rooms")); }
         if (val("Bathrooms")) { facts.push("الحمامات: " + val("Bathrooms")); }
@@ -839,8 +843,11 @@ document.addEventListener("DOMContentLoaded", function () {
         html += '</div></article>';
         box.innerHTML = html;
         box.hidden = false;
-        box.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
+        if (scroll) { box.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+    }
+    btn.addEventListener("click", function () { renderPreview(true); });
+    form.addEventListener("input", function () { renderPreview(false); });
+    form.addEventListener("change", function () { renderPreview(false); });
 });
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -1036,5 +1043,54 @@ document.addEventListener("DOMContentLoaded", function () {
             document.cookie = "aqarak-guest-favs=" + ids.join(",") + "; path=/; max-age=" + (365 * 24 * 60 * 60);
             window.location.reload();
         });
+    });
+});
+
+// Batch 24 — design 6 (29): أرقام متحركة في إحصائيات الرئيسية.
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".count-up").forEach(function (el) {
+        var target = parseInt(el.textContent.trim(), 10);
+        if (isNaN(target) || target <= 0) { return; }
+        var start = null;
+        function tick(ts) {
+            if (!start) { start = ts; }
+            var p = Math.min((ts - start) / 900, 1);
+            el.textContent = Math.round(target * p);
+            if (p < 1) { requestAnimationFrame(tick); }
+        }
+        requestAnimationFrame(tick);
+    });
+});
+
+// Batch 24 — design 6 (47): تبويبات لوحة الأدمن.
+document.addEventListener("DOMContentLoaded", function () {
+    var tabs = document.querySelectorAll(".dash-tab-btn");
+    if (!tabs.length) { return; }
+    var params = new URLSearchParams(window.location.search);
+    var initial = (params.get("userId") || params.get("area")) ? "dash-listings" : "dash-overview";
+    function showTab(id) {
+        document.querySelectorAll(".dash-tab").forEach(function (s) { s.hidden = s.id !== id; });
+        tabs.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-tab") === id); });
+    }
+    tabs.forEach(function (b) {
+        b.addEventListener("click", function () { showTab(b.getAttribute("data-tab")); });
+    });
+    showTab(initial);
+});
+
+// Batch 24 — design 6 (43): سحب وإفلات ملف CSV في الاستيراد.
+document.addEventListener("DOMContentLoaded", function () {
+    var zone = document.getElementById("csvDropZone");
+    if (!zone) { return; }
+    var input = zone.querySelector('input[type="file"]');
+    ["dragover", "dragenter"].forEach(function (ev) {
+        zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.add("drag-over"); });
+    });
+    ["dragleave", "drop"].forEach(function (ev) {
+        zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.remove("drag-over"); });
+    });
+    zone.addEventListener("drop", function (e) {
+        var files = e.dataTransfer && e.dataTransfer.files;
+        if (files && files.length) { input.files = files; }
     });
 });

@@ -7,9 +7,9 @@
     var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
     var isOwner = !string.IsNullOrEmpty(currentUserId) && Model.OwnerId == currentUserId;
     var facts = new List<string>();
-    if (Model.Rooms.HasValue) { facts.Add($"{L.T("Rooms")}: {Model.Rooms}"); }
+    if (Model.Rooms.HasValue) { facts.Add($"🛏️ {L.T("Rooms")}: {Model.Rooms}"); }
     if (Model.Bathrooms.HasValue) { facts.Add($"{L.T("Bathrooms")}: {Model.Bathrooms}"); }
-    if (Model.Floor.HasValue) { facts.Add($"{L.T("Floor")}: {Model.Floor}"); }
+    if (Model.Floor.HasValue) { facts.Add($"🏢 {L.T("Floor")}: {Model.Floor}"); }
     if (Model.Furnishing != FurnishingLevel.None) { facts.Add(L.FurnishingText(Model.Furnishing)); }
     if (Model.Finishing.HasValue) { facts.Add(L.FinishingText(Model.Finishing.Value)); }
 if (Model.HasParking) { facts.Add(L.T("Parking")); }
@@ -39,6 +39,10 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
     {
         <div class="listing-photo placeholder">@L.T("NoPhoto")</div>
     }
+        @if (Model.Attachments.Any(a => a.Kind == AttachmentKind.Video))
+        {
+            <span class="video-badge" title="فيديو">🎬</span>
+        }
         <div class="card-photo-actions">
             @if (User.Identity?.IsAuthenticated == true)
             {
@@ -91,6 +95,7 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
             <p class="listing-facts">@string.Join(" • ", facts)</p>
         }
         <p class="listing-price">@L.PriceText(Model.Price, Model.ListingType)</p>
+        <p class="listing-published">📅 @Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</p>
         <p class="listing-views">@L.T("Views"): @Model.ViewCount • @L.RelativeTime(Model.CreatedAt)</p>
         @if (Model.Approval != ListingApproval.Approved)
         {

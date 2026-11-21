@@ -1,14 +1,24 @@
 @model AqarakOnline.Controllers.AdminDashboardViewModel
 <h1>لوحة التحكم</h1>
-<p><a class="btn btn-ghost" asp-action="ExportBackup">⬇ @L.T("DownloadBackup")</a></p>
+<p><a class="btn btn-primary export-btn" asp-action="ExportBackup">⬇ @L.T("DownloadBackup")</a></p>
 <p>تحليل بيانات المنصة: المستخدمون، وعدد الإعلانات لكل مستخدم، مع فلترة حسب المستخدم أو المنطقة.</p>
 
+<div class="dash-tabs" role="tablist">
+    <button type="button" class="dash-tab-btn active" data-tab="dash-overview">نظرة عامة</button>
+    <button type="button" class="dash-tab-btn" data-tab="dash-settings">الإعدادات</button>
+    <button type="button" class="dash-tab-btn" data-tab="dash-listings">الإعلانات</button>
+    <button type="button" class="dash-tab-btn" data-tab="dash-stats">الإحصائيات</button>
+</div>
+
+<section class="dash-tab" id="dash-overview">
 <div class="cards-grid">
     <div class="listing-card stat-card"><div class="listing-body"><h3>المستخدمون</h3><p class="stat-number">@Model.TotalUsers</p><p>قيد المراجعة: @Model.PendingUsers | مفعّلون: @Model.ActiveUsers | موقوفون/محظورون: @Model.SuspendedOrBlockedUsers</p></div></div>
     <div class="listing-card stat-card"><div class="listing-body"><h3>الإعلانات</h3><p class="stat-number">@Model.TotalListings</p><p>مقبول: @Model.ApprovedListings | قيد المراجعة: @Model.PendingListings | متاح: @Model.AvailableListings</p></div></div>
     <div class="listing-card stat-card"><div class="listing-body"><h3>المشاهدات وطلبات التواصل</h3><p>مشاهدات: <span class="stat-number">@Model.TotalViews</span></p><p>طلبات تواصل: @Model.TotalRequests | غير مردود عليها: @Model.UnrepliedRequests</p></div></div>
 </div>
+</section>
 
+<section class="dash-tab" id="dash-settings" hidden>
 <h2>@L.T("MaintenanceMode")</h2>
 <form asp-action="Maintenance" method="post" class="form">
     <label>
@@ -45,7 +55,9 @@
         <a class="btn btn-ghost" asp-action="Dashboard">مسح الفلترة</a>
     </div>
 </form>
+</section>
 
+<section class="dash-tab" id="dash-listings" hidden>
 <h2>عدد الإعلانات لكل مستخدم</h2>
 @if (!Model.UserRows.Any())
 {
@@ -253,6 +265,9 @@ else
     </table>
 }
 
+</section>
+
+<section class="dash-tab" id="dash-stats" hidden>
 <h2>إحصائيات</h2>
 @{
     var maxMonthly = Model.MonthlyListings.Any() ? Model.MonthlyListings.Max(p => p.Count) : 0;
@@ -506,3 +521,5 @@ else
         }
     </div>
 }
+
+</section>

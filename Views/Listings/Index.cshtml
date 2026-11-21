@@ -179,6 +179,16 @@ else
     }
 </div>
 
+@if (areaCounts != null && areaCounts.Any())
+{
+    <div class="area-chips-row">
+        @foreach (var area in areaCounts.OrderByDescending(a => a.Value).Take(8))
+        {
+            <a class="btn btn-ghost area-chip" href="/Listings/Area/@Uri.EscapeDataString(area.Key)">@area.Key (@area.Value)</a>
+        }
+    </div>
+}
+
 @if (!Model.Any())
 {
     <div class="empty-state">

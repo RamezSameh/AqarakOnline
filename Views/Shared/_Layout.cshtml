@@ -57,6 +57,9 @@
                 }
             </nav>
             <div class="header-actions">
+                <form class="header-search" asp-controller="Listings" asp-action="Index" method="get">
+                    <input type="text" name="search" placeholder="ابحث..." aria-label="بحث" />
+                </form>
                 <button type="button" id="themeToggle" class="btn btn-ghost" title="الوضع الفاتح / الداكن">☀️</button>
                 @await Component.InvokeAsync("NotificationBell")
                 <a class="lang-switch" asp-controller="Language" asp-action="Set" asp-route-lang="@(L.IsArabic ? "en" : "ar")" asp-route-returnUrl="@Context.Request.Path">@(L.IsArabic ? "English" : "العربية")</a>
@@ -116,6 +119,7 @@
         <a id="compareLink" class="btn btn-primary" href="#">@L.T("CompareNow")</a>
         <button type="button" id="compareClear" class="btn btn-ghost">@L.T("ClearCompare")</button>
     </div>
+    <a class="fab-create" asp-controller="Listings" asp-action="Create" title="@L.T("CreateListing")">＋</a>
     @* مكتبة SignalR من CDN (مطابقة لإصدار .NET 8). لو تعذّر تحميلها،
        يعود site.js تلقائيًا للتحديث الدوري كل 30 ثانية. *@
     <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>

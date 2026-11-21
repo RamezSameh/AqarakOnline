@@ -6,39 +6,27 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>الاسم</th>
-                <th>الهاتف</th>
-                <th>الرسالة</th>
-                <th>التاريخ</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var message in Model)
-            {
-                <tr>
-                    <td>@message.Name</td>
-                    <td>@message.Phone</td>
-                    <td>@message.Message</td>
-                    <td>@L.RelativeTime(message.CreatedAt)</td>
-                    <td>
-                        @if (!message.IsRead)
-                        {
-                            <form asp-action="MarkMessageRead" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@message.Id" />
-                                <button type="submit" class="btn btn-ghost">@L.T("MarkAsRead")</button>
-                            </form>
-                        }
-                        else
-                        {
-                            <span>✓</span>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="admin-cards">
+        @foreach (var message in Model)
+        {
+            <article class="admin-card message-card @(message.IsRead ? "read" : "unread")">
+                <h3>@message.Name — @message.Phone</h3>
+                <p>@message.Message</p>
+                <p><small>@L.RelativeTime(message.CreatedAt)</small></p>
+                <div class="actions">
+                    @if (!message.IsRead)
+                    {
+                        <form asp-action="MarkMessageRead" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@message.Id" />
+                            <button type="submit" class="btn btn-ghost">@L.T("MarkAsRead")</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span>✓</span>
+                    }
+                </div>
+            </article>
+        }
+    </div>
 }

@@ -17,91 +17,77 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>الاسم</th>
-                <th>رقم الموبايل</th>
-                <th>البريد الإلكتروني</th>
-                <th>الدور</th>
-                <th>حالة الحساب</th>
-                <th>عدد الإعلانات</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var row in Model)
-            {
-                <tr>
-                    <td>@(row.User.FullName ?? row.User.UserName)</td>
-                    <td>@row.User.PhoneNumber</td>
-                    <td>@(row.User.Email ?? "-")</td>
-                    <td>@row.Role</td>
-                    <td>@row.User.AccountStatus</td>
-                    <td>@row.ListingsCount (مقبول: @row.ApprovedListingsCount، قيد المراجعة: @row.PendingListingsCount)</td>
-                    <td>
-                        @if (row.User.AccountStatus == AccountStatus.Pending)
-                        {
-                            <form asp-action="ApproveUser" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@row.User.Id" />
-                                <button type="submit" class="btn btn-primary">موافقة وتفعيل</button>
-                            </form>
-                        }
-                        @if (row.User.AccountStatus == AccountStatus.Active)
-                        {
-                            <form asp-action="SuspendUser" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@row.User.Id" />
-                                <button type="submit" class="btn btn-ghost">إيقاف مؤقت</button>
-                            </form>
-                            <form asp-action="BlockUser" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@row.User.Id" />
-                                <button type="submit" class="btn btn-ghost">حظر</button>
-                            </form>
-                        }
-                        @if (row.User.AccountStatus == AccountStatus.Suspended)
-                        {
-                            <form asp-action="UnsuspendUser" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@row.User.Id" />
-                                <button type="submit" class="btn btn-primary">إعادة تفعيل</button>
-                            </form>
-                            <form asp-action="BlockUser" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@row.User.Id" />
-                                <button type="submit" class="btn btn-ghost">حظر</button>
-                            </form>
-                        }
-                        @if (row.User.AccountStatus == AccountStatus.Blocked)
-                        {
-                            <form asp-action="UnblockUser" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@row.User.Id" />
-                                <button type="submit" class="btn btn-primary">رفع الحظر</button>
-                            </form>
-                        }
-                        <form asp-action="ResetPassword" method="post" class="inline-form" onsubmit="return confirm('إعادة تعيين كلمة مرور هذا المستخدم لكلمة مؤقتة؟');">
+    <div class="admin-cards">
+        @foreach (var row in Model)
+        {
+            <article class="admin-card user-card">
+                <h3>@(row.User.FullName ?? row.User.UserName)</h3>
+                <p>@row.User.PhoneNumber</p>
+                <p>@(row.User.Email ?? "-")</p>
+                <p>@row.Role • @row.User.AccountStatus</p>
+                <p>@row.ListingsCount (مقبول: @row.ApprovedListingsCount، قيد المراجعة: @row.PendingListingsCount)</p>
+                <div class="actions">
+                    @if (row.User.AccountStatus == AccountStatus.Pending)
+                    {
+                        <form asp-action="ApproveUser" method="post" class="inline-form">
                             <input type="hidden" name="id" value="@row.User.Id" />
-                            <button type="submit" class="btn btn-ghost">@L.T("ResetPassword")</button>
+                            <button type="submit" class="btn btn-primary">موافقة وتفعيل</button>
                         </form>
-                        <a class="btn btn-ghost" asp-action="EditUser" asp-route-id="@row.User.Id">تعديل</a>
-                        @if (!row.IsAdmin)
-                        {
-                            <form asp-action="PromoteToAdmin" method="post" class="inline-form" onsubmit="return confirm('ترقية هذا المستخدم لدور أدمن؟');">
-                                <input type="hidden" name="id" value="@row.User.Id" />
-                                <button type="submit" class="btn btn-ghost">ترقية لأدمن</button>
-                            </form>
-                        }
-                        else
-                        {
-                            <form asp-action="DemoteFromAdmin" method="post" class="inline-form" onsubmit="return confirm('سحب دور الأدمن من هذا المستخدم؟');">
-                                <input type="hidden" name="id" value="@row.User.Id" />
-                                <button type="submit" class="btn btn-ghost">سحب دور الأدمن</button>
-                            </form>
-                        }
-                        <form asp-action="DeleteUser" method="post" class="inline-form" onsubmit="return confirm('حذف هذا الحساب نهائيًا مع إعلاناته وطلبات تواصله؟ لا يمكن التراجع.');">
+                    }
+                    @if (row.User.AccountStatus == AccountStatus.Active)
+                    {
+                        <form asp-action="SuspendUser" method="post" class="inline-form">
                             <input type="hidden" name="id" value="@row.User.Id" />
-                            <button type="submit" class="btn btn-ghost">حذف نهائي</button>
+                            <button type="submit" class="btn btn-ghost">إيقاف مؤقت</button>
                         </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                        <form asp-action="BlockUser" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@row.User.Id" />
+                            <button type="submit" class="btn btn-ghost">حظر</button>
+                        </form>
+                    }
+                    @if (row.User.AccountStatus == AccountStatus.Suspended)
+                    {
+                        <form asp-action="UnsuspendUser" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@row.User.Id" />
+                            <button type="submit" class="btn btn-primary">إعادة تفعيل</button>
+                        </form>
+                        <form asp-action="BlockUser" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@row.User.Id" />
+                            <button type="submit" class="btn btn-ghost">حظر</button>
+                        </form>
+                    }
+                    @if (row.User.AccountStatus == AccountStatus.Blocked)
+                    {
+                        <form asp-action="UnblockUser" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@row.User.Id" />
+                            <button type="submit" class="btn btn-primary">رفع الحظر</button>
+                        </form>
+                    }
+                    <form asp-action="ResetPassword" method="post" class="inline-form" onsubmit="return confirm('إعادة تعيين كلمة مرور هذا المستخدم لكلمة مؤقتة؟');">
+                        <input type="hidden" name="id" value="@row.User.Id" />
+                        <button type="submit" class="btn btn-ghost">@L.T("ResetPassword")</button>
+                    </form>
+                    <a class="btn btn-ghost" asp-action="EditUser" asp-route-id="@row.User.Id">تعديل</a>
+                    @if (!row.IsAdmin)
+                    {
+                        <form asp-action="PromoteToAdmin" method="post" class="inline-form" onsubmit="return confirm('ترقية هذا المستخدم لدور أدمن؟');">
+                            <input type="hidden" name="id" value="@row.User.Id" />
+                            <button type="submit" class="btn btn-ghost">ترقية لأدمن</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="DemoteFromAdmin" method="post" class="inline-form" onsubmit="return confirm('سحب دور الأدمن من هذا المستخدم؟');">
+                            <input type="hidden" name="id" value="@row.User.Id" />
+                            <button type="submit" class="btn btn-ghost">سحب دور الأدمن</button>
+                        </form>
+                    }
+                    <form asp-action="DeleteUser" method="post" class="inline-form" onsubmit="return confirm('حذف هذا الحساب نهائيًا مع إعلاناته وطلبات تواصله؟ لا يمكن التراجع.');">
+                        <input type="hidden" name="id" value="@row.User.Id" />
+                        <button type="submit" class="btn btn-ghost">حذف نهائي</button>
+                    </form>
+                </div>
+            </article>
+        }
+    </div>
 }

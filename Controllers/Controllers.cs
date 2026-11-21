@@ -810,7 +810,7 @@ public class ListingsController : Controller
     [HttpGet]
     public async Task<IActionResult> Delete(int id)
     {
-        var listing = await _context.Listings.FindAsync(id);
+        var listing = await _context.Listings.Include(l => l.Attachments).FirstOrDefaultAsync(l => l.Id == id);
         if (listing == null)
         {
             return NotFound();

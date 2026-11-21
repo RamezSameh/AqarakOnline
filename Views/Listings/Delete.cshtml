@@ -1,9 +1,20 @@
 @model Listing
+<div class="auth-card">
 <h1>@L.T("Delete")</h1>
 <p>@L.T("DeleteConfirm")</p>
+@{
+    var cover = Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id).FirstOrDefault();
+}
+@if (cover != null)
+{
+    <img class="listing-photo" src="/@cover.FilePath" alt="@Model.Title" />
+}
 <p><strong>@Model.Title</strong> - @L.T("AdNumber"): @Model.AdNumber</p>
 <form asp-action="Delete" method="post">
     <input type="hidden" asp-for="Id" />
-    <button type="submit" class="btn btn-danger">@L.T("Delete")</button>
-    <a class="btn btn-ghost" asp-action="Details" asp-route-id="@Model.Id">@L.T("Cancel")</a>
+    <div class="actions">
+        <button type="submit" class="btn btn-danger">@L.T("Delete")</button>
+        <a class="btn btn-ghost" asp-action="Details" asp-route-id="@Model.Id">@L.T("Cancel")</a>
+    </div>
 </form>
+</div>

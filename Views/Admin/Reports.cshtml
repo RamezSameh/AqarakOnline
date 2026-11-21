@@ -6,52 +6,39 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>@L.T("Title")</th>
-                <th>@L.T("ReportReason")</th>
-                <th>@L.T("ReportDetails")</th>
-                <th>@L.T("FullName")</th>
-                <th>@L.T("PublishedAt")</th>
-                <th>@L.T("ApprovalStatus")</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var report in Model)
-            {
-                <tr>
-                    <td>
-                        @if (report.Listing != null)
-                        {
-                            <a asp-controller="Listings" asp-action="Details" asp-route-id="@report.ListingId">@report.Listing.Title</a>
-                        }
-                        else
-                        {
-                            <span>-</span>
-                        }
-                    </td>
-                    <td>@L.ReportReasonText(report.Reason)</td>
-                    <td>@(report.Details ?? "-")</td>
-                    <td>@(report.Reporter?.FullName ?? report.Reporter?.UserName ?? "-")</td>
-                    <td>@L.RelativeTime(report.CreatedAt)</td>
-                    <td>@(report.Status == ReportStatus.Reviewed ? L.T("ReportReviewed") : L.T("ReportPending"))</td>
-                    <td>
-                        @if (report.Status == ReportStatus.Pending)
-                        {
-                            <form asp-action="MarkReviewed" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@report.Id" />
-                                <button type="submit" class="btn btn-primary">@L.T("MarkReviewed")</button>
-                            </form>
-                        }
-                        <form asp-action="DeleteReport" method="post" class="inline-form">
+    <div class="admin-cards">
+        @foreach (var report in Model)
+        {
+            <article class="admin-card report-card @(report.Status == ReportStatus.Reviewed ? "reviewed" : "pending")">
+                <h3>
+                    @if (report.Listing != null)
+                    {
+                        <a asp-controller="Listings" asp-action="Details" asp-route-id="@report.ListingId">@report.Listing.Title</a>
+                    }
+                    else
+                    {
+                        <span>-</span>
+                    }
+                </h3>
+                <p>@L.ReportReasonText(report.Reason)</p>
+                <p>@(report.Details ?? "-")</p>
+                <p>@(report.Reporter?.FullName ?? report.Reporter?.UserName ?? "-")</p>
+                <p>@L.RelativeTime(report.CreatedAt)</p>
+                <p><strong>@(report.Status == ReportStatus.Reviewed ? L.T("ReportReviewed") : L.T("ReportPending"))</strong></p>
+                <div class="actions">
+                    @if (report.Status == ReportStatus.Pending)
+                    {
+                        <form asp-action="MarkReviewed" method="post" class="inline-form">
                             <input type="hidden" name="id" value="@report.Id" />
-                            <button type="submit" class="btn btn-ghost">@L.T("Delete")</button>
+                            <button type="submit" class="btn btn-primary">@L.T("MarkReviewed")</button>
                         </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                    }
+                    <form asp-action="DeleteReport" method="post" class="inline-form">
+                        <input type="hidden" name="id" value="@report.Id" />
+                        <button type="submit" class="btn btn-ghost">@L.T("Delete")</button>
+                    </form>
+                </div>
+            </article>
+        }
+    </div>
 }

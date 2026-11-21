@@ -33,6 +33,7 @@
     }
     <script type="application/ld+json">@Html.Raw(jsonLd)</script>
 }
+<div class="details-back-wrap"><a class="btn btn-ghost" asp-action="Index">← @L.T("BackToList")</a></div>
 <h1>@Model.Title</h1>
 <div class="listing-meta">
     <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
@@ -311,7 +312,6 @@ else
         <a class="btn btn-ghost" asp-action="Edit" asp-route-id="@Model.Id">@L.T("Edit")</a>
         <a class="btn btn-ghost" asp-action="Delete" asp-route-id="@Model.Id">@L.T("Delete")</a>
     }
-    <a class="btn btn-ghost" asp-action="Index">@L.T("BackToList")</a>
 </div>
 
 @if (Model.Approval == ListingApproval.Rejected && !string.IsNullOrWhiteSpace(Model.RejectionReason) && (isOwnListing || User.IsInRole("Admin")))
@@ -321,11 +321,11 @@ else
 
 <div class="share-row">
     <span>@L.T("Share"):</span>
-    <a class="btn btn-ghost" href="https://wa.me/?text=@Uri.EscapeDataString(shareText)" target="_blank" rel="noopener">واتساب</a>
-    <a class="btn btn-ghost" href="https://www.facebook.com/sharer/sharer.php?u=@Uri.EscapeDataString(pageUrl)" target="_blank" rel="noopener">فيسبوك</a>
-    <a class="btn btn-ghost" href="https://t.me/share/url?url=@Uri.EscapeDataString(pageUrl)&text=@Uri.EscapeDataString(shareText)" target="_blank" rel="noopener">تيليجرام</a>
-    <button type="button" class="btn btn-ghost share-copy" data-url="@pageUrl">@L.T("CopyLink")</button>
-    <button type="button" class="btn btn-ghost compare-toggle" data-id="@Model.Id" data-add="@L.T("AddToCompare")" data-added="@L.T("InCompare")" data-max="@L.T("CompareMax")">@L.T("AddToCompare")</button>
+    <a class="btn btn-ghost share-icon" href="https://wa.me/?text=@Uri.EscapeDataString(shareText)" target="_blank" rel="noopener" title="واتساب">💬</a>
+    <a class="btn btn-ghost share-icon" href="https://www.facebook.com/sharer/sharer.php?u=@Uri.EscapeDataString(pageUrl)" target="_blank" rel="noopener" title="فيسبوك">f</a>
+    <a class="btn btn-ghost share-icon" href="https://t.me/share/url?url=@Uri.EscapeDataString(pageUrl)&text=@Uri.EscapeDataString(shareText)" target="_blank" rel="noopener" title="تيليجرام">✈️</a>
+    <button type="button" class="btn btn-ghost share-icon share-copy" data-url="@pageUrl" title="@L.T("CopyLink")">🔗</button>
+    <button type="button" class="btn btn-ghost share-icon compare-toggle" data-id="@Model.Id" data-add="⚖️" data-added="✓" data-max="@L.T("CompareMax")" title="@L.T("AddToCompare")">⚖️</button>
 </div>
 
 
@@ -351,7 +351,7 @@ else
 {
     <section>
         <h2>@L.T("SimilarListings")</h2>
-        <div class="cards-grid">
+        <div class="cards-slider">
             @foreach (var item in similar)
             {
                 @await Html.PartialAsync("_ListingCard", item)

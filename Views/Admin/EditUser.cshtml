@@ -1,5 +1,6 @@
 @model AqarakOnline.Controllers.AdminUserFormViewModel
 <h1>تعديل حساب مستخدم</h1>
+<div class="auth-card">
 <form asp-action="EditUser" method="post" class="form">
     <input type="hidden" asp-for="Id" />
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
@@ -38,3 +39,4 @@
         <a class="btn btn-ghost" asp-action="Users">إلغاء</a>
     </div>
 </form>
+</div>

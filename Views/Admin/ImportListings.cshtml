@@ -18,7 +18,10 @@
 <p>الحد الأقصى 200 إعلان في الملف الواحد. الصف الغلط بيتخطى وبيظهر سببه تحت.</p>
 <form asp-action="ImportListings" method="post" enctype="multipart/form-data" class="form">
     <label>ملف CSV</label>
-    <input type="file" name="file" accept=".csv" required />
+    <div id="csvDropZone" class="drop-zone">
+        <span>اسحب ملف CSV هنا أو اختره</span>
+        <input type="file" name="file" accept=".csv" required />
+    </div>
     <div class="actions">
         <button type="submit" class="btn btn-primary">@L.T("ImportListings")</button>
     </div>

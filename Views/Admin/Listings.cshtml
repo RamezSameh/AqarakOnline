@@ -8,88 +8,66 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>@L.T("AdNumber")</th>
-                <th>@L.T("Title")</th>
-                <th>@L.T("ListingType")</th>
-                <th>@L.T("Price")</th>
-                <th>@L.T("Owner")</th>
-                <th>@L.T("ApprovalStatus")</th>
-                <th>@L.T("Featured")</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var listing in Model)
-            {
-                <tr>
-                    <td>@listing.AdNumber</td>
-                    <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></td>
-                    <td>@L.ListingTypeText(listing.ListingType)</td>
-                    <td>@L.PriceText(listing.Price, listing.ListingType)</td>
-                    <td>
-                        @(listing.Owner?.FullName ?? listing.Owner?.UserName ?? L.T("SiteAdmin"))<br />
-                        @(listing.Owner?.PhoneNumber ?? "-")<br />
-                        @(listing.Owner?.Address ?? "-")
-                    </td>
-                    <td>@L.ApprovalText(listing.Approval)</td>
-                    <td>
-                        @(listing.IsEffectivelyFeatured ? "⭐" : "-")
-                        @if (listing.FeaturedUntil.HasValue && listing.IsFeatured)
+    <div class="admin-cards">
+        @foreach (var listing in Model)
+        {
+            <article class="admin-card admin-listing-card">
+                <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></h3>
+                <p><strong>@listing.AdNumber</strong> • @L.ListingTypeText(listing.ListingType) • @L.PriceText(listing.Price, listing.ListingType)</p>
+                <p>@(listing.Owner?.FullName ?? listing.Owner?.UserName ?? L.T("SiteAdmin")) — @(listing.Owner?.PhoneNumber ?? "-") — @(listing.Owner?.Address ?? "-")</p>
+                <p>@L.ApprovalText(listing.Approval) • @(listing.IsEffectivelyFeatured ? "⭐" : "-")
+                    @if (listing.FeaturedUntil.HasValue && listing.IsFeatured)
+                    {
+                        <small>@L.T("FeaturedUntil") @listing.FeaturedUntil.Value.ToLocalTime().ToString("dd/MM/yyyy")</small>
+                    }
+                </p>
+                <div class="actions">
+                    <form asp-action="SetFeatured" method="post" class="inline-form">
+                        <input type="hidden" name="id" value="@listing.Id" />
+                        @if (listing.IsEffectivelyFeatured)
                         {
-                            <br /><small>@L.T("FeaturedUntil") @listing.FeaturedUntil.Value.ToLocalTime().ToString("dd/MM/yyyy")</small>
-                        }
-                    </td>
-                    <td>
-                        <form asp-action="SetFeatured" method="post" class="inline-form">
-                            <input type="hidden" name="id" value="@listing.Id" />
-                            @if (listing.IsEffectivelyFeatured)
-                            {
-                                <button type="submit" class="btn btn-ghost">@L.T("UnmarkFeatured")</button>
-                            }
-                            else
-                            {
-                                <select name="days">
-                                    <option value="7">7 أيام</option>
-                                    <option value="14">14 يومًا</option>
-                                    <option value="30">30 يومًا</option>
-                                </select>
-                                <button type="submit" class="btn btn-primary">@L.T("MarkFeatured")</button>
-                            }
-                        </form>
-                        @if (listing.Approval == ListingApproval.Pending)
-                        {
-                            <form asp-action="Approve" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@listing.Id" />
-                                <button type="submit" class="btn btn-primary">@L.T("Approve")</button>
-                            </form>
-                            <form asp-action="Reject" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@listing.Id" />
-                                <input type="text" name="reason" placeholder="@L.T("RejectionReason")" maxlength="500" />
-                                <button type="submit" class="btn btn-ghost">@L.T("Reject")</button>
-                            </form>
-                        }
-                        @if (listing.IsAvailable)
-                        {
-                            <form asp-controller="Listings" asp-action="MarkUnavailable" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@listing.Id" />
-                                <button type="submit" class="btn btn-ghost">@L.T("MarkUnavailable")</button>
-                            </form>
+                            <button type="submit" class="btn btn-ghost">@L.T("UnmarkFeatured")</button>
                         }
                         else
                         {
-                            <form asp-controller="Listings" asp-action="MarkAvailable" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@listing.Id" />
-                                <button type="submit" class="btn btn-ghost">@L.T("MarkAvailable")</button>
-                            </form>
+                            <select name="days">
+                                <option value="7">7 أيام</option>
+                                <option value="14">14 يومًا</option>
+                                <option value="30">30 يومًا</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">@L.T("MarkFeatured")</button>
                         }
-                        <a class="btn btn-ghost" asp-controller="Listings" asp-action="Delete" asp-route-id="@listing.Id">@L.T("Delete")</a>
-                        <a class="btn btn-ghost" asp-action="AuditLog" asp-route-listingId="@listing.Id">@L.T("AuditLog")</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                    </form>
+                    @if (listing.Approval == ListingApproval.Pending)
+                    {
+                        <form asp-action="Approve" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@listing.Id" />
+                            <button type="submit" class="btn btn-primary">@L.T("Approve")</button>
+                        </form>
+                        <form asp-action="Reject" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@listing.Id" />
+                            <input type="text" name="reason" placeholder="@L.T("RejectionReason")" maxlength="500" />
+                            <button type="submit" class="btn btn-ghost">@L.T("Reject")</button>
+                        </form>
+                    }
+                    @if (listing.IsAvailable)
+                    {
+                        <form asp-controller="Listings" asp-action="MarkUnavailable" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@listing.Id" />
+                            <button type="submit" class="btn btn-ghost">@L.T("MarkUnavailable")</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-controller="Listings" asp-action="MarkAvailable" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@listing.Id" />
+                            <button type="submit" class="btn btn-ghost">@L.T("MarkAvailable")</button>
+                        </form>
+                    }
+                    <a class="btn btn-ghost" asp-controller="Listings" asp-action="Delete" asp-route-id="@listing.Id">@L.T("Delete")</a>
+                    <a class="btn btn-ghost" asp-action="AuditLog" asp-route-listingId="@listing.Id">@L.T("AuditLog")</a>
+                </div>
+            </article>
+        }
+    </div>
 }

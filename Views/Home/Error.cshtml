@@ -1,3 +1,7 @@
-<h1>@L.T("Brand")</h1>
-<p>حدث خطأ أثناء معالجة طلبك. حاول مرة أخرى.</p>
-<a asp-controller="Home" asp-action="Index">@L.T("Home")</a>
+<div class="empty-state">
+    <div class="empty-state-icon">⚠️</div>
+    <h1>@L.T("Brand")</h1>
+    <p class="empty-state-title">حدث خطأ أثناء معالجة طلبك</p>
+    <p class="empty-state-hint">حاول مرة أخرى.</p>
+    <a class="btn btn-primary" asp-controller="Home" asp-action="Index">@L.T("Home")</a>
+</div>

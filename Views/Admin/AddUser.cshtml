@@ -1,6 +1,7 @@
 @model AqarakOnline.Controllers.AdminUserFormViewModel
 <h1>إضافة حساب مستخدم</h1>
 <p>الحساب الذي يضيفه الأدمن مفعَّل فورًا، لأنه موثَّق من الأدمن نفسه.</p>
+<div class="auth-card">
 <form asp-action="AddUser" method="post" class="form">
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
     <label>الاسم (عربي أو إنجليزي)</label>
@@ -31,3 +32,4 @@
         <a class="btn btn-ghost" asp-action="Users">إلغاء</a>
     </div>
 </form>
+</div>

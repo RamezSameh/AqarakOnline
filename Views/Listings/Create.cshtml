@@ -27,6 +27,14 @@
         <div class="chart-track"><div class="chart-bar" id="completenessBar" style="width:0%"></div></div>
     </div>
 
+    <div class="form-steps">
+        <span class="form-step-item">1 — بيانات الإعلان</span>
+        <span class="form-step-item">2 — السعر والمواصفات</span>
+        <span class="form-step-item">3 — الصور والفيديو</span>
+    </div>
+
+    <h2 class="form-step"><span class="step-num">1</span> بيانات الإعلان</h2>
+
     <label>@L.T("Title")</label>
     <input asp-for="Title" />
     <span asp-validation-for="Title" class="field-error"></span>
@@ -75,14 +83,21 @@
     <label>@L.T("CustomFeature")</label>
     <input type="text" name="customFeatures" value="@string.Join("، ", Model.FeaturesList.Except(AqarakOnline.Models.ListingFeatures.All))" placeholder="اكتب ميزة مش موجودة في الاختيارات (افصل بين الميزات بفاصلة)" />
 
+    <h2 class="form-step"><span class="step-num">2</span> السعر والمواصفات</h2>
+
+    <div class="form-row">
+        <div>
     <label>@L.T("Price")</label>
     <input asp-for="Price" type="number" min="0" step="any" />
     <span asp-validation-for="Price" class="field-error"></span>
     <small id="suggestedPriceHint"></small>
-
+        </div>
+        <div>
     <label>@L.T("AreaSqm")</label>
     <input asp-for="AreaSqm" type="number" min="1" step="1" />
     <span asp-validation-for="AreaSqm" class="field-error"></span>
+        </div>
+    </div>
 
     <label>@L.T("Rooms")</label>
     <input asp-for="Rooms" type="number" min="0" max="50" step="1" />
@@ -144,8 +159,14 @@
         <label><input asp-for="IsAvailable" type="checkbox" /> @L.T("Available")</label>
     }
 
+    <h2 class="form-step"><span class="step-num">3</span> الصور والفيديو</h2>
+
     <label>صور توضيحية (حتى 5 صور)</label>
-    <input asp-for="PhotoFiles" type="file" accept="image/*" multiple />
+    <div id="photoDropZone" class="drop-zone">
+        <span>@L.T("DropPhotosHere")</span>
+        <input asp-for="PhotoFiles" type="file" accept="image/*" multiple />
+        <div id="photoPreview" class="photo-preview"></div>
+    </div>
     <small>الصور بتتصغّر وتتضغط تلقائيًا عند الرفع، وحجم الصورة الواحدة 10 ميجا بحد أقصى.</small>
     <label>فيديو (حتى 25 ميجا)</label>
     <input asp-for="VideoFile" type="file" accept="video/*" />
@@ -166,6 +187,9 @@
 
     <div class="actions">
         <button type="submit" class="btn btn-primary">@L.T("Save")</button>
+        <button type="button" id="previewListingBtn" class="btn btn-ghost">👁 @L.T("PreviewListing")</button>
         <a class="btn btn-ghost" asp-action="Index">@L.T("Cancel")</a>
     </div>
 </form>
+
+<div id="listingPreview" class="listing-preview" hidden></div>

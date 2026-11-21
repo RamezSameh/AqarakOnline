@@ -6,11 +6,15 @@
         <input type="text" name="search" placeholder="@L.T("SearchPlaceholder")" />
         <button type="submit" class="btn btn-primary">@L.T("Search")</button>
     </form>
+    <div class="hero-actions">
+        <a class="btn btn-primary" asp-controller="Listings" asp-action="Index">تصفح الإعلانات</a>
+        <a class="btn btn-ghost" asp-controller="Listings" asp-action="Create">@L.T("CreateListing")</a>
+    </div>
 </section>
 
 <section class="home-stats">
-    <div class="stat"><strong>@ViewBag.AvailableListingsCount</strong><span>@L.T("StatsAvailableListings")</span></div>
-    <div class="stat"><strong>@ViewBag.AreasCount</strong><span>@L.T("StatsAreas")</span></div>
+    <div class="stat"><strong class="count-up">@ViewBag.AvailableListingsCount</strong><span>@L.T("StatsAvailableListings")</span></div>
+    <div class="stat"><strong class="count-up">@ViewBag.AreasCount</strong><span>@L.T("StatsAreas")</span></div>
 </section>
 
 <section class="about">
@@ -19,19 +23,19 @@
     <h2>@L.T("WhyChooseUs")</h2>
     <div class="why-grid">
         <div class="why-card">
-            <h3>@L.T("WhyFastTitle")</h3>
+            <h3>⚡ @L.T("WhyFastTitle")</h3>
             <p>@L.T("WhyFastText")</p>
         </div>
         <div class="why-card">
-            <h3>@L.T("WhyFollowTitle")</h3>
+            <h3>👁️ @L.T("WhyFollowTitle")</h3>
             <p>@L.T("WhyFollowText")</p>
         </div>
         <div class="why-card">
-            <h3>@L.T("WhyCommissionTitle")</h3>
+            <h3>💰 @L.T("WhyCommissionTitle")</h3>
             <p>@L.T("WhyCommissionText")</p>
         </div>
         <div class="why-card">
-            <h3>@L.T("WhyNoExploitationTitle")</h3>
+            <h3>🤝 @L.T("WhyNoExploitationTitle")</h3>
             <p>@L.T("WhyNoExploitationText")</p>
         </div>
     </div>
