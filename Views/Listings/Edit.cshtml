@@ -168,15 +168,25 @@
         <h3>@L.T("CurrentPhotos")</h3>
         <input type="hidden" name="photoOrder" id="photoOrderInput" value="@string.Join(",", Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id).Select(a => a.Id))" />
         <ul id="existingPhotos" class="photo-sort-list">
+            @{ var isFirstPhoto = true; }
             @foreach (var attachment in Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id))
             {
                 <li draggable="true" data-id="@attachment.Id">
                     <img src="/@attachment.FilePath" alt="@attachment.OriginalFileName" loading="lazy" />
+                    @if (isFirstPhoto)
+                    {
+                        <span class="badge">@L.T("Cover")</span>
+                    }
+                    else
+                    {
+                        <button type="submit" formaction="@Url.Action("SetCoverPhoto", "Listings", new { id = Model.Id, attachmentId = attachment.Id })" formmethod="post" class="btn btn-ghost">@L.T("SetAsCover")</button>
+                    }
                     <label>
                         <input type="checkbox" name="DeleteAttachmentIds" value="@attachment.Id" />
                         حذف
                     </label>
                 </li>
+                isFirstPhoto = false;
             }
         </ul>
     }

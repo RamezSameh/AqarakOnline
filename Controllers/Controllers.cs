@@ -801,6 +801,38 @@ public class ListingsController : Controller
         return RedirectToAction(nameof(MyListings));
     }
 
+    /// <summary>تعيين صورة الغلاف للإعلان — لصاحب الإعلان أو الأدمن.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetCoverPhoto(int id, int attachmentId)
+    {
+        var listing = await _context.Listings.Include(l => l.Attachments)
+            .FirstOrDefaultAsync(l => l.Id == id);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        if (listing.OwnerId != CurrentUserId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+        var attachment = listing.Attachments
+            .FirstOrDefault(a => a.Id == attachmentId && a.Kind == AttachmentKind.Photo);
+        if (attachment == null)
+        {
+            return NotFound();
+        }
+        // الغلاف هو الصورة الأولى بالترتيب؛ -1 يضعها قبل كل الصور،
+        // وأي غلاف سابق يعود لترتيبه الطبيعي.
+        foreach (var photo in listing.Attachments.Where(a => a.Kind == AttachmentKind.Photo))
+        {
+            photo.Order = photo.Id == attachmentId ? -1 : (photo.Order < 0 ? 0 : photo.Order);
+        }
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تم تعيين صورة الغلاف.";
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
     public async Task<IActionResult> MyListings(string? status = null, string? search = null, string? sort = null)
     {
         var query = _context.Listings.Include(l => l.Attachments)
@@ -1303,6 +1335,7 @@ public class AdminUserRow
 {
     public ApplicationUser User { get; set; } = null!;
     public string Role { get; set; } = "User";
+    public bool IsAdmin { get; set; }
     public int ListingsCount { get; set; }
     public int ApprovedListingsCount { get; set; }
     public int PendingListingsCount { get; set; }
@@ -1345,6 +1378,10 @@ public class AdminDashboardViewModel
     public List<Listing> TopViewed { get; set; } = new();
     /// <summary>أكثر كلمات البحث في آخر 30 يومًا (للرسم البياني).</summary>
     public List<ChartPoint> TopSearchTerms { get; set; } = new();
+    /// <summary>وضع الصيانة مفعّل؟</summary>
+    public bool MaintenanceEnabled { get; set; }
+    /// <summary>رسالة وضع الصيانة المعروضة للزوار.</summary>
+    public string? MaintenanceMessage { get; set; }
     /// <summary>أكثر 5 إعلانات طلب تواصل.</summary>
     public List<ChartPoint> TopContactedListings { get; set; } = new();
     /// <summary>أكثر 5 مستخدمين إضافة إعلانات.</summary>
@@ -1415,6 +1452,7 @@ public class AdminController : Controller
             {
                 User = user,
                 Role = roles.FirstOrDefault() ?? "User",
+                IsAdmin = roles.Contains("Admin"),
                 ListingsCount = await userListings.CountAsync(),
                 ApprovedListingsCount = await userListings.CountAsync(l => l.Approval == ListingApproval.Approved),
                 PendingListingsCount = await userListings.CountAsync(l => l.Approval == ListingApproval.Pending)
@@ -1434,6 +1472,8 @@ public class AdminController : Controller
             TotalViews = await _context.Listings.SumAsync(l => (long)l.ViewCount),
             TotalRequests = await _context.ContactRequests.CountAsync(),
             UnrepliedRequests = await _context.ContactRequests.CountAsync(r => !r.IsReplied),
+            MaintenanceEnabled = await SiteSettingsHelper.IsMaintenanceEnabledAsync(_context),
+            MaintenanceMessage = await SiteSettingsHelper.GetMaintenanceMessageAsync(_context),
             FilterUserId = userId,
             FilterArea = area,
             Areas = await _context.Listings.Select(l => l.Area).Distinct().OrderBy(a => a).ToListAsync(),
@@ -1957,6 +1997,92 @@ public class AdminController : Controller
     }
 
     [HttpGet]
+    /// <summary>ترقية مستخدم لدور أدمن — مع تنبيه له.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PromoteToAdmin(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        if (await _userManager.IsInRoleAsync(user, "Admin"))
+        {
+            TempData["Info"] = "هذا المستخدم أدمن بالفعل.";
+            return RedirectToAction(nameof(Users));
+        }
+        await _userManager.AddToRoleAsync(user, "Admin");
+        _context.Notifications.Add(new Notification
+        {
+            Title = "تمت ترقيتك لدور أدمن",
+            Message = "إدارة الموقع منحتك دور أدمن.",
+            TargetUserId = user.Id,
+            Url = "/Admin/Dashboard",
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+        await NotifyBellAsync();
+        TempData["Info"] = $"تمت ترقية {user.FullName} لدور أدمن.";
+        return RedirectToAction(nameof(Users));
+    }
+
+    /// <summary>سحب دور الأدمن من مستخدم — لا لنفسك ولا لآخر أدمن.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DemoteFromAdmin(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        if (user.Id == CurrentUserId)
+        {
+            TempData["Error"] = "لا يمكنك سحب دور الأدمن من نفسك.";
+            return RedirectToAction(nameof(Users));
+        }
+        if (!await _userManager.IsInRoleAsync(user, "Admin"))
+        {
+            TempData["Info"] = "هذا المستخدم ليس أدمن.";
+            return RedirectToAction(nameof(Users));
+        }
+        var admins = await _userManager.GetUsersInRoleAsync("Admin");
+        if (admins.Count <= 1)
+        {
+            TempData["Error"] = "لا يمكن سحب دور الأدمن من آخر أدمن في الموقع.";
+            return RedirectToAction(nameof(Users));
+        }
+        await _userManager.RemoveFromRoleAsync(user, "Admin");
+        _context.Notifications.Add(new Notification
+        {
+            Title = "تم سحب دور الأدمن من حسابك",
+            Message = "إدارة الموقع سحبت دور الأدمن من حسابك.",
+            TargetUserId = user.Id,
+            Url = "/Account/MyAccount",
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+        await NotifyBellAsync();
+        TempData["Info"] = $"تم سحب دور الأدمن من {user.FullName}.";
+        return RedirectToAction(nameof(Users));
+    }
+
+    /// <summary>تشغيل/إيقاف وضع الصيانة + رسالته — من لوحة التحكم.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Maintenance(bool enabled, string? message = null)
+    {
+        await SiteSettingsHelper.SetAsync(_context, SiteSettingsHelper.MaintenanceEnabledKey,
+            enabled ? "true" : "false");
+        await SiteSettingsHelper.SetAsync(_context, SiteSettingsHelper.MaintenanceMessageKey,
+            string.IsNullOrWhiteSpace(message) ? SiteSettingsHelper.DefaultMaintenanceMessage : message.Trim());
+        TempData["Info"] = enabled ? "تم تفعيل وضع الصيانة." : "تم إيقاف وضع الصيانة.";
+        return RedirectToAction(nameof(Dashboard));
+    }
+
     public async Task<IActionResult> Users(string? search = null)
     {
         var usersQuery = _userManager.Users.AsQueryable();
@@ -1977,6 +2103,7 @@ public class AdminController : Controller
             {
                 User = user,
                 Role = roles.FirstOrDefault() ?? "User",
+                IsAdmin = roles.Contains("Admin"),
                 ListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == user.Id),
                 ApprovedListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == user.Id && l.Approval == ListingApproval.Approved),
                 PendingListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == user.Id && l.Approval == ListingApproval.Pending)
@@ -2885,6 +3012,37 @@ public class NotificationsController : Controller
         {
             return Redirect(returnUrl);
         }
+        return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>حذف كل تنبيهاتي: التنبيهات الموجَّهة لي تُحذف،
+    /// والتنبيهات العامة تُعلَّم كمقروءة حتى لا تختفي من عند باقي المستخدمين.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteAll()
+    {
+        var mine = await _context.Notifications
+            .Where(n => n.TargetUserId == CurrentUserId)
+            .ToListAsync();
+        _context.Notifications.RemoveRange(mine);
+        var broadcastIds = await _context.Notifications
+            .Where(n => n.IsActive && n.TargetUserId == null)
+            .Select(n => n.Id)
+            .ToListAsync();
+        var readIds = await _context.NotificationReads
+            .Where(r => r.UserId == CurrentUserId)
+            .Select(r => r.NotificationId)
+            .ToListAsync();
+        foreach (var id in broadcastIds.Where(id => !readIds.Contains(id)))
+        {
+            _context.NotificationReads.Add(new NotificationRead
+            {
+                NotificationId = id,
+                UserId = CurrentUserId,
+                ReadAt = DateTime.UtcNow
+            });
+        }
+        await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
 }

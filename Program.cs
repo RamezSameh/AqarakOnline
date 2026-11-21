@@ -95,6 +95,30 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// وضع الصيانة: يحجب كل الصفحات عن غير الأدمن، ما عدا تسجيل الدخول
+// ولوحة الأدمن (حتى يستطيع الأدمن إيقافه) والملفات الثابتة.
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path;
+    var isExempt = path.StartsWithSegments("/Admin", StringComparison.OrdinalIgnoreCase)
+        || path.StartsWithSegments("/Account/Login", StringComparison.OrdinalIgnoreCase)
+        || path.StartsWithSegments("/Account/Logout", StringComparison.OrdinalIgnoreCase)
+        || path.StartsWithSegments("/realtimeHub", StringComparison.OrdinalIgnoreCase);
+    if (!context.User.IsInRole("Admin") && !isExempt)
+    {
+        var db = context.RequestServices.GetRequiredService<ApplicationDbContext>();
+        if (await SiteSettingsHelper.IsMaintenanceEnabledAsync(db))
+        {
+            var message = await SiteSettingsHelper.GetMaintenanceMessageAsync(db);
+            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            context.Response.ContentType = "text/html; charset=utf-8";
+            await context.Response.WriteAsync($"<!DOCTYPE html><html lang=\"ar\" dir=\"rtl\"><head><meta charset=\"utf-8\"><title>تحت الصيانة</title></head><body style=\"font-family: sans-serif; text-align: center; padding: 4rem 1rem;\"><h1>الموقع تحت الصيانة</h1><p>{System.Net.WebUtility.HtmlEncode(message)}</p></body></html>");
+            return;
+        }
+    }
+    await next();
+});
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

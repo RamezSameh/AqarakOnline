@@ -1,3 +1,6 @@
+using AqarakOnline.Data;
+using AqarakOnline.Models;
+
 namespace AqarakOnline.Services;
 
 public class ContactSettings
@@ -183,6 +186,12 @@ public class LanguageService
         ["FurnishingAny"] = ("مفروش (أي مستوى)", "Furnished (any level)"),
         ["SaleReason"] = ("سبب البيع", "Reason for selling"),
         ["BackToTop"] = ("العودة للأعلى", "Back to top"),
+        ["AgreeToTerms"] = ("أوافق على", "I agree to the"),
+        ["DeleteAllNotifications"] = ("حذف كل التنبيهات", "Delete all notifications"),
+        ["SetAsCover"] = ("تعيين كغلاف", "Set as cover"),
+        ["Cover"] = ("غلاف", "Cover"),
+        ["MaintenanceMode"] = ("وضع الصيانة", "Maintenance mode"),
+        ["MaintenanceMessage"] = ("رسالة الصيانة", "Maintenance message"),
         ["TopPosters"] = ("أكثر المستخدمين إضافة إعلانات", "Top posters"),
         ["ImportListings"] = ("استيراد إعلانات", "Import listings"),
         ["ImportTemplate"] = ("تحميل القالب", "Download template"),
@@ -467,5 +476,39 @@ public class LanguageService
         var formatted = price.ToString("N0");
         var suffix = type == Models.ListingType.Rent ? $" {T("PerMonth")}" : string.Empty;
         return $"{formatted} {T("Currency")}{suffix}";
+    }
+}
+
+/// <summary>إعدادات عامة للموقع مخزنة في قاعدة البيانات (مفتاح/قيمة) — مثل وضع الصيانة.</summary>
+public static class SiteSettingsHelper
+{
+    public const string MaintenanceEnabledKey = "MaintenanceEnabled";
+    public const string MaintenanceMessageKey = "MaintenanceMessage";
+    public const string DefaultMaintenanceMessage = "الموقع تحت الصيانة حاليًا، ونعود قريبًا.";
+
+    public static async Task<bool> IsMaintenanceEnabledAsync(ApplicationDbContext context)
+    {
+        var setting = await context.SiteSettings.FindAsync(MaintenanceEnabledKey);
+        return setting?.Value == "true";
+    }
+
+    public static async Task<string> GetMaintenanceMessageAsync(ApplicationDbContext context)
+    {
+        var setting = await context.SiteSettings.FindAsync(MaintenanceMessageKey);
+        return string.IsNullOrWhiteSpace(setting?.Value) ? DefaultMaintenanceMessage : setting.Value;
+    }
+
+    public static async Task SetAsync(ApplicationDbContext context, string key, string value)
+    {
+        var setting = await context.SiteSettings.FindAsync(key);
+        if (setting == null)
+        {
+            context.SiteSettings.Add(new SiteSetting { Key = key, Value = value });
+        }
+        else
+        {
+            setting.Value = value;
+        }
+        await context.SaveChangesAsync();
     }
 }

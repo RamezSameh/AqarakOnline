@@ -81,6 +81,20 @@ else
                             <button type="submit" class="btn btn-ghost">@L.T("ResetPassword")</button>
                         </form>
                         <a class="btn btn-ghost" asp-action="EditUser" asp-route-id="@row.User.Id">تعديل</a>
+                        @if (!row.IsAdmin)
+                        {
+                            <form asp-action="PromoteToAdmin" method="post" class="inline-form" onsubmit="return confirm('ترقية هذا المستخدم لدور أدمن؟');">
+                                <input type="hidden" name="id" value="@row.User.Id" />
+                                <button type="submit" class="btn btn-ghost">ترقية لأدمن</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="DemoteFromAdmin" method="post" class="inline-form" onsubmit="return confirm('سحب دور الأدمن من هذا المستخدم؟');">
+                                <input type="hidden" name="id" value="@row.User.Id" />
+                                <button type="submit" class="btn btn-ghost">سحب دور الأدمن</button>
+                            </form>
+                        }
                         <form asp-action="DeleteUser" method="post" class="inline-form" onsubmit="return confirm('حذف هذا الحساب نهائيًا مع إعلاناته وطلبات تواصله؟ لا يمكن التراجع.');">
                             <input type="hidden" name="id" value="@row.User.Id" />
                             <button type="submit" class="btn btn-ghost">حذف نهائي</button>

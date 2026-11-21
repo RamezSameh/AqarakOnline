@@ -9,6 +9,19 @@
     <div class="listing-card"><div class="listing-body"><h3>المشاهدات وطلبات التواصل</h3><p>مشاهدات: @Model.TotalViews</p><p>طلبات تواصل: @Model.TotalRequests | غير مردود عليها: @Model.UnrepliedRequests</p></div></div>
 </div>
 
+<h2>@L.T("MaintenanceMode")</h2>
+<form asp-action="Maintenance" method="post" class="form">
+    <label>
+        <input type="checkbox" name="enabled" value="true" @(Model.MaintenanceEnabled ? "checked" : null) />
+        @L.T("MaintenanceMode") @(Model.MaintenanceEnabled ? "(مفعّل الآن)" : "")
+    </label>
+    <label>@L.T("MaintenanceMessage")</label>
+    <input type="text" name="message" value="@Model.MaintenanceMessage" maxlength="2000" />
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">حفظ</button>
+    </div>
+</form>
+
 <h2>فلترة</h2>
 <form asp-action="Dashboard" method="get" class="form">
     <label>المستخدم</label>

@@ -49,6 +49,9 @@ public class RegisterViewModel
     [DataType(DataType.Password)]
     [Compare("Password", ErrorMessage = "كلمة المرور وتأكيدها غير متطابقين")]
     public string ConfirmPassword { get; set; } = string.Empty;
+
+    /// <summary>موافقة إجبارية على شروط الاستخدام قبل إنشاء الحساب.</summary>
+    public bool AcceptTerms { get; set; }
 }
 
 /// <summary>
@@ -150,6 +153,12 @@ public class AccountController : Controller
     {
         if (!ModelState.IsValid)
         {
+            return View(model);
+        }
+
+        if (!model.AcceptTerms)
+        {
+            ModelState.AddModelError(nameof(model.AcceptTerms), "يجب الموافقة على شروط الاستخدام للتسجيل.");
             return View(model);
         }
 

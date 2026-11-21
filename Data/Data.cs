@@ -71,6 +71,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ViewingAppointment> ViewingAppointments => Set<ViewingAppointment>();
     public DbSet<SearchLog> SearchLogs => Set<SearchLog>();
     public DbSet<BlockedPhone> BlockedPhones => Set<BlockedPhone>();
+    public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
 }
 
 public static class SeedData

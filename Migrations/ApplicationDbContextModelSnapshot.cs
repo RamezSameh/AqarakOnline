@@ -681,6 +681,22 @@ namespace AqarakOnline.Migrations
                     b.ToTable("SearchLogs");
                 });
 
+            modelBuilder.Entity("AqarakOnline.Models.SiteSetting", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("SiteSettings");
+                });
+
             modelBuilder.Entity("AqarakOnline.Models.ViewingAppointment", b =>
                 {
                     b.Property<int>("Id")

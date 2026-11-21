@@ -480,6 +480,17 @@ public class BlockedPhone
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
+/// <summary>إعداد عام للموقع (مفتاح/قيمة) — مثل وضع الصيانة.</summary>
+public class SiteSetting
+{
+    [Key]
+    [MaxLength(100)]
+    public string Key { get; set; } = string.Empty;
+
+    [MaxLength(2000)]
+    public string Value { get; set; } = string.Empty;
+}
+
 /// <summary>سبب البلاغ عن إعلان مخالف.</summary>
 public enum ReportReason
 {

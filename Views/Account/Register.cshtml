@@ -27,6 +27,11 @@
         <button type="button" class="btn btn-ghost password-toggle" aria-label="إظهار كلمة المرور">إظهار</button>
     </div>
     <span asp-validation-for="ConfirmPassword" class="field-error"></span>
+    <label class="checkbox-label">
+        <input asp-for="AcceptTerms" type="checkbox" />
+        @L.T("AgreeToTerms") <a asp-controller="Home" asp-action="Terms">@L.T("TermsOfUse")</a>
+    </label>
+    <span asp-validation-for="AcceptTerms" class="field-error"></span>
     <div class="actions">
         <button type="submit" class="btn btn-primary">@L.T("Register")</button>
         <a class="btn btn-ghost" asp-action="Login">@L.T("HasAccount")</a>

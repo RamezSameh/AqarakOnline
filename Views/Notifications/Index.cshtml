@@ -10,6 +10,9 @@ else
         <form asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="inline-form">
             <button type="submit" class="btn btn-ghost">@L.T("MarkAllAsRead")</button>
         </form>
+        <form asp-controller="Notifications" asp-action="DeleteAll" method="post" class="inline-form" onsubmit="return confirm('حذف كل التنبيهات؟');">
+            <button type="submit" class="btn btn-ghost">@L.T("DeleteAllNotifications")</button>
+        </form>
     </div>
     <div class="notifications-list">
         @foreach (var row in Model)
