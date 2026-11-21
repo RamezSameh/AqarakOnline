@@ -291,3 +291,58 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 [data-theme="light"] .suggest-item:hover { background: #f1f5f9; }
 .badge-reduced { background: #dc2626; color: #fff; }
 .badge-trusted { background: #0e7490; color: #fff; }
+
+/* Batch 20 — design 2 */
+/* (2) ألوان مميزة لكل نوع عقار */
+.badge-pt-Apartment { background: #0369a1; }
+.badge-pt-House { background: #15803d; }
+.badge-pt-Building { background: #7e22ce; }
+.badge-pt-Shop { background: #c2410c; }
+.badge-pt-Villa { background: #a16207; }
+[data-theme="light"] .badge-pt-Apartment { background: #0369a1; color: #fff; }
+[data-theme="light"] .badge-pt-House { background: #15803d; color: #fff; }
+[data-theme="light"] .badge-pt-Building { background: #7e22ce; color: #fff; }
+[data-theme="light"] .badge-pt-Shop { background: #c2410c; color: #fff; }
+[data-theme="light"] .badge-pt-Villa { background: #a16207; color: #fff; }
+
+/* (3) شريط تقدم الرفع (متحرك — الرفع نفسه إرسال نموذج عادي بلا نسبة مئوية حقيقية) */
+.upload-progress { margin-top: 12px; }
+.upload-progress-bar { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #6366f1, #38bdf8, #6366f1); background-size: 200% 100%; animation: upload-slide 1.2s linear infinite; }
+@keyframes upload-slide { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.upload-progress span { display: block; margin-top: 6px; font-size: 14px; color: #94a3b8; }
+
+/* (4) صور الكارت: تظهر صورة واحدة في كل مرة ويبدّلها الـ hover */
+.card-photos { position: relative; }
+.card-photos .listing-photo { display: none; }
+.card-photos .listing-photo.active { display: block; }
+
+/* (5) معرض صور أكبر في التفاصيل */
+.gallery-main-photo { max-height: 640px; }
+.gallery-thumb { flex-basis: 110px; }
+.gallery-thumb img { height: 84px; }
+
+/* (6)(7) بطاقتا مميز / عاجل */
+.listing-card.featured-card { border: 2px solid #f59e0b; box-shadow: 0 0 0 1px #f59e0b, 0 8px 24px rgba(245, 158, 11, .25); }
+.listing-card.featured-card:hover { box-shadow: 0 0 0 1px #f59e0b, 0 12px 28px rgba(245, 158, 11, .35); }
+.listing-card.urgent-card { border: 2px solid #ef4444; }
+
+/* (8) شريط تواصل ثابت أسفل التفاصيل في الموبايل */
+.sticky-contact { display: none; }
+@media (max-width: 640px) {
+    .sticky-contact { display: flex; gap: 10px; position: fixed; bottom: 0; left: 0; right: 0; z-index: 90; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(15, 23, 42, .97); border-top: 1px solid #334155; }
+    .sticky-contact .btn { flex: 1; text-align: center; }
+    .main-content { padding-bottom: 76px; }
+    .back-to-top { bottom: 76px; }
+}
+[data-theme="light"] .sticky-contact { background: rgba(255, 255, 255, .97); border-top-color: #e2e8f0; }
+
+/* (9) بطاقة تسجيل الدخول */
+.auth-card { max-width: 440px; margin: 24px auto; padding: 28px; border: 1px solid #334155; border-radius: 16px; background: #1e293b; box-shadow: 0 12px 32px rgba(0, 0, 0, .35); }
+[data-theme="light"] .auth-card { background: #fff; border-color: #e2e8f0; }
+
+/* (10) Toast عائم */
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 200; display: flex; gap: 12px; align-items: center; max-width: min(480px, 92vw); padding: 12px 16px; border-radius: 12px; font-weight: 600; box-shadow: 0 12px 32px rgba(0, 0, 0, .5); }
+.toast-info { background: #1e293b; border: 1px solid #6366f1; color: #f1f5f9; }
+.toast-error { background: #7f1d1d; border: 1px solid #ef4444; color: #fff; }
+.toast-close { background: transparent; border: none; color: inherit; cursor: pointer; font-size: 16px; padding: 0 4px; }
+.toast.hide { display: none; }

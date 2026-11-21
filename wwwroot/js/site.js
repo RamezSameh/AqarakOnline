@@ -701,8 +701,11 @@ document.addEventListener("DOMContentLoaded", function () {
             toggle.textContent = theme === "light" ? "🌙" : "☀️";
         }
     }
+    function systemTheme() {
+        try { return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"; } catch (e) { return "dark"; }
+    }
     try {
-        applyTheme(localStorage.getItem(themeKey) || "dark");
+        applyTheme(localStorage.getItem(themeKey) || systemTheme());
     } catch (e) {
         applyTheme("dark");
     }
@@ -952,4 +955,33 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     input.addEventListener("blur", function () { setTimeout(function () { box.style.display = "none"; }, 150); });
     input.addEventListener("focus", function () { if (box.children.length) { box.style.display = "block"; } });
+});
+
+// Batch 20 — design 2: Toast عائم + تبديل صور الكارت عند الـ hover.
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".toast").forEach(function (t) {
+        setTimeout(function () { t.classList.add("hide"); }, 6000);
+        var btn = t.querySelector(".toast-close");
+        if (btn) { btn.addEventListener("click", function () { t.classList.add("hide"); }); }
+    });
+    document.querySelectorAll(".card-photos").forEach(function (box) {
+        var imgs = box.querySelectorAll("img");
+        if (imgs.length < 2) { return; }
+        var card = box.closest(".listing-card");
+        if (!card) { return; }
+        var i = 0, timer = null;
+        card.addEventListener("mouseenter", function () {
+            timer = setInterval(function () {
+                imgs[i].classList.remove("active");
+                i = (i + 1) % imgs.length;
+                imgs[i].classList.add("active");
+            }, 1200);
+        });
+        card.addEventListener("mouseleave", function () {
+            clearInterval(timer);
+            imgs.forEach(function (im) { im.classList.remove("active"); });
+            imgs[0].classList.add("active");
+            i = 0;
+        });
+    });
 });

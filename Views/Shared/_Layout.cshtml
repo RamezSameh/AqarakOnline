@@ -17,7 +17,7 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     @* الوضع الفاتح/الداكن يُطبَّق قبل رسم الصفحة حتى لا يلمع الداكن أولًا. *@
-    <script>try { document.documentElement.setAttribute("data-theme", localStorage.getItem("aqarak-theme") || "dark"); } catch (e) {}</script>
+    <script>try { document.documentElement.setAttribute("data-theme", localStorage.getItem("aqarak-theme") || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")); } catch (e) { document.documentElement.setAttribute("data-theme", "dark"); }</script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -78,11 +78,11 @@
     <main class="container main-content">
         @if (TempData["Error"] != null)
         {
-            <div class="alert alert-error">@TempData["Error"]</div>
+            <div class="toast toast-error" role="alert">@TempData["Error"]<button type="button" class="toast-close" aria-label="إغلاق">✕</button></div>
         }
         @if (TempData["Info"] != null)
         {
-            <div class="alert alert-info">@TempData["Info"]</div>
+            <div class="toast toast-info" role="status">@TempData["Info"]<button type="button" class="toast-close" aria-label="إغلاق">✕</button></div>
         }
         @RenderBody()
     </main>

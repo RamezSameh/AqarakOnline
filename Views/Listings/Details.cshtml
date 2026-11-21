@@ -36,7 +36,7 @@
 <h1>@Model.Title</h1>
 <div class="listing-meta">
     <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
-    <span class="badge">@L.PropertyTypeText(Model.PropertyType)</span>
+    <span class="badge badge-pt-@Model.PropertyType">@L.PropertyTypeText(Model.PropertyType)</span>
     @if (Model.IsEffectivelyFeatured)
     {
         <span class="badge badge-featured">⭐ @L.T("Featured")</span>
@@ -343,5 +343,21 @@ else
             }
         </div>
     </section>
+}
+
+@* Batch 20 — design 2 (8): شريط تواصل ثابت في الموبايل. *@
+@if (Model.IsAvailable)
+{
+    <div class="sticky-contact">
+        @if (Model.ListingType == ListingType.Sale)
+        {
+            <a class="btn btn-primary" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id" asp-route-intent="buy">@L.T("Buy")</a>
+        }
+        else
+        {
+            <a class="btn btn-primary" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id" asp-route-intent="rent">@L.T("RentIt")</a>
+        }
+        <a class="btn btn-ghost" href="tel:@ContactOptions.Value.Phone">📞 @L.T("CallUs")</a>
+    </div>
 }
 
