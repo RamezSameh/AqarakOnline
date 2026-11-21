@@ -70,6 +70,12 @@ public class HomeController : Controller
         return View();
     }
 
+    public IActionResult Error404()
+    {
+        Response.StatusCode = StatusCodes.Status404NotFound;
+        return View();
+    }
+
     [HttpGet]
     public IActionResult Contact()
     {

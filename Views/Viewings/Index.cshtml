@@ -7,33 +7,21 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>@L.T("Title")</th>
-                <th>@L.T("ViewingDate")</th>
-                <th>@L.T("ApprovalStatus")</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var viewing in Model)
-            {
-                <tr>
-                    <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@viewing.ListingId">@viewing.Listing?.Title</a></td>
-                    <td>@viewing.RequestedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>@L.ViewingStatusText(viewing.Status)</td>
-                    <td>
-                        @if (viewing.Status == ViewingStatus.Pending || viewing.Status == ViewingStatus.Confirmed)
-                        {
-                            <form asp-action="Cancel" method="post" class="inline-form">
-                                <input type="hidden" name="id" value="@viewing.Id" />
-                                <button type="submit" class="btn btn-ghost">@L.T("Cancel")</button>
-                            </form>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="viewings-list">
+        @foreach (var viewing in Model)
+        {
+            <article class="viewing-card status-@viewing.Status">
+                <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@viewing.ListingId">@viewing.Listing?.Title</a></h3>
+                <p>@L.T("ViewingDate"): @viewing.RequestedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                <p><span class="viewing-status">@L.ViewingStatusText(viewing.Status)</span></p>
+                @if (viewing.Status == ViewingStatus.Pending || viewing.Status == ViewingStatus.Confirmed)
+                {
+                    <form asp-action="Cancel" method="post" class="inline-form">
+                        <input type="hidden" name="id" value="@viewing.Id" />
+                        <button type="submit" class="btn btn-ghost">@L.T("Cancel")</button>
+                    </form>
+                }
+            </article>
+        }
+    </div>
 }

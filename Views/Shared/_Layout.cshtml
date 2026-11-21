@@ -28,32 +28,32 @@
         <div class="container header-inner">
             <a class="brand" asp-controller="Home" asp-action="Index"><span class="brand-icon">🏠</span> @L.T("Brand")</a>
             <nav class="main-nav" id="mainNav">
-                <a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">@L.T("Home")</a>
-                <a class="nav-link @(currentController == "Listings" && currentAction == "Index" ? "active" : "")" asp-controller="Listings" asp-action="Index">@L.T("Listings")</a>
+                <a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">🏠 @L.T("Home")</a>
+                <a class="nav-link @(currentController == "Listings" && currentAction == "Index" ? "active" : "")" asp-controller="Listings" asp-action="Index">🏘️ @L.T("Listings")</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     @* باقي الخصائص ظاهرة عادي في الـ header على اليمين. *@
-                    <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">@L.T("MyListings")</a>
-                    <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">@L.T("Favorites")</a>
-                    <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">@L.T("SavedSearches")</a>
-                    <a class="nav-link @(currentController == "Viewings" ? "active" : "")" asp-controller="Viewings" asp-action="Index">@L.T("Viewings")</a>
-                    <a class="nav-link @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">@L.T("MyAccount")</a>
-                    <a class="nav-cta @(currentController == "Listings" && currentAction == "Create" ? "active" : "")" asp-controller="Listings" asp-action="Create">@L.T("CreateListing")</a>
+                    <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">📋 @L.T("MyListings")</a>
+                    <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>
+                    <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">🔔 @L.T("SavedSearches")</a>
+                    <a class="nav-link @(currentController == "Viewings" ? "active" : "")" asp-controller="Viewings" asp-action="Index">📅 @L.T("Viewings")</a>
+                    <a class="nav-link @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">👤 @L.T("MyAccount")</a>
+                    <a class="nav-cta @(currentController == "Listings" && currentAction == "Create" ? "active" : "")" asp-controller="Listings" asp-action="Create">➕ @L.T("CreateListing")</a>
                     @* غلاف display:contents حتى تُستبدل الإدارة لحظيًا من غير كسر توزيع الـ flex. *@
                     <span id="adminNavLinks" style="display:contents">@await Component.InvokeAsync("AdminNav")</span>
                     @* على الموبايل فقط: البروفايل وتسجيل الخروج داخل اللوحة. *@
                     <div class="panel-account mobile-only">
                         <a class="profile-link" asp-controller="Listings" asp-action="MyListings">👤 @displayName</a>
                         <form asp-controller="Account" asp-action="Logout" method="post" class="inline-form">
-                            <button type="submit" class="btn btn-ghost">@L.T("Logout")</button>
+                            <button type="submit" class="btn btn-ghost">🚪 @L.T("Logout")</button>
                         </form>
                     </div>
                 }
                 else
                 {
-                    <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">@L.T("Favorites")</a>
-                    <a class="btn btn-ghost nav-auth" asp-controller="Account" asp-action="Login">@L.T("Login")</a>
-                    <a class="btn btn-primary nav-auth" asp-controller="Account" asp-action="Register">@L.T("Register")</a>
+                    <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>
+                    <a class="btn btn-ghost nav-auth" asp-controller="Account" asp-action="Login">🔑 @L.T("Login")</a>
+                    <a class="btn btn-primary nav-auth" asp-controller="Account" asp-action="Register">📝 @L.T("Register")</a>
                 }
             </nav>
             <div class="header-actions">
@@ -65,7 +65,7 @@
                     @* جنب اليسار: البروفايل وتسجيل الخروج. *@
                     <a class="profile-link desktop-only" asp-controller="Listings" asp-action="MyListings">👤 @displayName</a>
                     <form asp-controller="Account" asp-action="Logout" method="post" class="inline-form desktop-only">
-                        <button type="submit" class="btn btn-ghost">@L.T("Logout")</button>
+                        <button type="submit" class="btn btn-ghost">🚪 @L.T("Logout")</button>
                     </form>
                 }
             </div>

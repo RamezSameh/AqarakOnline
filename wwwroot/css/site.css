@@ -449,3 +449,51 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 .notifications-list { display: grid; gap: 12px; }
 .notification-item.unread { background: #1e2a45; box-shadow: 0 4px 16px rgba(99, 102, 241, .2); }
 [data-theme="light"] .notification-item.unread { background: #eef2ff; }
+
+/* Batch 23 — design 5 */
+/* (1) معلومات التواصل في بطاقة «اتصل بنا» */
+.contact-info { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #334155; }
+.contact-info p { margin: 4px 0; }
+[data-theme="light"] .contact-info { border-bottom-color: #e2e8f0; }
+
+/* (4) نمط نقطي خفيف في الهيرو */
+.hero { background-image: radial-gradient(rgba(255, 255, 255, .07) 1px, transparent 1.5px), linear-gradient(135deg, #1e1b4b, #312e81 55%, #0f172a); background-size: 22px 22px, auto; }
+[data-theme="light"] .hero { background-image: radial-gradient(rgba(15, 23, 42, .07) 1px, transparent 1.5px), linear-gradient(135deg, #e0e7ff, #c7d2fe 55%, #f1f5f9); background-size: 22px 22px, auto; }
+
+/* (5) شريط المقارنة أوضح */
+.compare-bar { padding: 12px 20px; border-color: #6366f1; background: rgba(30, 41, 59, .97); backdrop-filter: blur(6px); box-shadow: 0 12px 32px rgba(0, 0, 0, .55); }
+.compare-bar #compareCount { font-weight: 800; color: #c7d2fe; }
+
+/* (6) بحثي المحفوظ كبطاقات */
+.saved-searches { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 20px; }
+.saved-search-card { border: 1px solid #334155; border-radius: 12px; padding: 16px; background: #1e293b; }
+.saved-search-card h3 { margin-top: 0; }
+.saved-search-card p { margin: 4px 0; color: #cbd5e1; }
+[data-theme="light"] .saved-search-card { background: #fff; border-color: #e2e8f0; }
+[data-theme="light"] .saved-search-card p { color: #475569; }
+
+/* (7) معايناتي كبطاقات بألوان حالة */
+.viewings-list { display: grid; gap: 12px; margin-top: 20px; }
+.viewing-card { border: 1px solid #334155; border-inline-start: 4px solid #64748b; border-radius: 12px; padding: 16px; background: #1e293b; }
+.viewing-card h3 { margin-top: 0; }
+.viewing-card.status-Pending { border-inline-start-color: #f59e0b; }
+.viewing-card.status-Confirmed { border-inline-start-color: #22c55e; }
+.viewing-card.status-Declined { border-inline-start-color: #ef4444; }
+.viewing-card.status-Cancelled { border-inline-start-color: #64748b; }
+.viewing-status { font-weight: 700; }
+[data-theme="light"] .viewing-card { background: #fff; border-color: #e2e8f0; }
+
+/* (8) أيقونات الهيدر */
+@media (min-width: 901px) { .nav-link, .nav-cta { display: inline-flex; align-items: center; gap: 6px; } }
+.main-nav .nav-link, .main-nav .nav-cta { display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+/* (9) طلبات التواصل كبطاقات */
+.requests-list { display: grid; gap: 12px; margin-top: 20px; }
+.request-card { border: 1px solid #334155; border-inline-start: 4px solid #f59e0b; border-radius: 12px; padding: 16px; background: #1e293b; }
+.request-card.replied { border-inline-start-color: #22c55e; }
+.request-card p { margin: 4px 0; }
+[data-theme="light"] .request-card { background: #fff; border-color: #e2e8f0; }
+
+/* (10) هيرو صفحة المنطقة */
+.area-hero { padding: 36px 20px; margin-bottom: 20px; }
+.area-hero h1 { font-size: 40px; }

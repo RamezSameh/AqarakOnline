@@ -76,7 +76,17 @@
     var totalPages = (int)(ViewBag.TotalPages ?? 1);
     var totalCount = (int)(ViewBag.TotalCount ?? 0);
 }
-<h1>@(ViewBag.AreaPage != null ? "إعلانات " + ViewBag.AreaPage : L.T("Listings"))</h1>
+@if (ViewBag.AreaPage != null)
+{
+    <section class="hero area-hero">
+        <h1>إعلانات @ViewBag.AreaPage</h1>
+        <p class="hero-tagline">@totalCount إعلان</p>
+    </section>
+}
+else
+{
+    <h1>@L.T("Listings")</h1>
+}
 
 <div class="search-layout">
     <aside class="search-sidebar">

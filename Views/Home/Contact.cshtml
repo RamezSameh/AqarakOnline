@@ -1,6 +1,12 @@
 @model ContactMessage
+<div class="auth-card">
 <h1>@L.T("ContactUs")</h1>
 <p>عندك سؤال أو استفسار؟ ابعت رسالتك وهنرد عليك.</p>
+<div class="contact-info">
+    <p>@L.T("Phone"): <a href="tel:@ContactOptions.Value.Phone">@ContactOptions.Value.Phone</a></p>
+    <p>@L.T("WhatsApp"): @ContactOptions.Value.WhatsApp</p>
+    <p>@L.T("Email"): @ContactOptions.Value.Email</p>
+</div>
 <form asp-action="Contact" method="post" class="form">
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
     <label>@L.T("YourName")</label>
@@ -16,3 +22,4 @@
         <button type="submit" class="btn btn-primary">@L.T("SendMessage")</button>
     </div>
 </form>
+</div>

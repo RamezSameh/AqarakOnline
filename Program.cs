@@ -93,6 +93,7 @@ if (app.Configuration.GetValue<bool>("UseHttpsRedirection", true))
     app.UseHttpsRedirection();
 }
 app.UseStaticFiles();
+app.UseStatusCodePagesWithReExecute("/Home/Error404");
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -114,7 +115,7 @@ app.Use(async (context, next) =>
             var message = await SiteSettingsHelper.GetMaintenanceMessageAsync(db);
             context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             context.Response.ContentType = "text/html; charset=utf-8";
-            await context.Response.WriteAsync($"<!DOCTYPE html><html lang=\"ar\" dir=\"rtl\"><head><meta charset=\"utf-8\"><title>تحت الصيانة</title></head><body style=\"font-family: sans-serif; text-align: center; padding: 4rem 1rem;\"><h1>الموقع تحت الصيانة</h1><p>{System.Net.WebUtility.HtmlEncode(message)}</p></body></html>");
+            await context.Response.WriteAsync($"<!DOCTYPE html><html lang=\"ar\" dir=\"rtl\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>تحت الصيانة</title></head><body style=\"font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e1b4b, #312e81 55%, #0f172a); color: #f1f5f9; text-align: center; padding: 1rem;\"><div style=\"max-width: 480px; width: 100%; background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2.5rem 2rem; box-shadow: 0 12px 32px rgba(0,0,0,.4);\"><div style=\"font-size: 48px;\">🔧</div><h1 style=\"margin: .5rem 0;\">الموقع تحت الصيانة</h1><p style=\"color: #cbd5e1;\">{System.Net.WebUtility.HtmlEncode(message)}</p></div></body></html>");
             return;
         }
     }
