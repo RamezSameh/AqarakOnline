@@ -683,3 +683,79 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+// الوضع الفاتح/الداكن: الاختيار محفوظ في جهاز المستخدم.
+document.addEventListener("DOMContentLoaded", function () {
+    var themeKey = "aqarak-theme";
+    function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        try { localStorage.setItem(themeKey, theme); } catch (e) {}
+        var toggle = document.getElementById("themeToggle");
+        if (toggle) {
+            toggle.textContent = theme === "light" ? "🌙" : "☀️";
+        }
+    }
+    try {
+        applyTheme(localStorage.getItem(themeKey) || "dark");
+    } catch (e) {
+        applyTheme("dark");
+    }
+    var themeToggle = document.getElementById("themeToggle");
+    if (themeToggle) {
+        themeToggle.addEventListener("click", function () {
+            var current = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+            applyTheme(current);
+        });
+    }
+});
+
+// المفضلة للزوار بدون حساب: تحفظ في جهاز الزائر (localStorage)،
+// ويزامنها كوكي aqarak-guest-favs حتى يقرأها السيرفر في صفحة المفضلة.
+document.addEventListener("DOMContentLoaded", function () {
+    var guestFavKey = "aqarak-guest-favorites";
+    function getGuestFavorites() {
+        try {
+            return JSON.parse(localStorage.getItem(guestFavKey) || "[]");
+        } catch (e) {
+            return [];
+        }
+    }
+    function saveGuestFavorites(ids) {
+        try { localStorage.setItem(guestFavKey, JSON.stringify(ids)); } catch (e) {}
+        document.cookie = "aqarak-guest-favs=" + ids.join(",") + "; path=/; max-age=" + (365 * 24 * 60 * 60);
+    }
+    function refreshGuestFavoriteButtons() {
+        var ids = getGuestFavorites();
+        document.querySelectorAll(".guest-favorite").forEach(function (btn) {
+            var id = parseInt(btn.getAttribute("data-id") || "0", 10);
+            var on = ids.indexOf(id) !== -1;
+            btn.classList.toggle("is-favorite", on);
+            btn.setAttribute("title", on ? "إزالة من المفضلة" : "إضافة إلى المفضلة");
+            if (btn.classList.contains("guest-fav-details")) {
+                btn.textContent = on ? "♥ في المفضلة" : "♡ إضافة إلى المفضلة";
+            } else {
+                btn.textContent = on ? "♥" : "♡";
+            }
+        });
+    }
+    document.addEventListener("click", function (event) {
+        var btn = event.target.closest ? event.target.closest(".guest-favorite") : null;
+        if (!btn) {
+            return;
+        }
+        var id = parseInt(btn.getAttribute("data-id") || "0", 10);
+        if (!id) {
+            return;
+        }
+        var ids = getGuestFavorites();
+        var i = ids.indexOf(id);
+        if (i === -1) {
+            ids.push(id);
+        } else {
+            ids.splice(i, 1);
+        }
+        saveGuestFavorites(ids);
+        refreshGuestFavoriteButtons();
+    });
+    refreshGuestFavoriteButtons();
+});

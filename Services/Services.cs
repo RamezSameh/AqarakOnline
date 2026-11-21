@@ -113,6 +113,25 @@ public class LanguageService
         ["SortPriceDesc"] = ("السعر: من الأعلى", "Price: high to low"),
         ["SortAreaDesc"] = ("المساحة: الأكبر", "Area: largest"),
         ["SortViewsDesc"] = ("الأكثر مشاهدة", "Most viewed"),
+        ["SortPricePerSqmAsc"] = ("سعر المتر: من الأقل", "Price per sqm: low to high"),
+        ["SortPricePerSqmDesc"] = ("سعر المتر: من الأعلى", "Price per sqm: high to low"),
+        ["SearchByAdNumber"] = ("ابحث برقم الإعلان (مثال: AQ-0001)", "Search by ad number (e.g. AQ-0001)"),
+        ["DirectOwnerOnly"] = ("مالك مباشر فقط", "Direct owner only"),
+        ["Recency"] = ("الإعلانات الجديدة", "New listings"),
+        ["RecencyAny"] = ("أي وقت", "Any time"),
+        ["RecencyToday"] = ("اليوم", "Today"),
+        ["RecencyWeek"] = ("آخر 7 أيام", "Last 7 days"),
+        ["RecencyMonth"] = ("آخر 30 يوم", "Last 30 days"),
+        ["Finishing"] = ("التشطيب", "Finishing"),
+        ["FinishingSuperLux"] = ("سوبر لوكس", "Super lux"),
+        ["FinishingLux"] = ("لوكس", "Lux"),
+        ["FinishingSemiFinished"] = ("نص تشطيب", "Semi-finished"),
+        ["FinishingRedBrick"] = ("على الطوب الأحمر", "Red brick"),
+        ["CopyListing"] = ("انسخ الإعلان", "Duplicate listing"),
+        ["CallUs"] = ("اتصل بينا", "Call us"),
+        ["StatsAvailableListings"] = ("إعلانات متاحة", "Available listings"),
+        ["StatsAreas"] = ("منطقة", "Areas"),
+        ["ExportListings"] = ("تصدير Excel", "Export Excel"),
         ["MinArea"] = ("أقل مساحة (م²)", "Min area (sqm)"),
         ["MaxArea"] = ("أكبر مساحة (م²)", "Max area (sqm)"),
         ["ResultsCount"] = ("عدد النتائج", "Results"),
@@ -270,6 +289,14 @@ public class LanguageService
 
     public string AdvertiserTypeText(Models.AdvertiserType type) =>
         type == Models.AdvertiserType.Broker ? T("FromBroker") : T("FromOwner");
+
+    public string FinishingText(Models.FinishingLevel level) => level switch
+    {
+        Models.FinishingLevel.SuperLux => T("FinishingSuperLux"),
+        Models.FinishingLevel.Lux => T("FinishingLux"),
+        Models.FinishingLevel.SemiFinished => T("FinishingSemiFinished"),
+        _ => T("FinishingRedBrick")
+    };
 
     public string ReportReasonText(Models.ReportReason reason) => reason switch
     {

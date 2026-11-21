@@ -8,6 +8,7 @@
     if (Model.Bathrooms.HasValue) { facts.Add($"{L.T("Bathrooms")}: {Model.Bathrooms}"); }
     if (Model.Floor.HasValue) { facts.Add($"{L.T("Floor")}: {Model.Floor}"); }
     if (Model.IsFurnished) { facts.Add(L.T("Furnished")); }
+    if (Model.Finishing.HasValue) { facts.Add(L.FinishingText(Model.Finishing.Value)); }
 }
 <article class="listing-card" data-listing-id="@Model.Id">
     <div class="availability-bar @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</div>
@@ -57,7 +58,7 @@
             }
             else
             {
-                <a class="btn btn-ghost favorite-btn" asp-controller="Account" asp-action="Login" title="إضافة إلى المفضلة">♡</a>
+                <button type="button" class="btn btn-ghost favorite-btn guest-favorite" data-id="@Model.Id" title="إضافة إلى المفضلة">♡</button>
             }
             @if (Model.IsAvailable && Model.Approval == ListingApproval.Approved && !isOwner)
             {
@@ -69,6 +70,10 @@
                     <input type="hidden" name="id" value="@Model.Id" />
                     <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
                     <button type="submit" class="btn btn-ghost" title="@L.T("RenewListing")">🔄</button>
+                </form>
+                <form asp-controller="Listings" asp-action="Duplicate" method="post" class="inline-form">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-ghost" title="@L.T("CopyListing")">📋</button>
                 </form>
             }
             <button type="button" class="btn btn-ghost share-copy" data-url="@($"{Context.Request.Scheme}://{Context.Request.Host}/Listings/Details/{Model.Id}")" title="@L.T("Share")">↗ @L.T("Share")</button>

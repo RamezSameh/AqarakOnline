@@ -74,6 +74,15 @@ public enum AdvertiserType
     Broker
 }
 
+/// <summary>مستوى التشطيب (اختياري — يختاره المعلن عند إضافة الإعلان).</summary>
+public enum FinishingLevel
+{
+    SuperLux,
+    Lux,
+    SemiFinished,
+    RedBrick
+}
+
 /// <summary>قائمة جاهزة للمناطق (القاهرة والجيزة). تُستخدم في نماذج إضافة/تعديل الإعلان بدل الكتابة الحرة.</summary>
 public static class ListingAreas
 {
@@ -221,6 +230,9 @@ public class Listing
 
     /// <summary>مفروش أم لا.</summary>
     public bool IsFurnished { get; set; }
+
+    /// <summary>مستوى التشطيب (اختياري).</summary>
+    public FinishingLevel? Finishing { get; set; }
 
     /// <summary>عدد مرات مشاهدة صفحة تفاصيل الإعلان (من غير الأدمن وصاحب الإعلان).</summary>
     public int ViewCount { get; set; }

@@ -215,3 +215,33 @@ input, select, textarea { padding: 10px 12px; border: 1px solid #475569; border-
 .admin-feature { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; color: #cbd5e1; text-decoration: none; }
 .admin-feature:hover { background: #334155; color: #fff; }
 .admin-feature.active { background: rgba(99, 102, 241, 0.25); color: #fff; }
+
+/* أرقام سريعة في الصفحة الرئيسية. */
+.home-stats { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin: 8px 0 4px; }
+.home-stats .stat { border: 1px solid #334155; border-radius: 10px; padding: 12px 24px; background: #1e293b; text-align: center; }
+.home-stats .stat strong { display: block; font-size: 28px; }
+.home-stats .stat span { color: #94a3b8; font-size: 14px; }
+
+/* الوضع الفاتح: نفس المكونات بألوان فاتحة. */
+[data-theme="light"] body { background: #f1f5f9; color: #0f172a; }
+[data-theme="light"] a { color: #4338ca; }
+[data-theme="light"] .site-header { background: rgba(255, 255, 255, 0.97); border-bottom-color: #cbd5e1; }
+[data-theme="light"] .brand { color: #0f172a; }
+[data-theme="light"] .nav-link { color: #334155; }
+[data-theme="light"] .nav-link:hover { color: #0f172a; background: #e2e8f0; }
+[data-theme="light"] .nav-link.active { color: #fff; background: #6366f1; }
+[data-theme="light"] .profile-link, [data-theme="light"] .lang-switch { color: #334155; border-color: #cbd5e1; }
+[data-theme="light"] input, [data-theme="light"] select, [data-theme="light"] textarea { background: #fff; color: #0f172a; border-color: #94a3b8; }
+[data-theme="light"] .btn-ghost { border-color: #94a3b8; color: #0f172a; }
+[data-theme="light"] .listing-card, [data-theme="light"] .why-card, [data-theme="light"] .filters-box, [data-theme="light"] .home-stats .stat { background: #fff; border-color: #cbd5e1; }
+[data-theme="light"] .listing-price { color: #0f172a; }
+[data-theme="light"] .listing-facts, [data-theme="light"] .listing-views, [data-theme="light"] .ad-number, [data-theme="light"] .hero-tagline, [data-theme="light"] .home-stats .stat span { color: #475569; }
+[data-theme="light"] .site-footer { color: #475569; border-top-color: #cbd5e1; }
+[data-theme="light"] .badge { background: #e2e8f0; color: #0f172a; }
+[data-theme="light"] .table th, [data-theme="light"] .table td { border-color: #cbd5e1; }
+[data-theme="light"] .alert-info { color: #14532d; }
+[data-theme="light"] .compare-bar { background: #fff; border-color: #cbd5e1; }
+[data-theme="light"] .drop-zone { background: #f8fafc; border-color: #94a3b8; }
+[data-theme="light"] .photo-sort-list li { background: #f8fafc; border-color: #cbd5e1; }
+[data-theme="light"] .admin-side-panel { background: #fff; border-inline-start-color: #cbd5e1; }
+[data-theme="light"] .admin-side-sub { color: #475569; }

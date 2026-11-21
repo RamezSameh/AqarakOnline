@@ -1,6 +1,7 @@
 @model IEnumerable<Listing>
 <h1>@L.T("AdminListings")</h1>
 <p>بيانات المعلن تظهر هنا للأدمن فقط، ولا تظهر في صفحة الإعلان العامة.</p>
+<p><a class="btn btn-primary" asp-action="ExportListings">⬇ @L.T("ExportListings")</a></p>
 @if (!Model.Any())
 {
     <p>@L.T("NoResults")</p>

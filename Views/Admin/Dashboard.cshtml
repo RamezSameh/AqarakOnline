@@ -137,6 +137,77 @@ else
     </table>
 }
 
+<h2>إعلانات معلّقة منذ أكثر من 3 أيام</h2>
+@if (!Model.StalePendingListings.Any())
+{
+    <p>لا توجد إعلانات معلّقة قديمة.</p>
+}
+else
+{
+    <p>عددها: @Model.StalePendingListings.Count — تحتاج قرار موافقة أو رفض من صفحة الإعلانات.</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>رقم الإعلان</th>
+                <th>العنوان</th>
+                <th>المعلن</th>
+                <th>المنطقة</th>
+                <th>تاريخ النشر</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var listing in Model.StalePendingListings)
+            {
+                <tr>
+                    <td>@listing.AdNumber</td>
+                    <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></td>
+                    <td>@(listing.Owner?.FullName ?? listing.Owner?.UserName ?? "إدارة الموقع")</td>
+                    <td>@listing.Area</td>
+                    <td>@L.RelativeTime(listing.CreatedAt)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<h2>إعلانات تحتاج تجديد (أكثر من 60 يومًا)</h2>
+@if (!Model.RenewalListings.Any())
+{
+    <p>لا توجد إعلانات تحتاج تجديد.</p>
+}
+else
+{
+    <p>عددها: @Model.RenewalListings.Count — دوس الزرار يبعت تنبيه «جدّد إعلانك» لأصحابها (مرة كل 60 يومًا لكل إعلان).</p>
+    <form asp-action="SendRenewalReminders" method="post" class="inline-form">
+        <button type="submit" class="btn btn-primary">إرسال تنبيهات التجديد</button>
+    </form>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>رقم الإعلان</th>
+                <th>العنوان</th>
+                <th>المعلن</th>
+                <th>المنطقة</th>
+                <th>تاريخ النشر</th>
+                <th>المشاهدات</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var listing in Model.RenewalListings)
+            {
+                <tr>
+                    <td>@listing.AdNumber</td>
+                    <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></td>
+                    <td>@(listing.Owner?.FullName ?? listing.Owner?.UserName ?? "إدارة الموقع")</td>
+                    <td>@listing.Area</td>
+                    <td>@L.RelativeTime(listing.CreatedAt)</td>
+                    <td>@listing.ViewCount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
 <h2>إحصائيات</h2>
 @{
     var maxMonthly = Model.MonthlyListings.Any() ? Model.MonthlyListings.Max(p => p.Count) : 0;

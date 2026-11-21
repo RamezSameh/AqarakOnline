@@ -87,6 +87,15 @@
 
     <label><input asp-for="IsFurnished" type="checkbox" /> @L.T("Furnished")</label>
 
+    <label>@L.T("Finishing")</label>
+    <select asp-for="Finishing">
+        <option value="">—</option>
+        @foreach (FinishingLevel level in Enum.GetValues(typeof(FinishingLevel)))
+        {
+            <option value="@level" selected="@(Model.Finishing == level)">@L.FinishingText(level)</option>
+        }
+    </select>
+
     @if (isEdit)
     {
         <label><input asp-for="IsAvailable" type="checkbox" /> @L.T("Available")</label>

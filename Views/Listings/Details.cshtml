@@ -105,7 +105,20 @@ else
 {
     <p><strong>@L.T("Furnished"):</strong> @L.T("Furnished")</p>
 }
+@if (Model.Finishing.HasValue)
+{
+    <p><strong>@L.T("Finishing"):</strong> @L.FinishingText(Model.Finishing.Value)</p>
+}
 <p><strong>@L.T("Price"):</strong> @L.PriceText(Model.Price, Model.ListingType)</p>
+@{
+    var avgSqm = ViewBag.AreaAvgPricePerSqm as decimal?;
+    var mySqm = ViewBag.PricePerSqm as decimal?;
+}
+@if (avgSqm.HasValue && mySqm.HasValue)
+{
+    var diff = (mySqm.Value - avgSqm.Value) / avgSqm.Value * 100;
+    <p><strong>متوسط سعر المتر في @Model.Area:</strong> @avgSqm.Value.ToString("N0") جنيه/م² — سعر المتر في الإعلان ده: @mySqm.Value.ToString("N0") جنيه/م² (@(diff < -0.5m ? $"أقل من المتوسط بنسبة {Math.Abs(diff):0}%" : diff > 0.5m ? $"أعلى من المتوسط بنسبة {diff:0}%" : "يساوي متوسط المنطقة"))</p>
+}
 <p><strong>@L.T("Views"):</strong> @Model.ViewCount</p>
 <p><strong>@L.T("PublishedAt"):</strong> @L.RelativeTime(Model.CreatedAt)</p>
 @if (User.IsInRole("Admin"))
@@ -146,7 +159,7 @@ else
     }
     else
     {
-        <a class="btn btn-ghost" asp-controller="Account" asp-action="Login">♡ إضافة إلى المفضلة</a>
+        <button type="button" class="btn btn-ghost favorite-btn guest-favorite guest-fav-details" data-id="@Model.Id" title="إضافة إلى المفضلة">♡ إضافة إلى المفضلة</button>
     }
     @if (isOwnListing)
     {
@@ -155,6 +168,10 @@ else
             <input type="hidden" name="id" value="@Model.Id" />
             <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
             <button type="submit" class="btn btn-ghost">🔄 @L.T("RenewListing")</button>
+        </form>
+        <form asp-action="Duplicate" method="post" class="inline-form">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn btn-ghost">📋 @L.T("CopyListing")</button>
         </form>
     }
     else if (Model.IsAvailable)
@@ -168,6 +185,7 @@ else
             <a class="btn btn-primary" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id" asp-route-intent="rent">@L.T("RentIt")</a>
         }
         <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id">@L.T("ContactUs")</a>
+        <a class="btn btn-ghost" href="tel:@ContactOptions.Value.Phone">📞 @L.T("CallUs")</a>
         <a class="btn btn-ghost" asp-action="Report" asp-route-id="@Model.Id">🚩 @L.T("ReportListing")</a>
     }
     @if (User.Identity?.IsAuthenticated == true && (Model.OwnerId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value || User.IsInRole("Admin")))

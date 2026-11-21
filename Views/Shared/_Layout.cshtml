@@ -16,6 +16,8 @@
     <meta name="description" content="إعلانات عقارات للبيع والإيجار في القاهرة والجيزة — شقق، فيلات، محلات وعمارات." />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    @* الوضع الفاتح/الداكن يُطبَّق قبل رسم الصفحة حتى لا يلمع الداكن أولًا. *@
+    <script>try { document.documentElement.setAttribute("data-theme", localStorage.getItem("aqarak-theme") || "dark"); } catch (e) {}</script>
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
@@ -45,11 +47,13 @@
                 }
                 else
                 {
+                    <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">@L.T("Favorites")</a>
                     <a class="btn btn-ghost nav-auth" asp-controller="Account" asp-action="Login">@L.T("Login")</a>
                     <a class="btn btn-primary nav-auth" asp-controller="Account" asp-action="Register">@L.T("Register")</a>
                 }
             </nav>
             <div class="header-actions">
+                <button type="button" id="themeToggle" class="btn btn-ghost" title="الوضع الفاتح / الداكن">☀️</button>
                 @await Component.InvokeAsync("NotificationBell")
                 <a class="lang-switch" asp-controller="Language" asp-action="Set" asp-route-lang="@(L.IsArabic ? "en" : "ar")" asp-route-returnUrl="@Context.Request.Path">@(L.IsArabic ? "English" : "العربية")</a>
                 @if (User.Identity?.IsAuthenticated == true)
@@ -81,7 +85,7 @@
     <footer class="site-footer">
         <div class="container">
             <p>@L.T("Brand") - @L.T("Tagline")</p>
-            <p>@L.T("Phone"): @ContactOptions.Value.Phone | @L.T("WhatsApp"): @ContactOptions.Value.WhatsApp | @L.T("Email"): @ContactOptions.Value.Email</p>
+            <p>@L.T("Phone"): <a href="tel:@ContactOptions.Value.Phone">@ContactOptions.Value.Phone</a> | @L.T("WhatsApp"): @ContactOptions.Value.WhatsApp | @L.T("Email"): @ContactOptions.Value.Email</p>
         </div>
     </footer>
     @* شريط المقارنة: يظهر لما تختار إعلانات للمقارنة من الكروت أو التفاصيل. *@

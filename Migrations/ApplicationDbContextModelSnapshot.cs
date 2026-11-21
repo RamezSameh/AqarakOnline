@@ -22,7 +22,6 @@ namespace AqarakOnline.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-
             modelBuilder.Entity("AqarakOnline.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -221,6 +220,9 @@ namespace AqarakOnline.Migrations
                     b.Property<string>("Features")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int?>("Finishing")
+                        .HasColumnType("int");
 
                     b.Property<int?>("Floor")
                         .HasColumnType("int");
@@ -670,7 +672,6 @@ namespace AqarakOnline.Migrations
 
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
-
 
             modelBuilder.Entity("AqarakOnline.Models.ContactRequest", b =>
                 {

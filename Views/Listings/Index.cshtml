@@ -30,7 +30,9 @@
         new(L.T("SortPriceAsc"), "priceAsc", ViewBag.Sort == "priceAsc"),
         new(L.T("SortPriceDesc"), "priceDesc", ViewBag.Sort == "priceDesc"),
         new(L.T("SortAreaDesc"), "areaDesc", ViewBag.Sort == "areaDesc"),
-        new(L.T("SortViewsDesc"), "viewsDesc", ViewBag.Sort == "viewsDesc")
+        new(L.T("SortViewsDesc"), "viewsDesc", ViewBag.Sort == "viewsDesc"),
+        new(L.T("SortPricePerSqmAsc"), "pricePerSqmAsc", ViewBag.Sort == "pricePerSqmAsc"),
+        new(L.T("SortPricePerSqmDesc"), "pricePerSqmDesc", ViewBag.Sort == "pricePerSqmDesc")
     };
     var listingTypeValue = ViewBag.ListingType?.ToString() ?? "";
     var propertyTypeValue = ViewBag.PropertyType?.ToString() ?? "";
@@ -39,10 +41,28 @@
     {
         new(L.T("All"), "")
     };
+    var areaCounts = ViewBag.AreaCounts as Dictionary<string, int>;
     foreach (var areaName in AqarakOnline.Models.ListingAreas.All)
     {
-        areaOptions.Add(new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(areaName, areaName, areaValue == areaName));
+        var areaLabel = areaCounts != null && areaCounts.TryGetValue(areaName, out var areaCount) && areaCount > 0
+            ? $"{areaName} ({areaCount})" : areaName;
+        areaOptions.Add(new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(areaLabel, areaName, areaValue == areaName));
     }
+    var finishingOptions = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+    {
+        new(L.T("All"), "")
+    };
+    foreach (FinishingLevel level in Enum.GetValues(typeof(FinishingLevel)))
+    {
+        finishingOptions.Add(new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(L.FinishingText(level), level.ToString(), ViewBag.Finishing == level));
+    }
+    var recencyOptions = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+    {
+        new(L.T("RecencyAny"), "any", ViewBag.Recency == "any"),
+        new(L.T("RecencyToday"), "today", ViewBag.Recency == "today"),
+        new(L.T("RecencyWeek"), "week", ViewBag.Recency == "week"),
+        new(L.T("RecencyMonth"), "month", ViewBag.Recency == "month")
+    };
     var currentPage = (int)(ViewBag.Page ?? 1);
     var totalPages = (int)(ViewBag.TotalPages ?? 1);
     var totalCount = (int)(ViewBag.TotalCount ?? 0);
@@ -53,6 +73,7 @@
     <summary>@L.T("Filters")</summary>
     <form class="filter-form" asp-action="Index" method="get">
         <input type="text" name="search" value="@ViewBag.Search" placeholder="@L.T("SearchPlaceholder")" />
+        <input type="text" name="adNumber" value="@ViewBag.AdNumber" placeholder="@L.T("SearchByAdNumber")" />
         <select name="area" asp-items="areaOptions"></select>
         <select name="listingType" asp-items="listingTypes"></select>
         <select name="propertyType" asp-items="propertyTypes"></select>
@@ -62,6 +83,12 @@
         <input type="number" name="maxArea" value="@ViewBag.MaxArea" placeholder="@L.T("MaxArea")" min="1" step="1" />
         <input type="number" name="minRooms" value="@ViewBag.MinRooms" placeholder="@L.T("MinRooms")" min="0" step="1" />
         <label><input type="checkbox" name="furnishedOnly" value="true" checked="@(ViewBag.FurnishedOnly == true)" /> @L.T("FurnishedOnly")</label>
+        <select name="finishing" asp-items="finishingOptions"></select>
+        <label class="sort-label">
+            @L.T("Recency")
+            <select name="recency" asp-items="recencyOptions"></select>
+        </label>
+        <label><input type="checkbox" name="directOwnerOnly" value="true" checked="@(ViewBag.DirectOwnerOnly == true)" /> @L.T("DirectOwnerOnly")</label>
         <label class="sort-label">
             @L.T("SortBy")
             <select name="sort" asp-items="sortOptions"></select>
@@ -115,18 +142,18 @@ else
             <a class="btn btn-ghost @(currentPage <= 1 ? "disabled" : "")"
                asp-action="Index" asp-route-search="@ViewBag.Search" asp-route-listingType="@listingTypeValue" asp-route-propertyType="@propertyTypeValue" asp-route-area="@areaValue"
                asp-route-minPrice="@ViewBag.MinPrice" asp-route-maxPrice="@ViewBag.MaxPrice" asp-route-minArea="@ViewBag.MinArea" asp-route-maxArea="@ViewBag.MaxArea"
-               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-page="@(currentPage - 1)">@L.T("Previous")</a>
+               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-adNumber="@ViewBag.AdNumber" asp-route-recency="@ViewBag.Recency" asp-route-directOwnerOnly="@ViewBag.DirectOwnerOnly" asp-route-finishing="@ViewBag.Finishing" asp-route-page="@(currentPage - 1)">@L.T("Previous")</a>
             @for (var p = 1; p <= totalPages; p++)
             {
                 <a class="btn btn-ghost" aria-current="@(p == currentPage ? "page" : null)"
                    asp-action="Index" asp-route-search="@ViewBag.Search" asp-route-listingType="@listingTypeValue" asp-route-propertyType="@propertyTypeValue" asp-route-area="@areaValue"
                    asp-route-minPrice="@ViewBag.MinPrice" asp-route-maxPrice="@ViewBag.MaxPrice" asp-route-minArea="@ViewBag.MinArea" asp-route-maxArea="@ViewBag.MaxArea"
-                   asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-page="@p">@p</a>
+                   asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-adNumber="@ViewBag.AdNumber" asp-route-recency="@ViewBag.Recency" asp-route-directOwnerOnly="@ViewBag.DirectOwnerOnly" asp-route-finishing="@ViewBag.Finishing" asp-route-page="@p">@p</a>
             }
             <a class="btn btn-ghost @(currentPage >= totalPages ? "disabled" : "")"
                asp-action="Index" asp-route-search="@ViewBag.Search" asp-route-listingType="@listingTypeValue" asp-route-propertyType="@propertyTypeValue" asp-route-area="@areaValue"
                asp-route-minPrice="@ViewBag.MinPrice" asp-route-maxPrice="@ViewBag.MaxPrice" asp-route-minArea="@ViewBag.MinArea" asp-route-maxArea="@ViewBag.MaxArea"
-               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-page="@(currentPage + 1)">@L.T("Next")</a>
+               asp-route-sort="@ViewBag.Sort" asp-route-onlyAvailable="@ViewBag.OnlyAvailable" asp-route-minRooms="@ViewBag.MinRooms" asp-route-furnishedOnly="@ViewBag.FurnishedOnly" asp-route-adNumber="@ViewBag.AdNumber" asp-route-recency="@ViewBag.Recency" asp-route-directOwnerOnly="@ViewBag.DirectOwnerOnly" asp-route-finishing="@ViewBag.Finishing" asp-route-page="@(currentPage + 1)">@L.T("Next")</a>
         </nav>
     }
 }

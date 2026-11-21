@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 using System.Security.Claims;
 using AqarakOnline.Data;
 using AqarakOnline.Models;
@@ -30,6 +31,11 @@ public class HomeController : Controller
             .ThenByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
             .Take(6)
             .ToListAsync();
+        ViewBag.AvailableListingsCount = await _context.Listings
+            .CountAsync(l => l.IsAvailable && l.Approval == ListingApproval.Approved);
+        ViewBag.AreasCount = await _context.Listings
+            .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
+            .Select(l => l.Area).Distinct().CountAsync();
         if (User.Identity?.IsAuthenticated == true)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -86,7 +92,9 @@ public class ListingsController : Controller
         string? search, ListingType? listingType, PropertyType? propertyType,
         decimal? minPrice, decimal? maxPrice, bool onlyAvailable = false,
         int? minArea = null, int? maxArea = null, string? sort = null, int page = 1,
-        int? minRooms = null, bool furnishedOnly = false, string? area = null)
+        int? minRooms = null, bool furnishedOnly = false, string? area = null,
+        string? adNumber = null, string? recency = null, bool directOwnerOnly = false,
+        FinishingLevel? finishing = null)
     {
         var query = _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.Approval == ListingApproval.Approved).AsQueryable();
@@ -135,6 +143,39 @@ public class ListingsController : Controller
         {
             query = query.Where(l => l.IsFurnished);
         }
+        if (!string.IsNullOrWhiteSpace(adNumber))
+        {
+            var adTerm = adNumber.Trim().ToUpperInvariant();
+            query = query.Where(l => l.AdNumber.ToUpper() == adTerm);
+        }
+        if (directOwnerOnly)
+        {
+            query = query.Where(l => l.AdvertiserType == AdvertiserType.Owner);
+        }
+        if (finishing.HasValue)
+        {
+            query = query.Where(l => l.Finishing == finishing.Value);
+        }
+        // فلتر «جديد»: اليوم = آخر 24 ساعة، الأسبوع = آخر 7 أيام، الشهر = آخر 30 يومًا.
+        var recencyKey = (recency ?? "any").ToLowerInvariant() switch
+        {
+            "today" => "today",
+            "week" => "week",
+            "month" => "month",
+            _ => "any"
+        };
+        if (recencyKey == "today")
+        {
+            query = query.Where(l => l.CreatedAt >= DateTime.UtcNow.AddDays(-1));
+        }
+        else if (recencyKey == "week")
+        {
+            query = query.Where(l => l.CreatedAt >= DateTime.UtcNow.AddDays(-7));
+        }
+        else if (recencyKey == "month")
+        {
+            query = query.Where(l => l.CreatedAt >= DateTime.UtcNow.AddDays(-30));
+        }
 
         // الترتيب: الافتراضي الأحدث. القيم المقبولة فقط هي المعرّفة هنا،
         // وأي قيمة غير معروفة تعود للأحدث بدل ما تكسر الاستعلام.
@@ -144,6 +185,8 @@ public class ListingsController : Controller
             "pricedesc" => "priceDesc",
             "areadesc" => "areaDesc",
             "viewsdesc" => "viewsDesc",
+            "pricepersqmasc" => "pricePerSqmAsc",
+            "pricepersqmdesc" => "pricePerSqmDesc",
             _ => "newest"
         };
         // الإعلانات المميزة أولًا دائمًا، ثم الترتيب المختار.
@@ -153,6 +196,8 @@ public class ListingsController : Controller
             "priceDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.Price).ThenByDescending(l => l.CreatedAt),
             "areaDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.AreaSqm).ThenByDescending(l => l.CreatedAt),
             "viewsDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt),
+            "pricePerSqmAsc" => query.OrderByDescending(l => l.IsFeatured).ThenBy(l => l.Price / l.AreaSqm).ThenByDescending(l => l.CreatedAt),
+            "pricePerSqmDesc" => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.Price / l.AreaSqm).ThenByDescending(l => l.CreatedAt),
             _ => query.OrderByDescending(l => l.IsFeatured).ThenByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
         };
 
@@ -172,6 +217,16 @@ public class ListingsController : Controller
         ViewBag.MinRooms = minRooms;
         ViewBag.FurnishedOnly = furnishedOnly;
         ViewBag.Area = area;
+        ViewBag.AdNumber = adNumber;
+        ViewBag.Recency = recencyKey;
+        ViewBag.DirectOwnerOnly = directOwnerOnly;
+        ViewBag.Finishing = finishing;
+        // عدد الإعلانات المتاحة في كل منطقة — يظهر جنب اسم المنطقة في الفلتر.
+        ViewBag.AreaCounts = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable)
+            .GroupBy(l => l.Area)
+            .Select(g => new { Area = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.Area, g => g.Count);
         ViewBag.Sort = sortKey;
         ViewBag.Page = page;
         ViewBag.TotalPages = totalPages;
@@ -214,6 +269,14 @@ public class ListingsController : Controller
             ViewBag.IsFavorite = await _context.Favorites
                 .AnyAsync(f => f.UserId == CurrentUserId && f.ListingId == listing.Id);
         }
+        // متوسط سعر المتر في نفس المنطقة (من الإعلانات المعتمدة غير هذا الإعلان)،
+        // وسعر المتر في هذا الإعلان — للمقارنة في صفحة التفاصيل.
+        var areaSqmPrices = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved && l.Area == listing.Area
+                && l.Id != listing.Id && l.AreaSqm > 0)
+            .Select(l => l.Price / l.AreaSqm).ToListAsync();
+        ViewBag.AreaAvgPricePerSqm = areaSqmPrices.Any() ? areaSqmPrices.Average() : (decimal?)null;
+        ViewBag.PricePerSqm = listing.AreaSqm > 0 ? listing.Price / listing.AreaSqm : (decimal?)null;
         // إعلانات مشابهة: نفس المنطقة أولًا، ثم نفس النوع، وبسعر قريب.
         ViewBag.SimilarListings = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.Approval == ListingApproval.Approved && l.Id != listing.Id
@@ -376,6 +439,7 @@ public class ListingsController : Controller
         listing.Bathrooms = model.Bathrooms;
         listing.Floor = model.PropertyType == PropertyType.Apartment ? model.Floor : null;
         listing.IsFurnished = model.IsFurnished;
+        listing.Finishing = model.Finishing;
         listing.IsAvailable = model.IsAvailable;
         if (!User.IsInRole("Admin"))
         {
@@ -509,6 +573,94 @@ public class ListingsController : Controller
             return Redirect(returnUrl);
         }
         return RedirectToAction(nameof(MyListings));
+    }
+
+    /// <summary>
+    /// نسخ الإعلان: نسخة جديدة بنفس البيانات والمرفقات (ملفات منسوخة)،
+    /// معلّقة تنتظر موافقة الأدمن — وتفتح صفحة التعديل لمراجعتها.
+    /// </summary>
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Duplicate(int id)
+    {
+        var source = await _context.Listings.Include(l => l.Attachments)
+            .FirstOrDefaultAsync(l => l.Id == id);
+        if (source == null)
+        {
+            return NotFound();
+        }
+        if (source.OwnerId != CurrentUserId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+        var copy = new Listing
+        {
+            OwnerId = source.OwnerId,
+            Title = source.Title + " (نسخة)",
+            ListingType = source.ListingType,
+            PropertyType = source.PropertyType,
+            Area = source.Area,
+            DetailedAddress = source.DetailedAddress,
+            Description = source.Description,
+            Features = source.Features,
+            Price = source.Price,
+            AreaSqm = source.AreaSqm,
+            AdvertiserType = source.AdvertiserType,
+            Rooms = source.Rooms,
+            Bathrooms = source.Bathrooms,
+            Floor = source.PropertyType == PropertyType.Apartment ? source.Floor : null,
+            IsFurnished = source.IsFurnished,
+            Finishing = source.Finishing,
+            IsAvailable = true,
+            IsFeatured = false,
+            ViewCount = 0,
+            LastBumpedAt = null,
+            Approval = User.IsInRole("Admin") ? ListingApproval.Approved : ListingApproval.Pending,
+            CreatedAt = DateTime.UtcNow,
+            AdNumber = "TEMP",
+            Attachments = new List<ListingAttachment>()
+        };
+        _context.Listings.Add(copy);
+        await _context.SaveChangesAsync();
+        copy.AdNumber = $"AQ-{copy.Id:D4}";
+        // نسخ ملفات المرفقات (صور/فيديو) إلى مجلد النسخة بأسماء جديدة،
+        // حتى لا يتأثر أي إعلان بحذف مرفقات الآخر.
+        foreach (var attachment in source.Attachments.OrderBy(a => a.Order))
+        {
+            var sourcePath = Path.Combine(_env.WebRootPath, attachment.FilePath.Replace('/', Path.DirectorySeparatorChar));
+            if (!System.IO.File.Exists(sourcePath))
+            {
+                continue;
+            }
+            var fileName = Guid.NewGuid().ToString("N") + Path.GetExtension(attachment.FilePath);
+            var folder = Path.Combine(_env.WebRootPath, "uploads", "listings", copy.Id.ToString());
+            Directory.CreateDirectory(folder);
+            System.IO.File.Copy(sourcePath, Path.Combine(folder, fileName));
+            _context.ListingAttachments.Add(new ListingAttachment
+            {
+                ListingId = copy.Id,
+                Kind = attachment.Kind,
+                FilePath = $"uploads/listings/{copy.Id}/{fileName}",
+                ContentType = attachment.ContentType,
+                OriginalFileName = attachment.OriginalFileName,
+                SizeBytes = attachment.SizeBytes,
+                Order = attachment.Order
+            });
+        }
+        await _context.SaveChangesAsync();
+        if (copy.Approval == ListingApproval.Pending)
+        {
+            await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
+            TempData["Info"] = "تم نسخ الإعلان — راجعه وعدّل اللي تحتاجه، وهو مستني موافقة الأدمن.";
+        }
+        else
+        {
+            await SavedSearchAlerts.NotifyMatchingAsync(_context, copy, _hub);
+            await _hub.Clients.All.SendAsync("listingsChanged");
+            TempData["Info"] = "تم نسخ الإعلان ونشره.";
+        }
+        return RedirectToAction(nameof(Edit), new { id = copy.Id });
     }
 
     [Authorize]
@@ -845,6 +997,10 @@ public class AdminDashboardViewModel
     public List<Listing> FilteredListings { get; set; } = new();
     /// <summary>إعلانات مقبولة ومتاحة بقالها أكثر من 30 يومًا — تحتاج مراجعة/تحديث.</summary>
     public List<Listing> StaleListings { get; set; } = new();
+    /// <summary>إعلانات معلّقة بقالها أكثر من 3 أيام — تحتاج قرار موافقة/رفض.</summary>
+    public List<Listing> StalePendingListings { get; set; } = new();
+    /// <summary>إعلانات مقبولة ومتاحة بقالها أكثر من 60 يومًا — تحتاج تنبيه تجديد لصاحبها.</summary>
+    public List<Listing> RenewalListings { get; set; } = new();
     /// <summary>إعلانات جديدة في آخر 6 شهور (للرسم البياني).</summary>
     public List<ChartPoint> MonthlyListings { get; set; } = new();
     /// <summary>توزيع الإعلانات حسب المنطقة — أعلى 8 مناطق.</summary>
@@ -945,6 +1101,16 @@ public class AdminController : Controller
             StaleListings = await _context.Listings.Include(l => l.Owner)
                 .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable
                     && l.CreatedAt <= DateTime.UtcNow.AddDays(-30))
+                .OrderBy(l => l.CreatedAt)
+                .ToListAsync(),
+            StalePendingListings = await _context.Listings.Include(l => l.Owner)
+                .Where(l => l.Approval == ListingApproval.Pending
+                    && l.CreatedAt <= DateTime.UtcNow.AddDays(-3))
+                .OrderBy(l => l.CreatedAt)
+                .ToListAsync(),
+            RenewalListings = await _context.Listings.Include(l => l.Owner)
+                .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable
+                    && l.CreatedAt <= DateTime.UtcNow.AddDays(-60))
                 .OrderBy(l => l.CreatedAt)
                 .ToListAsync()
         };
@@ -1281,8 +1447,19 @@ public class AdminController : Controller
         }
         listing.Approval = ListingApproval.Approved;
         await _context.SaveChangesAsync();
+        _context.Notifications.Add(new Notification
+        {
+            Title = "تمت الموافقة على إعلانك",
+            Message = $"إعلانك «{listing.Title}» اتنشر وبقى ظاهر للكل.",
+            TargetUserId = listing.OwnerId,
+            Url = $"/Listings/Details/{listing.Id}",
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
         await SavedSearchAlerts.NotifyMatchingAsync(_context, listing, _hub);
         await NotifyAdminsAsync();
+        await NotifyBellAsync();
         await _hub.Clients.All.SendAsync("listingsChanged");
         return RedirectToAction(nameof(Listings));
     }
@@ -1298,7 +1475,18 @@ public class AdminController : Controller
         }
         listing.Approval = ListingApproval.Rejected;
         await _context.SaveChangesAsync();
+        _context.Notifications.Add(new Notification
+        {
+            Title = "تم رفض إعلانك",
+            Message = $"إعلانك «{listing.Title}» اترفض. راجع بياناته وعدّله وحاول تاني.",
+            TargetUserId = listing.OwnerId,
+            Url = "/Listings/MyListings",
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
         await NotifyAdminsAsync();
+        await NotifyBellAsync();
         await _hub.Clients.All.SendAsync("listingsChanged");
         return RedirectToAction(nameof(Listings));
     }
@@ -1419,6 +1607,98 @@ public class AdminController : Controller
         await _hub.Clients.All.SendAsync("refreshBell");
         TempData["Info"] = doneMessage;
         return RedirectToAction(nameof(Viewings));
+    }
+
+    /// <summary>تصدير كل الإعلانات في ملف CSV (يفتح في Excel) — للأرشفة والمتابعة.</summary>
+    [HttpGet]
+    public async Task<IActionResult> ExportListings()
+    {
+        var listings = await _context.Listings.Include(l => l.Owner)
+            .OrderByDescending(l => l.CreatedAt).ToListAsync();
+        var sb = new StringBuilder();
+        sb.Append('\uFEFF'); // BOM حتى يفتح Excel العربي صح.
+        sb.AppendLine("رقم الإعلان,العنوان,النوع,نوع العقار,المنطقة,المساحة (م²),السعر,المعلن,الهاتف,متاح,الموافقة,المشاهدات,تاريخ النشر");
+        string Cell(string? value) => "\"" + (value ?? "").Replace("\"", "\"\"") + "\"";
+        foreach (var listing in listings)
+        {
+            var propertyType = listing.PropertyType switch
+            {
+                PropertyType.Apartment => "شقة",
+                PropertyType.House => "بيت",
+                PropertyType.Building => "عمارة",
+                PropertyType.Shop => "محل",
+                _ => "فيلا"
+            };
+            var approval = listing.Approval switch
+            {
+                ListingApproval.Approved => "مقبول",
+                ListingApproval.Rejected => "مرفوض",
+                _ => "معلّق"
+            };
+            sb.AppendLine(string.Join(",", new[]
+            {
+                Cell(listing.AdNumber),
+                Cell(listing.Title),
+                Cell(listing.ListingType == ListingType.Sale ? "بيع" : "إيجار"),
+                Cell(propertyType),
+                Cell(listing.Area),
+                listing.AreaSqm.ToString(),
+                listing.Price.ToString("0.##"),
+                Cell(listing.Owner?.FullName ?? listing.Owner?.UserName),
+                Cell(listing.Owner?.PhoneNumber),
+                Cell(listing.IsAvailable ? "متاح" : "غير متاح"),
+                Cell(approval),
+                listing.ViewCount.ToString(),
+                listing.CreatedAt.ToString("yyyy-MM-dd")
+            }));
+        }
+        var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+        return File(bytes, "text/csv", $"aqarak-listings-{DateTime.UtcNow:yyyy-MM-dd}.csv");
+    }
+
+    /// <summary>
+    /// إرسال تنبيه تجديد لأصحاب الإعلانات المقبولة المتاحة الأقدم من 60 يومًا —
+    /// تنبيه واحد لكل إعلان كل 60 يومًا كحد أقصى (لا تكرار).
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SendRenewalReminders()
+    {
+        var cutoff = DateTime.UtcNow.AddDays(-60);
+        var listings = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable && l.CreatedAt <= cutoff)
+            .ToListAsync();
+        var sent = 0;
+        foreach (var listing in listings)
+        {
+            var url = $"/Listings/Details/{listing.Id}";
+            var already = await _context.Notifications.AnyAsync(n =>
+                n.TargetUserId == listing.OwnerId && n.Title == "جدّد إعلانك" && n.Url == url
+                && n.CreatedAt >= DateTime.UtcNow.AddDays(-60));
+            if (already)
+            {
+                continue;
+            }
+            _context.Notifications.Add(new Notification
+            {
+                Title = "جدّد إعلانك",
+                Message = $"إعلانك «{listing.Title}» بقاله أكتر من 60 يوم — جدّده من «إعلاناتي» عشان يرجع أول النتائج.",
+                TargetUserId = listing.OwnerId,
+                Url = url,
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            sent++;
+        }
+        await _context.SaveChangesAsync();
+        if (sent > 0)
+        {
+            await NotifyBellAsync();
+        }
+        TempData["Info"] = sent > 0
+            ? $"تم إرسال تنبيه التجديد لـ {sent} معلن."
+            : "كل المعلنين دول اتبعت لهم تنبيه تجديد في آخر 60 يوم.";
+        return RedirectToAction(nameof(Dashboard));
     }
 
     // تنبيهات الأدمن: تظهر لكل المستخدمين على هيئة إشعارات.
@@ -2027,17 +2307,33 @@ public class FavoritesController : Controller
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var listings = await _context.Favorites
-            .Include(f => f.Listing).ThenInclude(l => l!.Owner)
-            .Include(f => f.Listing).ThenInclude(l => l!.Attachments)
-            .Where(f => f.UserId == CurrentUserId)
-            .OrderByDescending(f => f.CreatedAt)
-            .Select(f => f.Listing!)
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var listings = await _context.Favorites
+                .Include(f => f.Listing).ThenInclude(l => l!.Owner)
+                .Include(f => f.Listing).ThenInclude(l => l!.Attachments)
+                .Where(f => f.UserId == CurrentUserId)
+                .OrderByDescending(f => f.CreatedAt)
+                .Select(f => f.Listing!)
+                .ToListAsync();
+            ViewBag.FavoriteListingIds = listings.Select(l => l.Id).ToHashSet();
+            return View(listings);
+        }
+        // زائر بدون حساب: مفضلته محفوظة في جهازه (كوكي aqarak-guest-favs يزامنه الجافاسكربت).
+        var guestIds = (Request.Cookies["aqarak-guest-favs"] ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(v => int.TryParse(v, out var n) ? n : -1)
+            .Where(n => n > 0).Distinct().ToList();
+        var guestListings = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
+            .Where(l => l.Approval == ListingApproval.Approved && guestIds.Contains(l.Id))
             .ToListAsync();
-        ViewBag.FavoriteListingIds = listings.Select(l => l.Id).ToHashSet();
-        return View(listings);
+        var ordered = guestIds.Select(id => guestListings.FirstOrDefault(l => l.Id == id))
+            .Where(l => l != null).Select(l => l!).ToList();
+        ViewBag.FavoriteListingIds = ordered.Select(l => l.Id).ToHashSet();
+        return View(ordered);
     }
 
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Toggle(int listingId, string? returnUrl = null)
