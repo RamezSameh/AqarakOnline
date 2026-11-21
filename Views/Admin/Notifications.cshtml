@@ -11,36 +11,25 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>العنوان</th>
-                <th>النص</th>
-                <th>تاريخ الإنشاء</th>
-                <th>الحالة</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var n in Model)
-            {
-                <tr>
-                    <td>@n.Title</td>
-                    <td>@n.Message</td>
-                    <td>@n.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>@(n.IsActive ? "مفعَّل" : "مخفي")</td>
-                    <td>
-                        <form asp-action="ToggleNotification" method="post" class="inline-form">
-                            <input type="hidden" name="id" value="@n.Id" />
-                            <button type="submit" class="btn btn-ghost">@(n.IsActive ? "إخفاء" : "تفعيل")</button>
-                        </form>
-                        <form asp-action="DeleteNotification" method="post" class="inline-form" onsubmit="return confirm('حذف هذا التنبيه نهائيًا؟');">
-                            <input type="hidden" name="id" value="@n.Id" />
-                            <button type="submit" class="btn btn-ghost">حذف نهائي</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="admin-cards">
+        @foreach (var n in Model)
+        {
+            <article class="admin-card notification-card @(n.IsActive ? "active" : "hidden")">
+                <h3>@n.Title</h3>
+                <p>@n.Message</p>
+                <p><small>@n.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small></p>
+                <p><strong>@(n.IsActive ? "مفعَّل" : "مخفي")</strong></p>
+                <div class="actions">
+                    <form asp-action="ToggleNotification" method="post" class="inline-form">
+                        <input type="hidden" name="id" value="@n.Id" />
+                        <button type="submit" class="btn btn-ghost">@(n.IsActive ? "إخفاء" : "تفعيل")</button>
+                    </form>
+                    <form asp-action="DeleteNotification" method="post" class="inline-form" onsubmit="return confirm('حذف هذا التنبيه نهائيًا؟');">
+                        <input type="hidden" name="id" value="@n.Id" />
+                        <button type="submit" class="btn btn-ghost">حذف نهائي</button>
+                    </form>
+                </div>
+            </article>
+        }
+    </div>
 }

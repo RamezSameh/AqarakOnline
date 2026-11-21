@@ -2682,11 +2682,16 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Listings()
+    public async Task<IActionResult> Listings(string? search = null)
     {
-        var listings = await _context.Listings.Include(l => l.Owner)
-            .OrderByDescending(l => l.CreatedAt)
-            .ToListAsync();
+        var query = _context.Listings.Include(l => l.Owner).AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(l => l.Title.Contains(term) || l.AdNumber.Contains(term));
+        }
+        var listings = await query.OrderByDescending(l => l.CreatedAt).ToListAsync();
+        ViewBag.Search = search;
         return View(listings);
     }
 
@@ -3715,7 +3720,7 @@ public class FavoritesController : Controller
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? sort = null)
+    public async Task<IActionResult> Index(string? sort = null, string? propertyType = null, string? search = null)
     {
         var sortKey = (sort ?? "newest").ToLowerInvariant() switch
         {
@@ -3725,12 +3730,23 @@ public class FavoritesController : Controller
             _ => "newest"
         };
         ViewBag.Sort = sortKey;
+        ViewBag.PropertyType = propertyType;
+        ViewBag.Search = search;
         if (User.Identity?.IsAuthenticated == true)
         {
             var query = _context.Favorites
                 .Include(f => f.Listing).ThenInclude(l => l!.Owner)
                 .Include(f => f.Listing).ThenInclude(l => l!.Attachments)
                 .Where(f => f.UserId == CurrentUserId);
+            if (!string.IsNullOrWhiteSpace(propertyType) && Enum.TryParse<PropertyType>(propertyType, out var pt))
+            {
+                query = query.Where(f => f.Listing!.PropertyType == pt);
+            }
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(f => f.Listing!.Title.Contains(term) || f.Listing!.Area.Contains(term));
+            }
             var listings = sortKey switch
             {
                 "priceAsc" => await query.OrderBy(f => f.Listing!.Price).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
@@ -3751,6 +3767,15 @@ public class FavoritesController : Controller
             .ToListAsync();
         var ordered = guestIds.Select(id => guestListings.FirstOrDefault(l => l.Id == id))
             .Where(l => l != null).Select(l => l!).ToList();
+        if (!string.IsNullOrWhiteSpace(propertyType) && Enum.TryParse<PropertyType>(propertyType, out var gpt))
+        {
+            ordered = ordered.Where(l => l.PropertyType == gpt).ToList();
+        }
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            ordered = ordered.Where(l => l.Title.Contains(term) || l.Area.Contains(term)).ToList();
+        }
         if (sortKey == "priceAsc")
         {
             ordered = ordered.OrderBy(l => l.Price).ToList();

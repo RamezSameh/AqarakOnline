@@ -10,6 +10,11 @@
     <button type="button" class="dash-tab-btn" data-tab="dash-stats">الإحصائيات</button>
 </div>
 
+<form class="filter-form dash-quick-search" asp-controller="Admin" asp-action="Listings" method="get">
+    <input type="text" name="search" value="@ViewBag.Search" placeholder="ابحث عن إعلان بالعنوان أو رقم الإعلان..." />
+    <button type="submit" class="btn btn-primary">@L.T("Search")</button>
+</form>
+
 <section class="dash-tab" id="dash-overview">
 <div class="cards-grid">
     <div class="listing-card stat-card"><div class="listing-body"><h3>المستخدمون</h3><p class="stat-number">@Model.TotalUsers</p><p>قيد المراجعة: @Model.PendingUsers | مفعّلون: @Model.ActiveUsers | موقوفون/محظورون: @Model.SuspendedOrBlockedUsers</p></div></div>
@@ -333,6 +338,13 @@ else
                 <div class="chart-track"><div class="chart-bar" style="width:@pct%"></div></div>
                 <span class="chart-count">@point.Count</span>
             </div>
+        }
+    </div>
+    <div class="word-cloud">
+        @foreach (var point in Model.TopSearchTerms)
+        {
+            var size = Math.Min(14 + point.Count * 2, 28);
+            <span style="font-size:@(size)px">@point.Label (@point.Count)</span>
         }
     </div>
 }

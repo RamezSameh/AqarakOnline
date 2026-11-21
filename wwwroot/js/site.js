@@ -1094,3 +1094,48 @@ document.addEventListener("DOMContentLoaded", function () {
         if (files && files.length) { input.files = files; }
     });
 });
+
+// Batch 25 — design 7
+document.addEventListener("DOMContentLoaded", function () {
+    // 13 — علامة * حمراء على حقول الإجباري.
+    document.querySelectorAll("form.form label").forEach(function (label) {
+        var next = label.nextElementSibling;
+        if (next && next.hasAttribute && next.hasAttribute("data-val-required")) {
+            label.classList.add("required-label");
+        }
+    });
+    // 15/16 — عداد حروف للعنوان والوصف.
+    function bindCounter(inputId, counterId, max) {
+        var input = document.getElementById(inputId);
+        var counter = document.getElementById(counterId);
+        if (!input || !counter) { return; }
+        function update() { counter.textContent = input.value.length + " / " + max; }
+        input.addEventListener("input", update);
+        update();
+    }
+    bindCounter("Title", "titleCounter", 200);
+    bindCounter("Description", "descCounter", 2000);
+    // 19 — معاينة الفيديو قبل الرفع.
+    var videoInput = document.getElementById("VideoFile");
+    var videoPreview = document.getElementById("videoPreview");
+    if (videoInput && videoPreview) {
+        videoInput.addEventListener("change", function () {
+            videoPreview.innerHTML = "";
+            var file = videoInput.files && videoInput.files[0];
+            if (!file) { return; }
+            var v = document.createElement("video");
+            v.controls = true;
+            v.src = URL.createObjectURL(file);
+            videoPreview.appendChild(v);
+        });
+    }
+    // 34 — ترتيب النتائج كأزرار: الشريحة تضبط القائمة المخفية وتبعت النموذج.
+    document.querySelectorAll(".sort-chip").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+            var form = chip.closest("form");
+            var select = form && form.querySelector('select[name="sort"]');
+            if (select) { select.value = chip.getAttribute("data-sort"); }
+            if (form) { form.submit(); }
+        });
+    });
+});

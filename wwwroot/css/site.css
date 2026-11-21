@@ -584,3 +584,141 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 .export-btn { padding: 12px 24px; font-size: 17px; }
 /* (50) عداد غير المقروء أوضح على الجرس */
 .bell-badge { min-width: 22px; height: 22px; font-size: 13px; font-weight: 800; border: 2px solid #1e293b; }
+
+/* Batch 25 — design 7 */
+/* 1 — صورة الكارت بتكبير خفيف عند الـ hover */
+.card-photo-wrap { overflow: hidden; }
+.listing-photo { transition: transform .4s ease; }
+.listing-card:hover .listing-photo { transform: scale(1.05); }
+/* 2 — تدرج داكن أسفل صورة الكارت */
+.card-photo-wrap::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 60px; background: linear-gradient(to top, rgba(0, 0, 0, .45), transparent); pointer-events: none; z-index: 2; }
+.card-photo-actions { z-index: 3; }
+/* 3 — الكارت بظل ملون حسب نوع الإعلان */
+.listing-card[data-listing-type="Sale"] { box-shadow: 0 4px 18px rgba(99, 102, 241, .25); }
+.listing-card[data-listing-type="Rent"] { box-shadow: 0 4px 18px rgba(16, 185, 129, .25); }
+.listing-card[data-listing-type="Sale"]:hover { box-shadow: 0 10px 28px rgba(99, 102, 241, .35); }
+.listing-card[data-listing-type="Rent"]:hover { box-shadow: 0 10px 28px rgba(16, 185, 129, .35); }
+/* 4 — سعر الكارت بخلفية شريطية */
+.listing-price { background: linear-gradient(90deg, rgba(99, 102, 241, .22), rgba(99, 102, 241, 0)); border-radius: 8px; padding: 6px 10px; }
+[data-theme="light"] .listing-price { background: linear-gradient(90deg, rgba(99, 102, 241, .14), rgba(99, 102, 241, 0)); }
+/* 7 — شريط متاح/غير متاح أرفع وأوضح */
+.availability-bar { font-size: 15px; font-weight: 800; padding: 10px 16px; letter-spacing: .5px; }
+/* 8 — فيديو التفاصيل أكبر */
+.detail-video { width: 100%; max-height: 640px; background: #000; border-radius: 12px; }
+/* 9 — شريط جانبي ثابت في التفاصيل على الديسكتوب */
+@media (min-width: 900px) {
+    .details-side-actions { position: fixed; inset-inline-end: 16px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 40; background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px; max-width: 220px; }
+    .details-side-actions .btn { width: 100%; text-align: center; }
+    .details-side-actions .inline-form { display: block; }
+    .details-side-actions .alert-info { margin: 0; }
+}
+[data-theme="light"] .details-side-actions { background: #fff; }
+/* 10 — سعر المتر بخط كبير */
+.per-sqm-big { font-size: 20px; font-weight: 800; color: #c7d2fe; }
+[data-theme="light"] .per-sqm-big { color: #4338ca; }
+/* 11 — عداد المشاهدات أوضح */
+.details-views { font-size: 18px; font-weight: 700; }
+/* 12 — العدادات والمرافق كجدول */
+.meters-table { margin-top: 28px; }
+.meters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+/* 13 — حقول الإجباري بعلامة حمراء */
+.required-label::after { content: " *"; color: #ef4444; font-weight: 800; }
+/* 14 — زر حفظ ثابت أسفل نموذج الإعلان */
+#listingForm .actions { position: sticky; bottom: 0; background: rgba(15, 23, 42, .97); padding: 12px 0; border-top: 1px solid #334155; z-index: 20; }
+[data-theme="light"] #listingForm .actions { background: rgba(248, 250, 252, .97); border-top-color: #e2e8f0; }
+/* 15/16 — عداد الحروف */
+.char-counter { display: block; text-align: end; color: #94a3b8; font-size: 12px; margin-top: 2px; }
+/* 17 — مصغرات رفع الصور أكبر */
+.photo-preview-item img { width: 120px; height: 120px; }
+.photo-sort-list img { width: 120px; height: 110px; }
+/* 18 — زر إضافة صور كبطاقة كبيرة */
+.drop-zone { min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; }
+/* 19 — معاينة الفيديو قبل الرفع */
+.video-preview video { max-width: 100%; max-height: 240px; border-radius: 10px; margin-top: 8px; }
+/* 20 — خلفية مميزة لكل خطوة */
+.form-step.step-1 { border-inline-start: 4px solid #6366f1; background: rgba(99, 102, 241, .12); }
+.form-step.step-2 { border-inline-start: 4px solid #22c55e; background: rgba(34, 197, 94, .12); }
+.form-step.step-3 { border-inline-start: 4px solid #f59e0b; background: rgba(245, 158, 11, .12); }
+/* 23 — المقارنة بألوان مختلفة لكل عمود */
+.compare-table th:nth-child(2), .compare-table td:nth-child(2) { background: rgba(99, 102, 241, .10); }
+.compare-table th:nth-child(3), .compare-table td:nth-child(3) { background: rgba(34, 197, 94, .10); }
+.compare-table th:nth-child(4), .compare-table td:nth-child(4) { background: rgba(245, 158, 11, .10); }
+/* 24 — شارة حالة ملونة في إعلاناتي */
+.status-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 700; font-size: 13px; }
+.status-Approved { background: rgba(34, 197, 94, .2); color: #4ade80; }
+.status-Pending { background: rgba(245, 158, 11, .2); color: #fbbf24; }
+.status-Rejected { background: rgba(239, 68, 68, .2); color: #f87171; }
+[data-theme="light"] .status-Approved { color: #15803d; }
+[data-theme="light"] .status-Pending { color: #b45309; }
+[data-theme="light"] .status-Rejected { color: #b91c1c; }
+/* 25 — روابط سريعة في حسابي */
+.quick-links { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+.quick-link { padding: 14px 20px; font-size: 17px; }
+/* 27 — زر تشغيل البحث المحفوظ أكبر */
+.run-search-btn { padding: 12px 22px; font-size: 16px; }
+/* 28/29 — الدخول والتسجيل بخلفية متدرجة */
+.auth-gradient { background: linear-gradient(160deg, #1e293b, #312e81 70%, #1e1b4b); }
+[data-theme="light"] .auth-gradient { background: linear-gradient(160deg, #fff, #e0e7ff 70%, #c7d2fe); }
+/* 30 — أزرار اتصل بنا كبيرة */
+.contact-info { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.contact-big-btn { display: inline-flex; align-items: center; gap: 6px; padding: 12px 20px; font-size: 17px; }
+/* 31 — الهيرو بخلفية صورة */
+.hero { background-image: linear-gradient(rgba(15, 23, 42, .55), rgba(15, 23, 42, .75)), url("/images/hero.jpg"); background-size: cover; background-position: center; }
+/* 32 — ترقيم الأكثر مشاهدة */
+.ranked-item { position: relative; }
+.rank-num { position: absolute; top: 8px; inset-inline-start: 8px; z-index: 3; width: 30px; height: 30px; border-radius: 50%; background: #f59e0b; color: #fff; font-weight: 800; display: grid; place-items: center; box-shadow: 0 2px 8px rgba(0, 0, 0, .4); }
+/* 33 — زر عرض الكل أوضح */
+.section-head .btn { padding: 10px 20px; font-weight: 800; }
+/* 34 — ترتيب النتائج كأزرار */
+.sort-select-hidden { display: none; }
+.sort-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+.sort-chip { padding: 6px 12px; border-radius: 999px; }
+.sort-chip.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+/* 35 — شريط الفلاتر الجانبي بخلفية مميزة */
+@media (min-width: 900px) {
+    .search-sidebar { background: linear-gradient(180deg, #1e293b, #16213a); border: 1px solid #334155; border-radius: 16px; padding: 16px; }
+    [data-theme="light"] .search-sidebar { background: #fff; border-color: #e2e8f0; }
+}
+/* 36 — زر مسح الفلترة أوضح */
+.filter-form a.btn-ghost { border-color: #ef4444; color: #fca5a5; }
+[data-theme="light"] .filter-form a.btn-ghost { border-color: #ef4444; color: #dc2626; }
+/* 37 — ترقيم الصفحات بأزرار أكبر */
+.pagination .btn { padding: 10px 16px; font-size: 16px; }
+/* 39 — الهيدر بشعار أكبر */
+.brand { font-size: 24px; }
+.brand-icon { width: 40px; height: 40px; font-size: 22px; }
+/* 40 — الهيدر بخلفية متدرجة */
+.site-header { background: linear-gradient(90deg, #0f172a, #1e1b4b 60%, #0f172a); }
+[data-theme="light"] .site-header { background: linear-gradient(90deg, #f8fafc, #e0e7ff 60%, #f8fafc); }
+/* 43 — زر العودة للأعلى بسهم أكبر */
+.back-to-top-arrow { font-size: 26px; }
+/* 44 — بطاقات إحصائيات لوحة الأدمن ملونة */
+.stat-card:nth-child(1) { border-top: 4px solid #6366f1; }
+.stat-card:nth-child(2) { border-top: 4px solid #22c55e; }
+.stat-card:nth-child(3) { border-top: 4px solid #f59e0b; }
+.stat-card:nth-child(4) { border-top: 4px solid #ec4899; }
+/* 45 — بحث سريع في لوحة الأدمن */
+.dash-quick-search { margin: 16px 0; }
+/* 47 — سحابة كلمات لأعلى مصطلحات البحث */
+.word-cloud { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; margin-top: 12px; }
+.word-cloud span { background: #1e293b; border: 1px solid #334155; border-radius: 999px; padding: 4px 12px; font-weight: 700; }
+[data-theme="light"] .word-cloud span { background: #fff; border-color: #e2e8f0; }
+/* 48 — شريط جانبي للوحة الأدمن */
+.admin-sidebar { display: none; }
+@media (min-width: 901px) {
+    .admin-sidebar { display: flex; flex-direction: column; gap: 4px; position: fixed; inset-inline-start: 0; top: 61px; bottom: 0; width: 200px; background: #111827; border-inline-end: 1px solid #334155; padding: 16px 12px; z-index: 90; overflow-y: auto; }
+    .admin-sidebar a { padding: 10px 12px; border-radius: 8px; color: #cbd5e1; text-decoration: none; font-weight: 600; }
+    .admin-sidebar a:hover { background: #1e293b; color: #fff; }
+    .admin-sidebar-title { font-weight: 800; color: #fff; margin: 0 0 8px; padding: 0 12px; }
+    body:has(.admin-sidebar) main.container, body:has(.admin-sidebar) .site-footer .container, body:has(.admin-sidebar) .site-header .container { margin-inline-start: 200px; margin-inline-end: auto; width: calc(min(1400px, 96%) - 200px); }
+    [data-theme="light"] .admin-sidebar { background: #f1f5f9; border-inline-end-color: #e2e8f0; }
+    [data-theme="light"] .admin-sidebar a { color: #334155; }
+    [data-theme="light"] .admin-sidebar a:hover { background: #e2e8f0; color: #0f172a; }
+    [data-theme="light"] .admin-sidebar-title { color: #0f172a; }
+}
+/* 49 — أيقونة حسب نوع التنبيه */
+.notification-icon { font-size: 22px; }
+/* 50 — زر تحديد الكل كمقروء أوضح */
+.mark-all-read-btn { padding: 12px 22px; font-size: 16px; }
+/* 42 — حقوق النشر في الفوتر */
+.footer-copy { text-align: center; color: #94a3b8; font-size: 13px; padding-bottom: 16px; margin: 0; }

@@ -33,10 +33,11 @@
         <span class="form-step-item">3 — الصور والفيديو</span>
     </div>
 
-    <h2 class="form-step"><span class="step-num">1</span> بيانات الإعلان</h2>
+    <h2 class="form-step step-1"><span class="step-num">1</span> بيانات الإعلان</h2>
 
     <label>@L.T("Title")</label>
     <input asp-for="Title" />
+    <small id="titleCounter" class="char-counter"></small>
     <span asp-validation-for="Title" class="field-error"></span>
 
     <label>@L.T("ListingType")</label>
@@ -71,6 +72,7 @@
 
     <label>@L.T("Details")</label>
     <textarea asp-for="Description" rows="4"></textarea>
+    <small id="descCounter" class="char-counter"></small>
     <span asp-validation-for="Description" class="field-error"></span>
 
     <label>@L.T("Features")</label>
@@ -83,7 +85,7 @@
     <label>@L.T("CustomFeature")</label>
     <input type="text" name="customFeatures" value="@string.Join("، ", Model.FeaturesList.Except(AqarakOnline.Models.ListingFeatures.All))" placeholder="اكتب ميزة مش موجودة في الاختيارات (افصل بين الميزات بفاصلة)" />
 
-    <h2 class="form-step"><span class="step-num">2</span> السعر والمواصفات</h2>
+    <h2 class="form-step step-2"><span class="step-num">2</span> السعر والمواصفات</h2>
 
     <div class="form-row">
         <div>
@@ -177,7 +179,7 @@
         <label><input asp-for="IsAvailable" type="checkbox" /> @L.T("Available")</label>
     }
 
-    <h2 class="form-step"><span class="step-num">3</span> الصور والفيديو</h2>
+    <h2 class="form-step step-3"><span class="step-num">3</span> الصور والفيديو</h2>
 
     <label>صور توضيحية (حتى 5 صور)</label>
     <div id="photoDropZone" class="drop-zone">
@@ -188,6 +190,7 @@
     <small>الصور بتتصغّر وتتضغط تلقائيًا عند الرفع، وحجم الصورة الواحدة 10 ميجا بحد أقصى.</small>
     <label>فيديو (حتى 25 ميجا)</label>
     <input asp-for="VideoFile" type="file" accept="video/*" />
+    <div id="videoPreview" class="video-preview"></div>
 
     @if (isEdit && Model.Attachments.Any(a => a.Kind == AttachmentKind.Photo))
     {

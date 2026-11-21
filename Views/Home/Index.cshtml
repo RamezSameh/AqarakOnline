@@ -78,9 +78,14 @@
             <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index" asp-route-sort="viewsDesc">@L.T("SeeAll")</a>
         </div>
         <div class="cards-grid">
+            @{ var mostViewedRank = 1; }
             @foreach (var listing in (List<Listing>)ViewBag.MostViewed)
             {
-                @await Html.PartialAsync("_ListingCard", listing)
+                <div class="ranked-item">
+                    <span class="rank-num">@mostViewedRank</span>
+                    @await Html.PartialAsync("_ListingCard", listing)
+                </div>
+                mostViewedRank++;
             }
         </div>
     </section>

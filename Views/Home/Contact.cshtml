@@ -3,9 +3,9 @@
 <h1>@L.T("ContactUs")</h1>
 <p>عندك سؤال أو استفسار؟ ابعت رسالتك وهنرد عليك.</p>
 <div class="contact-info">
-    <p>@L.T("Phone"): <a href="tel:@ContactOptions.Value.Phone">@ContactOptions.Value.Phone</a></p>
-    <p>@L.T("WhatsApp"): @ContactOptions.Value.WhatsApp</p>
-    <p>@L.T("Email"): @ContactOptions.Value.Email</p>
+    <a class="btn btn-primary contact-big-btn" href="tel:@ContactOptions.Value.Phone">📞 @L.T("CallUs")</a>
+    <a class="btn btn-primary contact-big-btn" href="https://wa.me/@ContactOptions.Value.WhatsAppDigits" target="_blank" rel="noopener">💬 @L.T("WhatsApp")</a>
+    <a class="btn btn-ghost contact-big-btn" href="mailto:@ContactOptions.Value.Email">✉️ @L.T("Email")</a>
 </div>
 <form asp-action="Contact" method="post" class="form">
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>

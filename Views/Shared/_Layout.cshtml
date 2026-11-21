@@ -110,9 +110,27 @@
                 <p>@L.T("Phone"): <a href="tel:@ContactOptions.Value.Phone">@ContactOptions.Value.Phone</a></p>
                 <p>@L.T("WhatsApp"): @ContactOptions.Value.WhatsApp</p>
                 <p>@L.T("Email"): @ContactOptions.Value.Email</p>
+                <p>💬 <a href="https://wa.me/@ContactOptions.Value.WhatsAppDigits" target="_blank" rel="noopener">واتساب</a> • 📘 <a href="https://www.facebook.com/sharer/sharer.php?u=@Uri.EscapeDataString($"{Context.Request.Scheme}://{Context.Request.Host}/")" target="_blank" rel="noopener">شارك الموقع على فيسبوك</a></p>
             </div>
         </div>
+        <p class="footer-copy">© 2026 @L.T("Brand") — جميع الحقوق محفوظة</p>
     </footer>
+    @if (currentController == "Admin")
+    {
+        <aside class="admin-sidebar">
+            <p class="admin-sidebar-title">لوحة الأدمن</p>
+            <a asp-controller="Admin" asp-action="Dashboard">لوحة التحكم</a>
+            <a asp-controller="Admin" asp-action="Users">المستخدمون</a>
+            <a asp-controller="Admin" asp-action="Listings">الإعلانات</a>
+            <a asp-controller="Admin" asp-action="Reports">البلاغات</a>
+            <a asp-controller="Admin" asp-action="Requests">طلبات التواصل</a>
+            <a asp-controller="Admin" asp-action="Viewings">المعاينات</a>
+            <a asp-controller="Admin" asp-action="ContactMessages">رسائل التواصل</a>
+            <a asp-controller="Admin" asp-action="BlockedPhones">الأرقام المحظورة</a>
+            <a asp-controller="Admin" asp-action="ImportListings">استيراد إعلانات</a>
+            <a asp-controller="Admin" asp-action="Notifications">الإشعارات</a>
+        </aside>
+    }
     @* شريط المقارنة: يظهر لما تختار إعلانات للمقارنة من الكروت أو التفاصيل. *@
     <div id="compareBar" class="compare-bar" hidden>
         <span id="compareCount"></span>

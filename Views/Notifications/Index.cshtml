@@ -8,34 +8,48 @@ else
 {
     <div class="actions">
         <form asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="inline-form">
-            <button type="submit" class="btn btn-ghost">@L.T("MarkAllAsRead")</button>
+            <button type="submit" class="btn btn-primary mark-all-read-btn">@L.T("MarkAllAsRead")</button>
         </form>
         <form asp-controller="Notifications" asp-action="DeleteAll" method="post" class="inline-form" onsubmit="return confirm('حذف كل التنبيهات؟');">
             <button type="submit" class="btn btn-ghost">@L.T("DeleteAllNotifications")</button>
         </form>
     </div>
-    <div class="notifications-list">
-        @foreach (var row in Model)
+        var today = DateTime.Today;
+        var notifGroups = new[]
         {
-            <article class="notification-item @(row.IsRead ? "" : "unread")">
-                @if (!string.IsNullOrEmpty(row.Notification.Url))
-                {
-                    <h3><a href="@row.Notification.Url">@row.Notification.Title</a></h3>
-                }
-                else
-                {
-                    <h3>@row.Notification.Title</h3>
-                }
-                <p>@row.Notification.Message</p>
-                <small>@row.Notification.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
-                @if (!row.IsRead)
-                {
-                    <form asp-controller="Notifications" asp-action="MarkRead" method="post" class="inline-form">
-                        <input type="hidden" name="id" value="@row.Notification.Id" />
-                        <button type="submit" class="btn btn-ghost">@L.T("MarkAsRead")</button>
-                    </form>
-                }
-            </article>
-        }
-    </div>
+            ("اليوم", Model.Where(r => r.Notification.CreatedAt.ToLocalTime().Date == today)),
+            ("أمس", Model.Where(r => r.Notification.CreatedAt.ToLocalTime().Date == today.AddDays(-1))),
+            ("أقدم", Model.Where(r => r.Notification.CreatedAt.ToLocalTime().Date < today.AddDays(-1)))
+        };
+    @foreach (var (label, rows) in notifGroups)
+    {
+        if (!rows.Any()) { continue; }
+        <h2>@label</h2>
+        <div class="notifications-list">
+            @foreach (var row in rows)
+            {
+                var notifIcon = (row.Notification.Url ?? "").StartsWith("/Viewings") ? "📅" : (row.Notification.Url ?? "").StartsWith("/Listings") ? "🏠" : (row.Notification.Url ?? "").StartsWith("/Account") ? "👤" : "🔔";
+                <article class="notification-item @(row.IsRead ? "" : "unread")">
+                    <span class="notification-icon">@notifIcon</span>
+                    @if (!string.IsNullOrEmpty(row.Notification.Url))
+                    {
+                        <h3><a href="@row.Notification.Url">@row.Notification.Title</a></h3>
+                    }
+                    else
+                    {
+                        <h3>@row.Notification.Title</h3>
+                    }
+                    <p>@row.Notification.Message</p>
+                    <small>@row.Notification.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                    @if (!row.IsRead)
+                    {
+                        <form asp-controller="Notifications" asp-action="MarkRead" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@row.Notification.Id" />
+                            <button type="submit" class="btn btn-ghost">@L.T("MarkAsRead")</button>
+                        </form>
+                    }
+                </article>
+            }
+        </div>
+    }
 }

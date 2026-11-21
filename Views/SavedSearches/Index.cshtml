@@ -27,7 +27,7 @@ else
                 <p>@L.T("AreaSqm"): @areaText</p>
                 <p><strong>@L.T("MatchingNow"): @(matchCounts.TryGetValue(saved.Id, out var count) ? count : 0)</strong></p>
                 <div class="actions">
-                    <a class="btn btn-primary" asp-action="Run" asp-route-id="@saved.Id">@L.T("RunSearch")</a>
+                    <a class="btn btn-primary run-search-btn" asp-action="Run" asp-route-id="@saved.Id">@L.T("RunSearch")</a>
                     <form asp-action="Delete" method="post" class="inline-form">
                         <input type="hidden" name="id" value="@saved.Id" />
                         <button type="submit" class="btn btn-ghost">@L.T("Delete")</button>

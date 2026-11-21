@@ -143,10 +143,17 @@ else
         <label><input type="checkbox" name="hasGasMeter" value="true" checked="@(ViewBag.HasGasMeter == true)" /> @L.T("GasMeter")</label>
         <label><input type="checkbox" name="hasWaterMeter" value="true" checked="@(ViewBag.HasWaterMeter == true)" /> @L.T("WaterMeter")</label>
         <input type="number" name="minBuildingFloors" value="@ViewBag.MinBuildingFloors" placeholder="@L.T("MinBuildingFloors")" min="0" step="1" />
-        <label class="sort-label">
+        <label class="sort-label sort-select-hidden">
             @L.T("SortBy")
             <select name="sort" asp-items="sortOptions"></select>
         </label>
+        <div class="sort-chips">
+            <span>@L.T("SortBy"):</span>
+            @foreach (var opt in sortOptions)
+            {
+                <button type="button" class="btn sort-chip @(ViewBag.Sort == opt.Value ? "active" : "")" data-sort="@opt.Value">@opt.Text</button>
+            }
+        </div>
         <label><input type="checkbox" name="onlyAvailable" value="true" checked="@(ViewBag.OnlyAvailable == true)" /> @L.T("OnlyAvailable")</label>
         <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
         <a class="btn btn-ghost" asp-action="Index">@L.T("ClearFilter")</a>
@@ -155,7 +162,7 @@ else
     </aside>
     <div class="search-results">
 <div class="results-bar">
-    <span>@L.T("ResultsCount"): @totalCount</span>
+    <span>🏠 @L.T("ResultsCount"): @totalCount</span>
     @if (totalPages > 1)
     {
         <span>@currentPage / @totalPages</span>

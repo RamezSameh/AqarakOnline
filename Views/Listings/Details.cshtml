@@ -202,10 +202,34 @@ else
 @if (avgSqm.HasValue && mySqm.HasValue)
 {
     var diff = (mySqm.Value - avgSqm.Value) / avgSqm.Value * 100;
-    <p><strong>متوسط سعر المتر في @Model.Area:</strong> @avgSqm.Value.ToString("N0") جنيه/م² — سعر المتر في الإعلان ده: @mySqm.Value.ToString("N0") جنيه/م² (@(diff < -0.5m ? $"أقل من المتوسط بنسبة {Math.Abs(diff):0}%" : diff > 0.5m ? $"أعلى من المتوسط بنسبة {diff:0}%" : "يساوي متوسط المنطقة"))</p>
+    <p class="per-sqm-big"><strong>متوسط سعر المتر في @Model.Area:</strong> @avgSqm.Value.ToString("N0") جنيه/م² — سعر المتر في الإعلان ده: @mySqm.Value.ToString("N0") جنيه/م² (@(diff < -0.5m ? $"أقل من المتوسط بنسبة {Math.Abs(diff):0}%" : diff > 0.5m ? $"أعلى من المتوسط بنسبة {diff:0}%" : "يساوي متوسط المنطقة"))</p>
 }
-<p><strong>@L.T("Views"):</strong> @Model.ViewCount</p>
+<p class="details-views"><strong>@L.T("Views"):</strong> @Model.ViewCount</p>
 <p><strong>@L.T("PublishedAt"):</strong> @L.RelativeTime(Model.CreatedAt)</p>
+
+<section class="meters-table">
+    <h2>العدادات والمرافق</h2>
+    <div class="meters-grid">
+        <div>
+            <h3>@L.T("Meters")</h3>
+            <table class="table">
+                <tr><td>@L.T("ElectricityMeter")</td><td>@(Model.HasElectricityMeter ? "✓" : "✗")</td></tr>
+                <tr><td>@L.T("GasMeter")</td><td>@(Model.HasGasMeter ? "✓" : "✗")</td></tr>
+                <tr><td>@L.T("WaterMeter")</td><td>@(Model.HasWaterMeter ? "✓" : "✗")</td></tr>
+            </table>
+        </div>
+        <div>
+            <h3>@L.T("Amenities")</h3>
+            <table class="table">
+                <tr><td>@L.T("Parking")</td><td>@(Model.HasParking ? "✓" : "✗")</td></tr>
+                <tr><td>@L.T("Elevator")</td><td>@(Model.HasElevator ? "✓" : "✗")</td></tr>
+                <tr><td>@L.T("Balcony")</td><td>@(Model.HasBalcony ? "✓" : "✗")</td></tr>
+                <tr><td>@L.T("AirConditioning")</td><td>@(Model.HasAirConditioning ? "✓" : "✗")</td></tr>
+                <tr><td>@L.T("Security")</td><td>@(Model.HasSecurity ? "✓" : "✗")</td></tr>
+            </table>
+        </div>
+    </div>
+</section>
 @if (User.IsInRole("Admin"))
 {
     <h2>@L.T("AdvertiserData")</h2>
@@ -266,7 +290,7 @@ else
     }
 </div>
 
-<div class="actions">
+<div class="actions details-side-actions">
     @if (User.Identity?.IsAuthenticated == true)
     {
         var isFavorite = ViewBag.IsFavorite == true;

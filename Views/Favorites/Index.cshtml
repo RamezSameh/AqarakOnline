@@ -7,6 +7,14 @@
         new(L.T("SortPriceDesc"), "priceDesc", ViewBag.Sort == "priceDesc"),
         new(L.T("SortViewsDesc"), "viewsDesc", ViewBag.Sort == "viewsDesc")
     };
+    var typeOptions = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+    {
+        new(L.T("All"), "", string.IsNullOrWhiteSpace(ViewBag.PropertyType))
+    };
+    foreach (PropertyType pt in Enum.GetValues(typeof(PropertyType)))
+    {
+        typeOptions.Add(new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(L.PropertyTypeText(pt), pt.ToString(), ViewBag.PropertyType == pt.ToString()));
+    }
 }
 <h1>@L.T("Favorites")</h1>
 @if (!Model.Any())
@@ -21,6 +29,11 @@ else
             @L.T("SortBy")
             <select name="sort" asp-items="sortOptions"></select>
         </label>
+        <label class="sort-label">
+            @L.T("PropertyType")
+            <select name="propertyType" asp-items="typeOptions"></select>
+        </label>
+        <input type="search" name="search" value="@ViewBag.Search" placeholder="@L.T("Search")" />
         <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
     </form>
     <div class="actions">

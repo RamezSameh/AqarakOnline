@@ -46,7 +46,7 @@ else
             <div class="my-listing">
                 @await Html.PartialAsync("_ListingCard", listing)
                 <div class="my-listing-strip">
-                    <span>@L.T("ApprovalStatus"): @L.ApprovalText(listing.Approval)</span>
+                    <span class="status-badge status-@listing.Approval">@L.ApprovalText(listing.Approval)</span>
                     <span>👁 @listing.ViewCount</span>
                 </div>
                 <div class="my-listing-actions">
