@@ -267,7 +267,7 @@ public class LanguageService
         ["Views"] = ("عدد المشاهدات", "Views"),
         ["MarkAvailable"] = ("إعادة إتاحة الإعلان", "Make listing available again"),
         ["AboutUs"] = ("من نحن", "About us"),
-        ["AboutText"] = ("عقارك أونلاين منصة إعلانات عقارية تربط بين البائع والمشتري والمستأجر مباشرة عبر الإنترنت، من غير وسيط يفرض عليك شروطه أو عمولة مبالغ فيها.", "Aqarak Online is a real estate ads platform that connects sellers, buyers, and renters directly online, without a middleman imposing terms or an exaggerated commission."),
+        ["AboutText"] = ("إحنا منصة إعلانات عقارية هدفها تبسيط البيع والإيجار: تنشر إعلانك في دقايق، والمشتري يلاقي اللي بيدور عليه بسهولة، وإدارة الموقع هي اللي بتنسق بينكم من أول طلب التواصل لحد المعاينة", "We're a real estate ads platform that makes buying, selling, and renting simple: publish your ad in minutes, buyers find what they're looking for easily, and the site's management coordinates everything between you — from the first contact request to the viewing."),
         ["WhyChooseUs"] = ("ليه تختارنا؟", "Why choose us?"),
         ["WhyFastTitle"] = ("أسرع طريقة للبيع والشراء والإيجار", "The fastest way to sell, buy, and rent"),
         ["WhyFastText"] = ("اعرض عقارك أو ابحث عن عقارك في دقائق، وتابع طلبات التواصل أولًا بأول.", "List your property or find your property in minutes, and follow up on contact requests right away."),
