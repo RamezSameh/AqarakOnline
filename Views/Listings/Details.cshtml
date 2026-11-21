@@ -217,19 +217,53 @@ else
     <p><strong>@L.T("ApprovalStatus"):</strong> @L.ApprovalText(Model.Approval)</p>
 }
 
-<h2>@L.T("Details")</h2>
-<p>@Model.Description</p>
-
-@if (Model.FeaturesList.Any())
-{
-    <h2>@L.T("Features")</h2>
-    <ul>
-        @foreach (var feature in Model.FeaturesList)
+<div class="details-tabs">
+    <div class="details-tab-buttons" role="tablist">
+        <button type="button" class="details-tab-btn active" data-tab="tab-desc">@L.T("Details")</button>
+        @if (Model.FeaturesList.Any())
         {
-            <li>@feature</li>
+            <button type="button" class="details-tab-btn" data-tab="tab-features">@L.T("Features")</button>
         }
-    </ul>
-}
+        @if (Model.ListingType == ListingType.Sale)
+        {
+            <button type="button" class="details-tab-btn" data-tab="tab-calc">@L.T("Calculator")</button>
+        }
+    </div>
+    <div class="details-tab-panel active" id="tab-desc">
+        <p>@Model.Description</p>
+    </div>
+    @if (Model.FeaturesList.Any())
+    {
+        <div class="details-tab-panel" id="tab-features" hidden>
+            <ul>
+                @foreach (var feature in Model.FeaturesList)
+                {
+                    <li>@feature</li>
+                }
+            </ul>
+        </div>
+    }
+    @if (Model.ListingType == ListingType.Sale)
+    {
+        <div class="details-tab-panel" id="tab-calc" hidden>
+            <section class="calculator" id="calculator">
+                <h2>@L.T("Calculator")</h2>
+                <div class="form">
+                    <label>@L.T("Price")</label>
+                    <input id="calcPrice" type="number" min="0" step="any" value="@Model.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                    <label>@L.T("DownPayment")</label>
+                    <input id="calcDown" type="number" min="0" step="any" value="@((Model.Price * 0.2m).ToString("0", System.Globalization.CultureInfo.InvariantCulture))" />
+                    <label>@L.T("Years")</label>
+                    <input id="calcYears" type="number" min="1" max="30" step="1" value="10" />
+                    <label>@L.T("InterestRate")</label>
+                    <input id="calcRate" type="number" min="0" max="100" step="any" value="18" />
+                    <p><strong>@L.T("MonthlyInstallment"):</strong> <span id="calcResult">-</span></p>
+                    <small>@L.T("CalculatorNote")</small>
+                </div>
+            </section>
+        </div>
+    }
+</div>
 
 <div class="actions">
     @if (User.Identity?.IsAuthenticated == true)
@@ -294,26 +328,7 @@ else
     <button type="button" class="btn btn-ghost compare-toggle" data-id="@Model.Id" data-add="@L.T("AddToCompare")" data-added="@L.T("InCompare")" data-max="@L.T("CompareMax")">@L.T("AddToCompare")</button>
 </div>
 
-@if (Model.ListingType == ListingType.Sale)
-{
-    <section class="calculator" id="calculator">
-        <h2>@L.T("Calculator")</h2>
-        <div class="form">
-            <label>@L.T("Price")</label>
-            <input id="calcPrice" type="number" min="0" step="any" value="@Model.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
-            <label>@L.T("DownPayment")</label>
-            <input id="calcDown" type="number" min="0" step="any" value="@((Model.Price * 0.2m).ToString("0", System.Globalization.CultureInfo.InvariantCulture))" />
-            <label>@L.T("Years")</label>
-            <input id="calcYears" type="number" min="1" max="30" step="1" value="10" />
-            <label>@L.T("InterestRate")</label>
-            <input id="calcRate" type="number" min="0" max="100" step="any" value="18" />
-            <p><strong>@L.T("MonthlyInstallment"):</strong> <span id="calcResult">-</span></p>
-            <small>@L.T("CalculatorNote")</small>
-        </div>
-    </section>
-}
 
-@if (User.Identity?.IsAuthenticated == true && !isOwnListing && Model.IsAvailable && Model.Approval == ListingApproval.Approved)
 {
     <section class="viewing-form">
         <h2>@L.T("BookViewing")</h2>

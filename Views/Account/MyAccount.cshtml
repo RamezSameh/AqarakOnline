@@ -1,10 +1,10 @@
 @model AqarakOnline.Controllers.MyAccountViewModel
 <h1>@L.T("MyAccount")</h1>
 <div class="cards-grid">
-    <div class="listing-card"><div class="listing-body"><h3>إعلاناتي</h3><p>@Model.MyListingsCount</p><p>مقبول: @Model.ApprovedListingsCount | معلّق: @Model.PendingListingsCount</p></div></div>
-    <div class="listing-card"><div class="listing-body"><h3>المفضلة</h3><p>@Model.FavoritesCount</p></div></div>
-    <div class="listing-card"><div class="listing-body"><h3>بحثي المحفوظ</h3><p>@Model.SavedSearchesCount</p></div></div>
-    <div class="listing-card"><div class="listing-body"><h3>تنبيهات غير مقروءة</h3><p>@Model.UnreadNotificationsCount</p></div></div>
+    <div class="listing-card stat-card"><div class="listing-body"><h3>إعلاناتي</h3><p class="stat-number">@Model.MyListingsCount</p><p>مقبول: @Model.ApprovedListingsCount | معلّق: @Model.PendingListingsCount</p></div></div>
+    <div class="listing-card stat-card"><div class="listing-body"><h3>المفضلة</h3><p class="stat-number">@Model.FavoritesCount</p></div></div>
+    <div class="listing-card stat-card"><div class="listing-body"><h3>بحثي المحفوظ</h3><p class="stat-number">@Model.SavedSearchesCount</p></div></div>
+    <div class="listing-card stat-card"><div class="listing-body"><h3>تنبيهات غير مقروءة</h3><p class="stat-number">@Model.UnreadNotificationsCount</p></div></div>
 </div>
 <p>
     <a class="btn btn-ghost" asp-controller="Listings" asp-action="MyListings">إعلاناتي</a>

@@ -985,3 +985,26 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+// Batch 21 — design 3: تبويبات التفاصيل + تحميل ضبابي للصور.
+document.addEventListener("DOMContentLoaded", function () {
+    var tabButtons = document.querySelectorAll(".details-tab-btn");
+    if (tabButtons.length < 2) {
+        var row = document.querySelector(".details-tab-buttons");
+        if (row) { row.hidden = true; }
+    } else {
+        tabButtons.forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                tabButtons.forEach(function (b) { b.classList.remove("active"); });
+                document.querySelectorAll(".details-tab-panel").forEach(function (p) { p.hidden = true; p.classList.remove("active"); });
+                btn.classList.add("active");
+                var panel = document.getElementById(btn.getAttribute("data-tab"));
+                if (panel) { panel.hidden = false; panel.classList.add("active"); }
+            });
+        });
+    }
+    document.querySelectorAll("img.listing-photo, img.gallery-main-photo").forEach(function (img) {
+        if (img.complete && img.naturalWidth > 0) { img.classList.add("loaded"); }
+        else { img.addEventListener("load", function () { img.classList.add("loaded"); }); }
+    });
+});

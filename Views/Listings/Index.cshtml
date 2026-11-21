@@ -168,7 +168,12 @@
 
 @if (!Model.Any())
 {
-    <p class="empty-results">@L.T("NoResults")<br />@L.T("TryClearFilters")</p>
+    <div class="empty-state">
+        <div class="empty-state-icon">🔍</div>
+        <p class="empty-state-title">@L.T("NoResults")</p>
+        <p class="empty-state-hint">@L.T("TryClearFilters")</p>
+        <a class="btn btn-primary" asp-action="Index">@L.T("ClearFilter")</a>
+    </div>
 }
 else
 {

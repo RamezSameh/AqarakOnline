@@ -2,6 +2,8 @@
 @inject AqarakOnline.Services.TrustedAdvertiserService TrustedAdvertiser
 @{
     var photos = Model.Attachments.Where(a => a.Kind == AttachmentKind.Photo).OrderBy(a => a.Order).ThenBy(a => a.Id).ToList();
+    var favoriteIds = ViewBag.FavoriteListingIds as HashSet<int>;
+    var isFavorite = favoriteIds != null && favoriteIds.Contains(Model.Id);
     var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
     var isOwner = !string.IsNullOrEmpty(currentUserId) && Model.OwnerId == currentUserId;
     var facts = new List<string>();
@@ -23,6 +25,7 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
 }
 <article class="listing-card@(Model.IsEffectivelyFeatured ? " featured-card" : "")@(Model.IsUrgent ? " urgent-card" : "")" data-listing-id="@Model.Id">
     <div class="availability-bar @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</div>
+    <div class="card-photo-wrap">
     @if (photos.Count > 0)
     {
         <div class="card-photos" data-photo-count="@photos.Count">
@@ -36,6 +39,22 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
     {
         <div class="listing-photo placeholder">@L.T("NoPhoto")</div>
     }
+        <div class="card-photo-actions">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-controller="Favorites" asp-action="Toggle" method="post" class="inline-form">
+                    <input type="hidden" name="listingId" value="@Model.Id" />
+                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                    <button type="submit" class="btn btn-ghost favorite-btn @(isFavorite ? "is-favorite" : "")" title="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")" aria-label="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")">@(isFavorite ? "♥" : "♡")</button>
+                </form>
+            }
+            else
+            {
+                <button type="button" class="btn btn-ghost favorite-btn guest-favorite" data-id="@Model.Id" title="إضافة إلى المفضلة">♡</button>
+            }
+            <button type="button" class="btn btn-ghost compare-toggle" data-id="@Model.Id" data-add="⚖️" data-added="✓" data-max="@L.T("CompareMax")" title="@L.T("AddToCompare")">⚖️</button>
+        </div>
+    </div>
     <div class="listing-body">
         <div class="listing-meta">
             <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
@@ -79,20 +98,6 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
         }
         <div class="actions">
             <a class="btn btn-primary" asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@L.T("ViewDetails")</a>
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                var favoriteIds = ViewBag.FavoriteListingIds as HashSet<int>;
-                var isFavorite = favoriteIds != null && favoriteIds.Contains(Model.Id);
-                <form asp-controller="Favorites" asp-action="Toggle" method="post" class="inline-form">
-                    <input type="hidden" name="listingId" value="@Model.Id" />
-                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
-                    <button type="submit" class="btn btn-ghost favorite-btn @(isFavorite ? "is-favorite" : "")" title="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")" aria-label="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")">@(isFavorite ? "♥" : "♡")</button>
-                </form>
-            }
-            else
-            {
-                <button type="button" class="btn btn-ghost favorite-btn guest-favorite" data-id="@Model.Id" title="إضافة إلى المفضلة">♡</button>
-            }
             @if (Model.IsAvailable && Model.Approval == ListingApproval.Approved && !isOwner)
             {
                 <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id">@L.T("ContactUs")</a>
@@ -111,7 +116,6 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
             }
             <button type="button" class="btn btn-ghost share-copy" data-url="@($"{Context.Request.Scheme}://{Context.Request.Host}/Listings/Details/{Model.Id}")" title="@L.T("Share")">↗ @L.T("Share")</button>
             <a class="btn btn-ghost" href="https://t.me/share/url?url=@Uri.EscapeDataString($"{Context.Request.Scheme}://{Context.Request.Host}/Listings/Details/{Model.Id}")&text=@Uri.EscapeDataString(Model.Title)" target="_blank" rel="noopener" title="تيليجرام">✈️</a>
-            <button type="button" class="btn btn-ghost compare-toggle" data-id="@Model.Id" data-add="@L.T("AddToCompare")" data-added="@L.T("InCompare")" data-max="@L.T("CompareMax")">@L.T("AddToCompare")</button>
         </div>
     </div>
 </article>

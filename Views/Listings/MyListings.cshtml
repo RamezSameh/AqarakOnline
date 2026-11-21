@@ -32,19 +32,31 @@
 </form>
 @if (!Model.Any())
 {
-    <p>@L.T("NoResults")</p>
+    <div class="empty-state">
+        <div class="empty-state-icon">🏠</div>
+        <p class="empty-state-title">@L.T("NoResults")</p>
+        <a class="btn btn-primary" asp-action="MyListings">@L.T("ClearFilter")</a>
+    </div>
 }
 else
 {
     <div class="cards-grid">
         @foreach (var listing in Model)
         {
-            @await Html.PartialAsync("_ListingCard", listing)
-            <form asp-action="ToggleAvailability" method="post" class="inline-form">
-                <input type="hidden" name="id" value="@listing.Id" />
-                <button type="submit" class="btn btn-ghost">@(listing.IsAvailable ? L.T("StopListing") : L.T("StartListing"))</button>
-            </form>
-            <a class="btn btn-ghost" asp-action="Delete" asp-route-id="@listing.Id">@L.T("Delete")</a>
+            <div class="my-listing">
+                @await Html.PartialAsync("_ListingCard", listing)
+                <div class="my-listing-strip">
+                    <span>@L.T("ApprovalStatus"): @L.ApprovalText(listing.Approval)</span>
+                    <span>👁 @listing.ViewCount</span>
+                </div>
+                <div class="my-listing-actions">
+                    <form asp-action="ToggleAvailability" method="post" class="inline-form">
+                        <input type="hidden" name="id" value="@listing.Id" />
+                        <button type="submit" class="btn btn-ghost">@(listing.IsAvailable ? L.T("StopListing") : L.T("StartListing"))</button>
+                    </form>
+                    <a class="btn btn-ghost" asp-action="Delete" asp-route-id="@listing.Id">@L.T("Delete")</a>
+                </div>
+            </div>
         }
     </div>
 }

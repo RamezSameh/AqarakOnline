@@ -42,7 +42,7 @@
         <h2>@L.T("LatestListings")</h2>
         <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index">@L.T("SeeAll")</a>
     </div>
-    <div class="cards-grid">
+    <div class="cards-slider">
         @foreach (var listing in Model)
         {
             @await Html.PartialAsync("_ListingCard", listing)

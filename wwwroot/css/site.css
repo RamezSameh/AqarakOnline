@@ -346,3 +346,59 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 .toast-error { background: #7f1d1d; border: 1px solid #ef4444; color: #fff; }
 .toast-close { background: transparent; border: none; color: inherit; cursor: pointer; font-size: 16px; padding: 0 4px; }
 .toast.hide { display: none; }
+
+/* Batch 21 — design 3 */
+/* (1) سلايدر أفقي لأحدث الإعلانات في الرئيسية */
+.cards-slider { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; margin-top: 20px; }
+.cards-slider .listing-card { flex: 0 0 320px; scroll-snap-align: start; }
+
+/* (3) أزرار المفضلة والمقارنة فوق صورة الكارت */
+.card-photo-wrap { position: relative; }
+.card-photo-actions { position: absolute; top: 10px; inset-inline-end: 10px; display: flex; gap: 8px; z-index: 2; }
+.card-photo-actions .btn { background: rgba(15, 23, 42, .75); border-color: transparent; min-height: 0; padding: 6px 10px; backdrop-filter: blur(4px); }
+.card-photo-actions .favorite-btn.is-favorite { color: #f87171; }
+.card-photo-actions .compare-toggle.is-selected { color: #38bdf8; }
+
+/* (4) حالات فارغة أجمل */
+.empty-state { text-align: center; padding: 48px 20px; }
+.empty-state-icon { font-size: 48px; }
+.empty-state-title { font-size: 20px; font-weight: 700; margin: 12px 0 4px; }
+.empty-state-hint { color: #94a3b8; margin: 0 0 16px; }
+
+/* (5) بطاقات إحصائيات «حسابي» */
+.stat-card { text-align: center; }
+.stat-card .stat-number { font-size: 36px; font-weight: 800; color: #c7d2fe; margin: 8px 0; }
+[data-theme="light"] .stat-card .stat-number { color: #4338ca; }
+
+/* (6) «إعلاناتي» أرتب: شريط حالة + أزرار تحت الكارت */
+.my-listing { display: flex; flex-direction: column; }
+.my-listing-strip { display: flex; justify-content: space-between; gap: 8px; padding: 8px 4px; font-size: 14px; color: #94a3b8; }
+.my-listing-actions { display: flex; gap: 8px; padding: 0 4px 12px; }
+
+/* (7) فوتر بأعمدة */
+.footer-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 24px; text-align: start; }
+.footer-col p { margin: 4px 0; }
+.footer-brand { font-size: 20px; font-weight: 800; color: #f1f5f9; }
+.footer-heading { font-weight: 700; margin-bottom: 8px; color: #f1f5f9; }
+[data-theme="light"] .footer-brand, [data-theme="light"] .footer-heading { color: #0f172a; }
+@media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr; } }
+
+/* (8) تحميل ضبابي للصور */
+img.listing-photo, img.gallery-main-photo { filter: blur(6px); transition: filter .4s ease; }
+img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
+
+/* (9) تبويبات صفحة التفاصيل */
+.details-tab-buttons { display: flex; gap: 8px; margin: 20px 0 0; border-bottom: 1px solid #334155; }
+.details-tab-btn { background: transparent; border: none; border-bottom: 3px solid transparent; color: #94a3b8; font: inherit; font-weight: 700; padding: 10px 14px; cursor: pointer; }
+.details-tab-btn.active { color: #c7d2fe; border-bottom-color: #6366f1; }
+.details-tab-panel { padding: 16px 0; }
+
+/* (10) جداول الأدمن كبطاقات في الموبايل */
+@media (max-width: 640px) {
+    .table thead { display: none; }
+    .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+    .table tr { border: 1px solid #334155; border-radius: 12px; margin-bottom: 12px; padding: 8px 12px; background: #1e293b; }
+    .table td { border: none; padding: 4px 0; }
+    .table td:first-child { font-weight: 700; }
+    [data-theme="light"] .table tr { background: #fff; border-color: #e2e8f0; }
+}

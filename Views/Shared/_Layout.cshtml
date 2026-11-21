@@ -87,10 +87,27 @@
         @RenderBody()
     </main>
     <footer class="site-footer">
-        <div class="container">
-            <p>@L.T("Brand") - @L.T("Tagline")</p>
-            <p><a asp-controller="Home" asp-action="Contact">@L.T("ContactUs")</a> | <a asp-controller="Home" asp-action="SellGuide">@L.T("SellGuide")</a> | <a asp-controller="Home" asp-action="Tips">@L.T("Tips")</a> | <a asp-controller="Home" asp-action="PriceGuide">@L.T("PriceGuide")</a> | <a asp-controller="Home" asp-action="BuyingMistakes">@L.T("BuyingMistakes")</a> | <a asp-controller="Home" asp-action="Terms">@L.T("TermsOfUse")</a> | <a asp-controller="Home" asp-action="Privacy">@L.T("PrivacyPolicy")</a></p>
-            <p>@L.T("Phone"): <a href="tel:@ContactOptions.Value.Phone">@ContactOptions.Value.Phone</a> | @L.T("WhatsApp"): @ContactOptions.Value.WhatsApp | @L.T("Email"): @ContactOptions.Value.Email</p>
+        <div class="container footer-grid">
+            <div class="footer-col">
+                <p class="footer-brand">@L.T("Brand")</p>
+                <p>@L.T("Tagline")</p>
+            </div>
+            <div class="footer-col">
+                <p class="footer-heading">روابط سريعة</p>
+                <p><a asp-controller="Home" asp-action="Contact">@L.T("ContactUs")</a></p>
+                <p><a asp-controller="Home" asp-action="SellGuide">@L.T("SellGuide")</a></p>
+                <p><a asp-controller="Home" asp-action="Tips">@L.T("Tips")</a></p>
+                <p><a asp-controller="Home" asp-action="PriceGuide">@L.T("PriceGuide")</a></p>
+                <p><a asp-controller="Home" asp-action="BuyingMistakes">@L.T("BuyingMistakes")</a></p>
+                <p><a asp-controller="Home" asp-action="Terms">@L.T("TermsOfUse")</a></p>
+                <p><a asp-controller="Home" asp-action="Privacy">@L.T("PrivacyPolicy")</a></p>
+            </div>
+            <div class="footer-col">
+                <p class="footer-heading">تواصل معنا</p>
+                <p>@L.T("Phone"): <a href="tel:@ContactOptions.Value.Phone">@ContactOptions.Value.Phone</a></p>
+                <p>@L.T("WhatsApp"): @ContactOptions.Value.WhatsApp</p>
+                <p>@L.T("Email"): @ContactOptions.Value.Email</p>
+            </div>
         </div>
     </footer>
     @* شريط المقارنة: يظهر لما تختار إعلانات للمقارنة من الكروت أو التفاصيل. *@
