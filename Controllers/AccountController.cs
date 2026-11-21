@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using AqarakOnline.Data;
 using AqarakOnline.Models;
 using Microsoft.EntityFrameworkCore;
 using AqarakOnline.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -225,6 +227,73 @@ public class AccountController : Controller
         return RedirectToAction(nameof(Login));
     }
 
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> MyAccount()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+        var model = new MyAccountViewModel
+        {
+            MyListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == userId),
+            ApprovedListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == userId && l.Approval == ListingApproval.Approved),
+            PendingListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == userId && l.Approval == ListingApproval.Pending),
+            FavoritesCount = await _context.Favorites.CountAsync(f => f.UserId == userId),
+            SavedSearchesCount = await _context.SavedSearches.CountAsync(s => s.UserId == userId),
+            UnreadNotificationsCount = await _context.Notifications
+                .Where(n => n.IsActive && (n.TargetUserId == null || n.TargetUserId == userId)
+                    && !_context.NotificationReads.Any(r => r.NotificationId == n.Id && r.UserId == userId))
+                .CountAsync(),
+            RecentNotifications = await _context.Notifications
+                .Where(n => n.IsActive && (n.TargetUserId == null || n.TargetUserId == userId))
+                .OrderByDescending(n => n.CreatedAt).Take(5).ToListAsync()
+        };
+        return View(model);
+    }
+
+    /// <summary>
+    /// طلب مراجعة حساب معلّق — من صفحة الدخول، بدون تسجيل دخول.
+    /// رسالة عامة عمدًا: لا نكشف إن كان الرقم مسجَّلًا أم لا. تنبيه واحد
+    /// للأدمن لكل حساب كل 24 ساعة كحد أقصى (لا تكرار).
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RequestReview(string phoneNumber)
+    {
+        var phone = PhoneHelper.Normalize(phoneNumber ?? string.Empty);
+        var user = await _userManager.FindByNameAsync(phone);
+        if (user != null && user.AccountStatus == AccountStatus.Pending)
+        {
+            var adminEmail = _configuration["AdminEmail"];
+            var admin = !string.IsNullOrWhiteSpace(adminEmail)
+                ? await _context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail)
+                : null;
+            if (admin != null)
+            {
+                var alreadyRequested = await _context.Notifications.AnyAsync(n =>
+                    n.TargetUserId == admin.Id && n.Title == "طلب مراجعة حساب"
+                    && n.CreatedAt >= DateTime.UtcNow.AddDays(-1)
+                    && n.Message.Contains(user.PhoneNumber ?? phone));
+                if (!alreadyRequested)
+                {
+                    _context.Notifications.Add(new Notification
+                    {
+                        Title = "طلب مراجعة حساب",
+                        Message = $"{user.FullName} ({user.PhoneNumber}) طلب مراجعة حسابه.",
+                        TargetUserId = admin.Id,
+                        Url = "/Admin/Users",
+                        CreatedAt = DateTime.UtcNow,
+                        IsActive = true
+                    });
+                    await _context.SaveChangesAsync();
+                    await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
+                    await _hub.Clients.All.SendAsync("refreshBell");
+                }
+            }
+        }
+        TempData["Info"] = "إذا كان الرقم مسجَّلًا وحسابه قيد المراجعة، سيصل طلبك للإدارة.";
+        return RedirectToAction(nameof(Login));
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
@@ -233,4 +302,15 @@ public class AccountController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+}
+
+public class MyAccountViewModel
+{
+    public int MyListingsCount { get; set; }
+    public int ApprovedListingsCount { get; set; }
+    public int PendingListingsCount { get; set; }
+    public int FavoritesCount { get; set; }
+    public int SavedSearchesCount { get; set; }
+    public int UnreadNotificationsCount { get; set; }
+    public List<Notification> RecentNotifications { get; set; } = new();
 }

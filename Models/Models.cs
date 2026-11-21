@@ -272,6 +272,13 @@ public class Listing
     /// <summary>آخر مرة عدّل فيها صاحب الإعلان (أو الأدمن) بيانات الإعلان.</summary>
     public DateTime? UpdatedAt { get; set; }
 
+    /// <summary>إعلان عاجل — يحدده صاحب الإعلان، ويظهر بشارة مميزة.</summary>
+    public bool IsUrgent { get; set; }
+
+    /// <summary>سبب رفض الأدمن للإعلان (إن وُجد) — يظهر لصاحب الإعلان.</summary>
+    [MaxLength(500)]
+    public string? RejectionReason { get; set; }
+
     /// <summary>السعر قابل للتفاوض أم لا.</summary>
     public bool IsPriceNegotiable { get; set; }
 

@@ -105,6 +105,24 @@ public class HomeController : Controller
     {
         return View();
     }
+
+    [HttpGet]
+    public IActionResult Terms()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult Tips()
+    {
+        return View();
+    }
 }
 
 public class LanguageController : Controller
@@ -589,6 +607,7 @@ public class ListingsController : Controller
         listing.HasSecurity = model.HasSecurity;
         listing.AcceptsInstallments = model.AcceptsInstallments;
         listing.IsPriceNegotiable = model.IsPriceNegotiable;
+        listing.IsUrgent = model.IsUrgent;
         listing.RentPeriod = model.ListingType == ListingType.Rent ? model.RentPeriod : null;
         listing.DepositMonths = model.DepositMonths;
         listing.HasElectricityMeter = model.HasElectricityMeter;
@@ -601,6 +620,7 @@ public class ListingsController : Controller
         if (!User.IsInRole("Admin"))
         {
             listing.Approval = ListingApproval.Pending;
+            listing.RejectionReason = null;
         }
 
         foreach (var attachment in listing.Attachments.Where(a => deleteIds.Contains(a.Id)).ToList())
@@ -859,6 +879,7 @@ public class ListingsController : Controller
             UpdatedAt = null,
             IsAvailable = true,
             IsFeatured = false,
+            IsUrgent = false,
             ViewCount = 0,
             LastBumpedAt = null,
             Approval = User.IsInRole("Admin") ? ListingApproval.Approved : ListingApproval.Pending,
@@ -1702,7 +1723,8 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> MarkReplied(int id)
     {
-        var request = await _context.ContactRequests.FindAsync(id);
+        var request = await _context.ContactRequests
+            .Include(r => r.Listing).FirstOrDefaultAsync(r => r.Id == id);
         if (request == null)
         {
             return NotFound();
@@ -1710,6 +1732,20 @@ public class AdminController : Controller
         request.IsReplied = true;
         request.RepliedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+        if (!string.IsNullOrEmpty(request.BuyerId))
+        {
+            _context.Notifications.Add(new Notification
+            {
+                Title = "تم الرد على طلب تواصلك",
+                Message = $"إدارة الموقع ردّت على طلب تواصلك بخصوص «{request.Listing?.Title ?? request.ListingId.ToString()}».",
+                TargetUserId = request.BuyerId,
+                Url = $"/Listings/Details/{request.ListingId}",
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            await _context.SaveChangesAsync();
+            await NotifyBellAsync();
+        }
         await NotifyAdminsAsync();
         return RedirectToAction(nameof(Requests));
     }
@@ -1724,6 +1760,7 @@ public class AdminController : Controller
             return NotFound();
         }
         listing.Approval = ListingApproval.Approved;
+        listing.RejectionReason = null;
         await _context.SaveChangesAsync();
         _context.Notifications.Add(new Notification
         {
@@ -1745,26 +1782,32 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Reject(int id)
+    public async Task<IActionResult> Reject(int id, string? reason = null)
     {
         var listing = await _context.Listings.FindAsync(id);
         if (listing == null)
         {
             return NotFound();
         }
+        var cleanReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
+        if (cleanReason != null && cleanReason.Length > 500)
+        {
+            cleanReason = cleanReason[..500];
+        }
         listing.Approval = ListingApproval.Rejected;
+        listing.RejectionReason = cleanReason;
         await _context.SaveChangesAsync();
         _context.Notifications.Add(new Notification
         {
             Title = "تم رفض إعلانك",
-            Message = $"إعلانك «{listing.Title}» اترفض. راجع بياناته وعدّله وحاول تاني.",
+            Message = $"إعلانك «{listing.Title}» اترفض{(cleanReason != null ? $" — السبب: {cleanReason}" : "")}. راجع بياناته وعدّله وحاول تاني.",
             TargetUserId = listing.OwnerId,
             Url = "/Listings/MyListings",
             CreatedAt = DateTime.UtcNow,
             IsActive = true
         });
         await _context.SaveChangesAsync();
-        await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId, "رفض", "تم رفض الإعلان.");
+        await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId, "رفض", cleanReason != null ? $"تم رفض الإعلان. السبب: {cleanReason}" : "تم رفض الإعلان.");
         await NotifyAdminsAsync();
         await NotifyBellAsync();
         await _hub.Clients.All.SendAsync("listingsChanged");
@@ -1816,6 +1859,18 @@ public class AdminController : Controller
         }
         report.Status = ReportStatus.Reviewed;
         await _context.SaveChangesAsync();
+        var reportedListing = await _context.Listings.FindAsync(report.ListingId);
+        _context.Notifications.Add(new Notification
+        {
+            Title = "تمت مراجعة بلاغك",
+            Message = $"إدارة الموقع راجعت بلاغك على «{reportedListing?.Title ?? report.ListingId.ToString()}».",
+            TargetUserId = report.ReporterId,
+            Url = $"/Listings/Details/{report.ListingId}",
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+        await NotifyBellAsync();
         await NotifyAdminsAsync();
         TempData["Info"] = "تمت مراجعة البلاغ.";
         return RedirectToAction(nameof(Reports));

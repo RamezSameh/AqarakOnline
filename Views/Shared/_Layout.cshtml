@@ -34,6 +34,7 @@
                     <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">@L.T("Favorites")</a>
                     <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">@L.T("SavedSearches")</a>
                     <a class="nav-link @(currentController == "Viewings" ? "active" : "")" asp-controller="Viewings" asp-action="Index">@L.T("Viewings")</a>
+                    <a class="nav-link @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">@L.T("MyAccount")</a>
                     <a class="nav-cta @(currentController == "Listings" && currentAction == "Create" ? "active" : "")" asp-controller="Listings" asp-action="Create">@L.T("CreateListing")</a>
                     @* غلاف display:contents حتى تُستبدل الإدارة لحظيًا من غير كسر توزيع الـ flex. *@
                     <span id="adminNavLinks" style="display:contents">@await Component.InvokeAsync("AdminNav")</span>
@@ -85,7 +86,7 @@
     <footer class="site-footer">
         <div class="container">
             <p>@L.T("Brand") - @L.T("Tagline")</p>
-            <p><a asp-controller="Home" asp-action="Contact">@L.T("ContactUs")</a> | <a asp-controller="Home" asp-action="SellGuide">@L.T("SellGuide")</a></p>
+            <p><a asp-controller="Home" asp-action="Contact">@L.T("ContactUs")</a> | <a asp-controller="Home" asp-action="SellGuide">@L.T("SellGuide")</a> | <a asp-controller="Home" asp-action="Tips">@L.T("Tips")</a> | <a asp-controller="Home" asp-action="Terms">@L.T("TermsOfUse")</a> | <a asp-controller="Home" asp-action="Privacy">@L.T("PrivacyPolicy")</a></p>
             <p>@L.T("Phone"): <a href="tel:@ContactOptions.Value.Phone">@ContactOptions.Value.Phone</a> | @L.T("WhatsApp"): @ContactOptions.Value.WhatsApp | @L.T("Email"): @ContactOptions.Value.Email</p>
         </div>
     </footer>

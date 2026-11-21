@@ -49,6 +49,7 @@ else
                             </form>
                             <form asp-action="Reject" method="post" class="inline-form">
                                 <input type="hidden" name="id" value="@listing.Id" />
+                                <input type="text" name="reason" placeholder="@L.T("RejectionReason")" maxlength="500" />
                                 <button type="submit" class="btn btn-ghost">@L.T("Reject")</button>
                             </form>
                         }

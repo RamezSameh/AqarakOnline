@@ -309,6 +309,9 @@ namespace AqarakOnline.Migrations
                     b.Property<bool>("IsPriceNegotiable")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsUrgent")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("LandAreaSqm")
                         .HasColumnType("int");
 
@@ -327,6 +330,10 @@ namespace AqarakOnline.Migrations
 
                     b.Property<int>("PropertyType")
                         .HasColumnType("int");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int?>("RentPeriod")
                         .HasColumnType("int");

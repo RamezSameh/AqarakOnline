@@ -1,0 +1,31 @@
+@model AqarakOnline.Controllers.MyAccountViewModel
+<h1>@L.T("MyAccount")</h1>
+<div class="cards-grid">
+    <div class="listing-card"><div class="listing-body"><h3>إعلاناتي</h3><p>@Model.MyListingsCount</p><p>مقبول: @Model.ApprovedListingsCount | معلّق: @Model.PendingListingsCount</p></div></div>
+    <div class="listing-card"><div class="listing-body"><h3>المفضلة</h3><p>@Model.FavoritesCount</p></div></div>
+    <div class="listing-card"><div class="listing-body"><h3>بحثي المحفوظ</h3><p>@Model.SavedSearchesCount</p></div></div>
+    <div class="listing-card"><div class="listing-body"><h3>تنبيهات غير مقروءة</h3><p>@Model.UnreadNotificationsCount</p></div></div>
+</div>
+<p>
+    <a class="btn btn-ghost" asp-controller="Listings" asp-action="MyListings">إعلاناتي</a>
+    <a class="btn btn-ghost" asp-controller="Favorites" asp-action="Index">المفضلة</a>
+    <a class="btn btn-ghost" asp-controller="SavedSearches" asp-action="Index">بحثي المحفوظ</a>
+    <a class="btn btn-ghost" asp-controller="Notifications" asp-action="Index">التنبيهات</a>
+</p>
+<h2>أحدث التنبيهات</h2>
+@if (!Model.RecentNotifications.Any())
+{
+    <p>لا توجد تنبيهات بعد.</p>
+}
+else
+{
+    <ul>
+        @foreach (var notification in Model.RecentNotifications)
+        {
+            <li>
+                <strong>@notification.Title</strong> — @notification.Message
+                <span>(@L.RelativeTime(notification.CreatedAt))</span>
+            </li>
+        }
+    </ul>
+}

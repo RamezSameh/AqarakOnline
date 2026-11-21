@@ -40,6 +40,10 @@
     {
         <span class="badge badge-featured">⭐ @L.T("Featured")</span>
     }
+    @if (Model.IsUrgent)
+    {
+        <span class="badge badge-urgent">🔥 @L.T("Urgent")</span>
+    }
     <span class="ad-number">@L.T("AdNumber"): @Model.AdNumber</span>
     <span class="listing-status @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</span>
 </div>
@@ -248,6 +252,11 @@ else
     }
     <a class="btn btn-ghost" asp-action="Index">@L.T("BackToList")</a>
 </div>
+
+@if (Model.Approval == ListingApproval.Rejected && !string.IsNullOrWhiteSpace(Model.RejectionReason) && (isOwnListing || User.IsInRole("Admin")))
+{
+    <p class="alert-error"><strong>@L.T("RejectionReason"):</strong> @Model.RejectionReason</p>
+}
 
 <div class="share-row">
     <span>@L.T("Share"):</span>

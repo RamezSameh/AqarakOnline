@@ -19,3 +19,12 @@
         <a class="btn btn-ghost" asp-action="Register">@L.T("NoAccount")</a>
     </div>
 </form>
+<hr />
+<p>حسابك قيد المراجعة وطال الانتظار؟ اطلب مراجعة حسابك:</p>
+<form asp-action="RequestReview" method="post" class="form">
+    <label>@L.T("PhoneNumber")</label>
+    <input type="tel" name="phoneNumber" dir="ltr" placeholder="01xxxxxxxxx" required />
+    <div class="actions">
+        <button type="submit" class="btn btn-ghost">@L.T("RequestReview")</button>
+    </div>
+</form>
