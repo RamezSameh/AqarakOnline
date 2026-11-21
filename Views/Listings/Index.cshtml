@@ -78,6 +78,8 @@
 }
 <h1>@(ViewBag.AreaPage != null ? "إعلانات " + ViewBag.AreaPage : L.T("Listings"))</h1>
 
+<div class="search-layout">
+    <aside class="search-sidebar">
 <details class="filters-box" open>
     <summary>@L.T("Filters")</summary>
     <form class="filter-form" asp-action="Index" method="get">
@@ -140,7 +142,8 @@
         <a class="btn btn-ghost" asp-action="Index">@L.T("ClearFilter")</a>
     </form>
 </details>
-
+    </aside>
+    <div class="search-results">
 <div class="results-bar">
     <span>@L.T("ResultsCount"): @totalCount</span>
     @if (totalPages > 1)
@@ -204,3 +207,5 @@ else
         </nav>
     }
 }
+    </div>
+</div>

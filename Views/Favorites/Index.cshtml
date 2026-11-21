@@ -38,7 +38,21 @@ else
     <div class="cards-grid">
         @foreach (var listing in Model)
         {
-            @await Html.PartialAsync("_ListingCard", listing)
+            <div class="favorite-item">
+                @await Html.PartialAsync("_ListingCard", listing)
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <form asp-controller="Favorites" asp-action="Toggle" method="post" class="inline-form">
+                        <input type="hidden" name="listingId" value="@listing.Id" />
+                        <input type="hidden" name="returnUrl" value="/Favorites" />
+                        <button type="submit" class="btn btn-ghost favorite-remove">✕ إزالة من المفضلة</button>
+                    </form>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-ghost favorite-remove guest-favorite-remove" data-id="@listing.Id">✕ إزالة من المفضلة</button>
+                }
+            </div>
         }
     </div>
 }

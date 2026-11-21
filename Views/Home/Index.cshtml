@@ -37,6 +37,22 @@
     </div>
 </section>
 
+@if (ViewBag.FeaturedListings != null && ((List<Listing>)ViewBag.FeaturedListings).Any())
+{
+    <section>
+        <div class="section-head">
+            <h2>⭐ @L.T("Featured")</h2>
+            <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index">@L.T("SeeAll")</a>
+        </div>
+        <div class="cards-slider">
+            @foreach (var listing in (List<Listing>)ViewBag.FeaturedListings)
+            {
+                @await Html.PartialAsync("_ListingCard", listing)
+            }
+        </div>
+    </section>
+}
+
 <section>
     <div class="section-head">
         <h2>@L.T("LatestListings")</h2>
@@ -72,7 +88,7 @@
         <div class="section-head">
             <h2>@L.T("PopularAreas")</h2>
         </div>
-        <div class="actions">
+        <div class="area-chips">
             @foreach (var area in (List<AqarakOnline.Controllers.ChartPoint>)ViewBag.PopularAreas)
             {
                 <a class="btn btn-ghost" href="/Listings/Area/@Uri.EscapeDataString(area.Label)">@area.Label (@area.Count)</a>

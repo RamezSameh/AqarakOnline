@@ -402,3 +402,50 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
     .table td:first-child { font-weight: 700; }
     [data-theme="light"] .table tr { background: #fff; border-color: #e2e8f0; }
 }
+
+/* Batch 22 — design 4 */
+/* (2) نبض خفيف على شارة «جديد» */
+.badge-new { animation: new-pulse 1.6s ease-in-out infinite; }
+@keyframes new-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@media (prefers-reduced-motion: reduce) { .badge-new { animation: none; } }
+
+/* (3) زرار إزالة واضح تحت كارت المفضلة */
+.favorite-item { display: flex; flex-direction: column; }
+.favorite-remove { margin: 8px 4px 0; align-self: flex-start; color: #f87171; }
+
+/* (4) تمييز الصفوف المختلفة في جدول المقارنة */
+.compare-table tr.row-diff td { background: rgba(99, 102, 241, .14); font-weight: 600; }
+[data-theme="light"] .compare-table tr.row-diff td { background: rgba(99, 102, 241, .12); }
+
+/* (6) مناطق شائعة أزرار ملونة */
+.area-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.area-chips .btn:nth-child(5n+1) { border-color: #38bdf8; color: #7dd3fc; }
+.area-chips .btn:nth-child(5n+2) { border-color: #34d399; color: #6ee7b7; }
+.area-chips .btn:nth-child(5n+3) { border-color: #fbbf24; color: #fcd34d; }
+.area-chips .btn:nth-child(5n+4) { border-color: #f472b6; color: #f9a8d4; }
+.area-chips .btn:nth-child(5n+5) { border-color: #a78bfa; color: #c4b5fd; }
+[data-theme="light"] .area-chips .btn:nth-child(5n+1) { border-color: #0369a1; color: #0369a1; }
+[data-theme="light"] .area-chips .btn:nth-child(5n+2) { border-color: #047857; color: #047857; }
+[data-theme="light"] .area-chips .btn:nth-child(5n+3) { border-color: #b45309; color: #b45309; }
+[data-theme="light"] .area-chips .btn:nth-child(5n+4) { border-color: #be185d; color: #be185d; }
+[data-theme="light"] .area-chips .btn:nth-child(5n+5) { border-color: #6d28d9; color: #6d28d9; }
+
+/* (7) الفلاتر في شريط جانبي على الشاشات الكبيرة */
+@media (min-width: 900px) {
+    .search-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 20px; align-items: start; }
+    .search-sidebar { position: sticky; top: 76px; }
+    .search-sidebar .filters-box { margin-top: 0; }
+}
+
+/* (8) دائرة تقدم حول زر العودة للأعلى */
+.back-to-top { width: 48px; height: 48px; padding: 0; }
+.back-to-top-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.back-to-top-ring circle { fill: none; stroke-width: 3; }
+.back-to-top-ring .ring-bg { stroke: #334155; }
+.back-to-top-ring .ring-fg { stroke: #6366f1; stroke-dasharray: 100.5; stroke-dashoffset: 100.5; stroke-linecap: round; }
+.back-to-top-arrow { position: relative; z-index: 1; }
+
+/* (10) التنبيهات كبطاقات مع تمييز غير المقروء */
+.notifications-list { display: grid; gap: 12px; }
+.notification-item.unread { background: #1e2a45; box-shadow: 0 4px 16px rgba(99, 102, 241, .2); }
+[data-theme="light"] .notification-item.unread { background: #eef2ff; }

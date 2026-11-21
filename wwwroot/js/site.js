@@ -917,9 +917,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     var backToTop = document.getElementById("backToTop");
     if (!backToTop) { return; }
-    window.addEventListener("scroll", function () {
+    var ringFg = backToTop.querySelector(".ring-fg");
+    function updateBackToTop() {
         backToTop.classList.toggle("visible", window.scrollY > 400);
-    }, { passive: true });
+        if (ringFg) {
+            var max = document.documentElement.scrollHeight - window.innerHeight;
+            var p = max > 0 ? Math.min(window.scrollY / max, 1) : 0;
+            ringFg.style.strokeDashoffset = (100.5 * (1 - p)).toFixed(1);
+        }
+    }
+    window.addEventListener("scroll", updateBackToTop, { passive: true });
+    updateBackToTop();
     backToTop.addEventListener("click", function () {
         window.scrollTo({ top: 0, behavior: "smooth" });
     });
@@ -1006,5 +1014,27 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll("img.listing-photo, img.gallery-main-photo").forEach(function (img) {
         if (img.complete && img.naturalWidth > 0) { img.classList.add("loaded"); }
         else { img.addEventListener("load", function () { img.classList.add("loaded"); }); }
+    });
+});
+
+// Batch 22 — design 4: تمييز الاختلافات في المقارنة + إزالة مفضلة الضيف.
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".compare-table tbody tr").forEach(function (row) {
+        var cells = Array.prototype.slice.call(row.querySelectorAll("td"));
+        if (cells.length < 2) { return; }
+        var first = cells[0].textContent.trim();
+        var allSame = cells.every(function (c) { return c.textContent.trim() === first; });
+        if (!allSame) { row.classList.add("row-diff"); }
+    });
+    document.querySelectorAll(".guest-favorite-remove").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var id = parseInt(btn.getAttribute("data-id"), 10);
+            var ids = [];
+            try { ids = JSON.parse(localStorage.getItem("aqarak-guest-favorites") || "[]"); } catch (e) {}
+            ids = ids.filter(function (n) { return n !== id; });
+            try { localStorage.setItem("aqarak-guest-favorites", JSON.stringify(ids)); } catch (e) {}
+            document.cookie = "aqarak-guest-favs=" + ids.join(",") + "; path=/; max-age=" + (365 * 24 * 60 * 60);
+            window.location.reload();
+        });
     });
 });

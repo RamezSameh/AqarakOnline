@@ -4,9 +4,9 @@
 <p>تحليل بيانات المنصة: المستخدمون، وعدد الإعلانات لكل مستخدم، مع فلترة حسب المستخدم أو المنطقة.</p>
 
 <div class="cards-grid">
-    <div class="listing-card"><div class="listing-body"><h3>المستخدمون</h3><p>@Model.TotalUsers</p><p>قيد المراجعة: @Model.PendingUsers | مفعّلون: @Model.ActiveUsers | موقوفون/محظورون: @Model.SuspendedOrBlockedUsers</p></div></div>
-    <div class="listing-card"><div class="listing-body"><h3>الإعلانات</h3><p>@Model.TotalListings</p><p>مقبول: @Model.ApprovedListings | قيد المراجعة: @Model.PendingListings | متاح: @Model.AvailableListings</p></div></div>
-    <div class="listing-card"><div class="listing-body"><h3>المشاهدات وطلبات التواصل</h3><p>مشاهدات: @Model.TotalViews</p><p>طلبات تواصل: @Model.TotalRequests | غير مردود عليها: @Model.UnrepliedRequests</p></div></div>
+    <div class="listing-card stat-card"><div class="listing-body"><h3>المستخدمون</h3><p class="stat-number">@Model.TotalUsers</p><p>قيد المراجعة: @Model.PendingUsers | مفعّلون: @Model.ActiveUsers | موقوفون/محظورون: @Model.SuspendedOrBlockedUsers</p></div></div>
+    <div class="listing-card stat-card"><div class="listing-body"><h3>الإعلانات</h3><p class="stat-number">@Model.TotalListings</p><p>مقبول: @Model.ApprovedListings | قيد المراجعة: @Model.PendingListings | متاح: @Model.AvailableListings</p></div></div>
+    <div class="listing-card stat-card"><div class="listing-body"><h3>المشاهدات وطلبات التواصل</h3><p>مشاهدات: <span class="stat-number">@Model.TotalViews</span></p><p>طلبات تواصل: @Model.TotalRequests | غير مردود عليها: @Model.UnrepliedRequests</p></div></div>
 </div>
 
 <h2>@L.T("MaintenanceMode")</h2>

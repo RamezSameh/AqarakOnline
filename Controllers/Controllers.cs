@@ -44,6 +44,10 @@ public class HomeController : Controller
             .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
             .OrderByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt)
             .Take(5).ToListAsync();
+        ViewBag.FeaturedListings = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
+            .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved && l.IsFeatured && (l.FeaturedUntil == null || l.FeaturedUntil > DateTime.UtcNow))
+            .OrderByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
+            .Take(6).ToListAsync();
         ViewBag.PopularAreas = await _context.Listings
             .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
             .GroupBy(l => l.Area)
