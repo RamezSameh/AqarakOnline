@@ -364,32 +364,6 @@ public class NotificationRead
     public DateTime ReadAt { get; set; } = DateTime.UtcNow;
 }
 
-/// <summary>
-/// تقييم معلن: نجوم 1-5 وتعليق اختياري. تقييم واحد لكل (مقيِّم، معلن) —
-/// إعادة التقييم تحدّث التقييم السابق. اسم المقيِّم يظهر بأول اسم فقط.
-/// </summary>
-public class AdvertiserReview
-{
-    public int Id { get; set; }
-
-    public string AdvertiserId { get; set; } = string.Empty;
-    public ApplicationUser? Advertiser { get; set; }
-
-    public string ReviewerId { get; set; } = string.Empty;
-    public ApplicationUser? Reviewer { get; set; }
-
-    public int ListingId { get; set; }
-    public Listing? Listing { get; set; }
-
-    [Range(1, 5)]
-    public int Rating { get; set; }
-
-    [MaxLength(1000)]
-    public string? Comment { get; set; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-}
-
 /// <summary>سبب البلاغ عن إعلان مخالف.</summary>
 public enum ReportReason
 {

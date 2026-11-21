@@ -39,15 +39,6 @@
         }
         <p class="listing-price">@L.PriceText(Model.Price, Model.ListingType)</p>
         <p class="listing-views">@L.T("Views"): @Model.ViewCount • @L.RelativeTime(Model.CreatedAt)</p>
-        @{
-            var ratings = ViewBag.AdvertiserRatings as Dictionary<string, (double Avg, int Count)>;
-            (double Avg, int Count) advertiserRating = (0, 0);
-            var hasRating = ratings != null && !string.IsNullOrEmpty(Model.OwnerId) && ratings.TryGetValue(Model.OwnerId, out advertiserRating);
-        }
-        @if (hasRating)
-        {
-            <p class="listing-rating">⭐ @advertiserRating.Avg.ToString("0.0") (@advertiserRating.Count)</p>
-        }
         @if (Model.Approval != ListingApproval.Approved)
         {
             <p class="listing-status">@L.T("ApprovalStatus"): @L.ApprovalText(Model.Approval)</p>

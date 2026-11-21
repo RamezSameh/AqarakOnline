@@ -93,11 +93,6 @@ input, select, textarea { padding: 10px 12px; border: 1px solid #475569; border-
 .chart-track { flex: 1; height: 18px; background: #0f172a; border: 1px solid #334155; border-radius: 999px; overflow: hidden; }
 .chart-bar { height: 100%; background: #38bdf8; }
 .chart-count { min-width: 32px; text-align: end; font-weight: 700; }
-/* تقييم المعلن في صفحة التفاصيل. */
-.reviews { margin-top: 28px; }
-.review-item { padding: 12px 0; border-top: 1px solid #334155; }
-.review-stars { color: #f59e0b; letter-spacing: 2px; }
-.listing-rating { color: #fbbf24; font-weight: 700; margin: 4px 0 0; }
 /* حجز المعاينة في صفحة التفاصيل. */
 .viewing-form { margin-top: 28px; }
 /* سحب وإفلات الصور وإعادة ترتيبها في نماذج الإعلان. */

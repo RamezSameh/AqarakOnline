@@ -38,20 +38,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.Cascade);
         builder.Entity<Favorite>()
             .HasIndex(f => new { f.UserId, f.ListingId }).IsUnique();
-        // تقييم واحد لكل (مقيِّم، معلن). حذف المقيِّم أو الإعلان يحذف تقييماته؛
-        // وحذف المعلن نفسه يُنظَّف يدويًا في DeleteUser لأن SQL Server يمنع
-        // مسارَي حذف متتاليين إلى جدول المستخدمين.
-        builder.Entity<AdvertiserReview>()
-            .HasIndex(r => new { r.ReviewerId, r.AdvertiserId }).IsUnique();
-        builder.Entity<AdvertiserReview>()
-            .HasOne(r => r.Reviewer).WithMany().HasForeignKey(r => r.ReviewerId)
-            .OnDelete(DeleteBehavior.Cascade);
-        builder.Entity<AdvertiserReview>()
-            .HasOne(r => r.Advertiser).WithMany().HasForeignKey(r => r.AdvertiserId)
-            .OnDelete(DeleteBehavior.NoAction);
-        builder.Entity<AdvertiserReview>()
-            .HasOne(r => r.Listing).WithMany().HasForeignKey(r => r.ListingId)
-            .OnDelete(DeleteBehavior.Cascade);
         // حذف إعلان يحذف بلاغاته وطلبات معاينته؛ وحذف مستخدم يحذف ما أرسله منهما.
         builder.Entity<ListingReport>()
             .HasOne(r => r.Listing).WithMany().HasForeignKey(r => r.ListingId)
@@ -75,7 +61,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<NotificationRead> NotificationReads => Set<NotificationRead>();
     public DbSet<Favorite> Favorites => Set<Favorite>();
     public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
-    public DbSet<AdvertiserReview> AdvertiserReviews => Set<AdvertiserReview>();
     public DbSet<ListingReport> ListingReports => Set<ListingReport>();
     public DbSet<ViewingAppointment> ViewingAppointments => Set<ViewingAppointment>();
 }

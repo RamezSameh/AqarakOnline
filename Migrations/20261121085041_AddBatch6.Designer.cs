@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AqarakOnline.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261121083621_AddBatch6")]
+    [Migration("20261121085041_AddBatch6")]
     partial class AddBatch6
     {
         /// <inheritdoc />
@@ -25,46 +25,6 @@ namespace AqarakOnline.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("AqarakOnline.Models.AdvertiserReview", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AdvertiserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Comment")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("ListingId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ReviewerId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AdvertiserId");
-
-                    b.HasIndex("ListingId");
-
-                    b.HasIndex("ReviewerId", "AdvertiserId")
-                        .IsUnique();
-
-                    b.ToTable("AdvertiserReviews");
-                });
 
             modelBuilder.Entity("AqarakOnline.Models.ApplicationUser", b =>
                 {
@@ -714,32 +674,6 @@ namespace AqarakOnline.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("AqarakOnline.Models.AdvertiserReview", b =>
-                {
-                    b.HasOne("AqarakOnline.Models.ApplicationUser", "Advertiser")
-                        .WithMany()
-                        .HasForeignKey("AdvertiserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("AqarakOnline.Models.Listing", "Listing")
-                        .WithMany()
-                        .HasForeignKey("ListingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AqarakOnline.Models.ApplicationUser", "Reviewer")
-                        .WithMany()
-                        .HasForeignKey("ReviewerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Advertiser");
-
-                    b.Navigation("Listing");
-
-                    b.Navigation("Reviewer");
-                });
 
             modelBuilder.Entity("AqarakOnline.Models.ContactRequest", b =>
                 {

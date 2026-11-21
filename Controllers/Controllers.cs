@@ -185,15 +185,6 @@ public class ListingsController : Controller
                 .Select(f => f.ListingId)
                 .ToListAsync()).ToHashSet();
         }
-        var pageOwnerIds = listings.Select(l => l.OwnerId)
-            .Where(id => !string.IsNullOrEmpty(id)).Distinct().ToList();
-        var pageRatingRows = await _context.AdvertiserReviews
-            .Where(r => pageOwnerIds.Contains(r.AdvertiserId))
-            .GroupBy(r => r.AdvertiserId)
-            .Select(g => new { AdvertiserId = g.Key, Avg = g.Average(r => r.Rating), Count = g.Count() })
-            .ToListAsync();
-        ViewBag.AdvertiserRatings = pageRatingRows
-            .ToDictionary(g => g.AdvertiserId, g => (g.Avg, g.Count));
         return View(listings);
     }
 
@@ -223,15 +214,6 @@ public class ListingsController : Controller
             ViewBag.IsFavorite = await _context.Favorites
                 .AnyAsync(f => f.UserId == CurrentUserId && f.ListingId == listing.Id);
         }
-        // تقييمات المعلن + متوسط تقييمه (ولأصحاب الإعلانات المشابهة لعرضها في كروتهم).
-        ViewBag.AdvertiserReviews = await _context.AdvertiserReviews
-            .Include(r => r.Reviewer)
-            .Where(r => r.AdvertiserId == listing.OwnerId)
-            .OrderByDescending(r => r.CreatedAt).ToListAsync();
-        ViewBag.MyReview = User.Identity?.IsAuthenticated == true
-            ? await _context.AdvertiserReviews
-                .FirstOrDefaultAsync(r => r.AdvertiserId == listing.OwnerId && r.ReviewerId == CurrentUserId)
-            : null;
         // إعلانات مشابهة: نفس المنطقة أولًا، ثم نفس النوع، وبسعر قريب.
         ViewBag.SimilarListings = await _context.Listings.Include(l => l.Owner).Include(l => l.Attachments)
             .Where(l => l.Approval == ListingApproval.Approved && l.Id != listing.Id
@@ -240,18 +222,6 @@ public class ListingsController : Controller
             .ThenBy(l => Math.Abs(l.Price - listing.Price))
             .Take(4)
             .ToListAsync();
-        var similarForRatings = ViewBag.SimilarListings as List<Listing> ?? new List<Listing>();
-        var ratingOwnerIds = similarForRatings.Select(l => l.OwnerId)
-            .Append(listing.OwnerId)
-            .Where(id => !string.IsNullOrEmpty(id))
-            .Distinct().ToList();
-        var ratingRows = await _context.AdvertiserReviews
-            .Where(r => ratingOwnerIds.Contains(r.AdvertiserId))
-            .GroupBy(r => r.AdvertiserId)
-            .Select(g => new { AdvertiserId = g.Key, Avg = g.Average(r => r.Rating), Count = g.Count() })
-            .ToListAsync();
-        ViewBag.AdvertiserRatings = ratingRows
-            .ToDictionary(g => g.AdvertiserId, g => (g.Avg, g.Count));
         return View(listing);
     }
 
@@ -1106,12 +1076,8 @@ public class AdminController : Controller
         var requests = await _context.ContactRequests
             .Where(r => r.BuyerId == user.Id)
             .ToListAsync();
-        var reviews = await _context.AdvertiserReviews
-            .Where(r => r.AdvertiserId == user.Id || r.ReviewerId == user.Id)
-            .ToListAsync();
         _context.Listings.RemoveRange(listings);
         _context.ContactRequests.RemoveRange(requests);
-        _context.AdvertiserReviews.RemoveRange(reviews);
         await _context.SaveChangesAsync();
         var result = await _userManager.DeleteAsync(user);
         if (!result.Succeeded)
@@ -1887,92 +1853,6 @@ public class SeoController : Controller
     {
         var baseUrl = $"{Request.Scheme}://{Request.Host}";
         return Content($"User-agent: *\nAllow: /\nSitemap: {baseUrl}/sitemap.xml\n", "text/plain", System.Text.Encoding.UTF8);
-    }
-}
-
-/// <summary>
-/// تقييم المعلن: مستخدم مسجَّل يقيّم صاحب إعلان (1-5 نجوم + تعليق اختياري).
-/// تقييم واحد لكل (مقيِّم، معلن) — إعادة التقييم تحدّث السابق.
-/// </summary>
-[Authorize]
-public class ReviewsController : Controller
-{
-    private readonly ApplicationDbContext _context;
-
-    public ReviewsController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
-    private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(string advertiserId, int listingId, int rating, string? comment)
-    {
-        if (string.IsNullOrWhiteSpace(advertiserId) || advertiserId == CurrentUserId)
-        {
-            TempData["Error"] = "لا يمكنك تقييم نفسك.";
-            return RedirectToAction("Details", "Listings", new { id = listingId });
-        }
-        if (rating < 1 || rating > 5)
-        {
-            TempData["Error"] = "التقييم من 1 إلى 5 نجوم.";
-            return RedirectToAction("Details", "Listings", new { id = listingId });
-        }
-        var listing = await _context.Listings.FindAsync(listingId);
-        if (listing == null || listing.OwnerId != advertiserId)
-        {
-            return NotFound();
-        }
-        var cleanComment = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim();
-        if (cleanComment != null && cleanComment.Length > 1000)
-        {
-            cleanComment = cleanComment[..1000];
-        }
-        var existing = await _context.AdvertiserReviews
-            .FirstOrDefaultAsync(r => r.AdvertiserId == advertiserId && r.ReviewerId == CurrentUserId);
-        if (existing == null)
-        {
-            _context.AdvertiserReviews.Add(new AdvertiserReview
-            {
-                AdvertiserId = advertiserId,
-                ReviewerId = CurrentUserId,
-                ListingId = listingId,
-                Rating = rating,
-                Comment = cleanComment,
-                CreatedAt = DateTime.UtcNow
-            });
-        }
-        else
-        {
-            existing.Rating = rating;
-            existing.Comment = cleanComment;
-            existing.ListingId = listingId;
-            existing.CreatedAt = DateTime.UtcNow;
-        }
-        await _context.SaveChangesAsync();
-        TempData["Info"] = "تم حفظ تقييمك.";
-        return RedirectToAction("Details", "Listings", new { id = listingId });
-    }
-
-    [Authorize(Roles = "Admin")]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id, string? returnUrl = null)
-    {
-        var review = await _context.AdvertiserReviews.FindAsync(id);
-        if (review != null)
-        {
-            _context.AdvertiserReviews.Remove(review);
-            await _context.SaveChangesAsync();
-            TempData["Info"] = "تم حذف التقييم.";
-        }
-        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-        {
-            return Redirect(returnUrl);
-        }
-        return RedirectToAction("Index", "Listings");
     }
 }
 
