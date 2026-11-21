@@ -728,6 +728,9 @@ namespace AqarakOnline.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<bool>("ReminderSent")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("RequestedAt")
                         .HasColumnType("datetime2");
 

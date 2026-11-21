@@ -1,5 +1,9 @@
 using AqarakOnline.Data;
 using AqarakOnline.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace AqarakOnline.Services;
 
@@ -195,6 +199,15 @@ public class LanguageService
         ["AdvertiserBroker"] = ("وسيط", "Broker"),
         ["MostReported"] = ("الأكثر بلاغًا", "Most reported"),
         ["ClearAllFavorites"] = ("حذف كل المفضلة", "Delete all favorites"),
+        ["PopularAreas"] = ("مناطق شائعة", "Popular areas"),
+        ["TrustedAdvertiser"] = ("معلن موثوق", "Trusted advertiser"),
+        ["AvgPricePerSqmByArea"] = ("متوسط سعر المتر حسب المنطقة", "Average price per sqm by area"),
+        ["AvgPricePerSqm"] = ("متوسط سعر المتر", "Avg price per sqm"),
+        ["ListingsCount"] = ("عدد الإعلانات", "Listings count"),
+        ["ListingsByPropertyType"] = ("الإعلانات حسب نوع العقار", "Listings by property type"),
+        ["ListingsByListingType"] = ("الإعلانات حسب الغرض", "Listings by purpose"),
+        ["PriceGuide"] = ("كيف تقيّم سعر عقارك", "How to price your property"),
+        ["BuyingMistakes"] = ("أخطاء شائعة عند الشراء", "Common buying mistakes"),
         ["AgreeToTerms"] = ("أوافق على", "I agree to the"),
         ["DeleteAllNotifications"] = ("حذف كل التنبيهات", "Delete all notifications"),
         ["SetAsCover"] = ("تعيين كغلاف", "Set as cover"),
@@ -519,5 +532,99 @@ public static class SiteSettingsHelper
             setting.Value = value;
         }
         await context.SaveChangesAsync();
+    }
+}
+
+/// <summary>المعلن الموثوق: صاحب 3 إعلانات مقبولة أو أكثر. تُحسب مرة واحدة لكل طلب (scoped)
+/// فلا تضيف استعلامًا مع كل كارت.</summary>
+public class TrustedAdvertiserService
+{
+    /// <summary>عدد الإعلانات المقبولة اللازم لشارة «معلن موثوق».</summary>
+    public const int TrustedThreshold = 3;
+
+    private readonly ApplicationDbContext _context;
+    private HashSet<string>? _trustedOwnerIds;
+
+    public TrustedAdvertiserService(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<bool> IsTrustedAsync(string? ownerId)
+    {
+        if (string.IsNullOrEmpty(ownerId))
+        {
+            return false;
+        }
+        _trustedOwnerIds ??= (await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved && l.OwnerId != null)
+            .GroupBy(l => l.OwnerId)
+            .Where(g => g.Count() >= TrustedThreshold)
+            .Select(g => g.Key!)
+            .ToListAsync()).ToHashSet();
+        return _trustedOwnerIds.Contains(ownerId);
+    }
+}
+
+/// <summary>تذكير بموعد المعاينة قبلها بيوم: خدمة خلفية تفحص كل ساعة المعاينات المؤكدة
+/// خلال الـ24 ساعة القادمة وترسل تنبيهًا لطالب المعاينة مرة واحدة (ReminderSent).
+/// المعاينة بتوقيت المستخدم المحلي كما أدخله، فالمقارنة بـDateTime.Now زي ما بيعمل
+/// ViewingsController عند إنشاء المعاينة.</summary>
+public class ViewingReminderService : BackgroundService
+{
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<ViewingReminderService> _logger;
+
+    public ViewingReminderService(IServiceScopeFactory scopeFactory, ILogger<ViewingReminderService> logger)
+    {
+        _scopeFactory = scopeFactory;
+        _logger = logger;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                await SendRemindersAsync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "فشل إرسال تذكيرات المعاينة.");
+            }
+            await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+        }
+    }
+
+    private async Task SendRemindersAsync(CancellationToken stoppingToken)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var now = DateTime.Now;
+        var upcoming = await context.ViewingAppointments
+            .Include(v => v.Listing)
+            .Where(v => v.Status == ViewingStatus.Confirmed
+                && !v.ReminderSent
+                && v.RequestedAt > now
+                && v.RequestedAt <= now.AddHours(24))
+            .ToListAsync(stoppingToken);
+        foreach (var viewing in upcoming)
+        {
+            context.Notifications.Add(new Notification
+            {
+                Title = "تذكير بموعد المعاينة",
+                Message = $"معاينة «{viewing.Listing?.Title}» غدًا {viewing.RequestedAt:dd/MM/yyyy HH:mm} — التنسيق كله بيتم عن طريق الأدمن.",
+                TargetUserId = viewing.RequesterId,
+                Url = "/Viewings",
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            viewing.ReminderSent = true;
+        }
+        if (upcoming.Count > 0)
+        {
+            await context.SaveChangesAsync(stoppingToken);
+        }
     }
 }

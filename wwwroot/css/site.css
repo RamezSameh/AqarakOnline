@@ -265,3 +265,4 @@ input, select, textarea { padding: 10px 12px; border: 1px solid #475569; border-
 [data-theme="light"] .suggest-item { color: #0f172a; }
 [data-theme="light"] .suggest-item:hover { background: #f1f5f9; }
 .badge-reduced { background: #dc2626; color: #fff; }
+.badge-trusted { background: #0e7490; color: #fff; }

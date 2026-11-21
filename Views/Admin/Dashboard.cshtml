@@ -341,6 +341,63 @@ else
         }
     </div>
 }
+<h3>@L.T("AvgPricePerSqmByArea")</h3>
+@if (!Model.AreaPrices.Any())
+{
+    <p>لا توجد إعلانات متاحة بعد.</p>
+}
+else
+{
+    <table class="table">
+        <thead><tr><th>@L.T("Area")</th><th>@L.T("AvgPricePerSqm")</th><th>@L.T("ListingsCount")</th></tr></thead>
+        <tbody>
+            @foreach (var p in Model.AreaPrices)
+            {
+                <tr><td>@p.Area</td><td>@p.AvgPricePerSqm.ToString("N0") جنيه/م²</td><td>@p.ListingsCount</td></tr>
+            }
+        </tbody>
+    </table>
+}
+<h3>@L.T("ListingsByPropertyType")</h3>
+@if (!Model.ListingsByPropertyType.Any())
+{
+    <p>لا توجد إعلانات بعد.</p>
+}
+else
+{
+    var maxType = Model.ListingsByPropertyType.Max(p => p.Count);
+    <div class="chart">
+        @foreach (var point in Model.ListingsByPropertyType)
+        {
+            var pct = maxType > 0 ? point.Count * 100 / maxType : 0;
+            <div class="chart-row">
+                <span class="chart-label">@point.Label</span>
+                <div class="chart-track"><div class="chart-bar" style="width:@pct%"></div></div>
+                <span class="chart-count">@point.Count</span>
+            </div>
+        }
+    </div>
+}
+<h3>@L.T("ListingsByListingType")</h3>
+@if (!Model.ListingsByListingType.Any())
+{
+    <p>لا توجد إعلانات بعد.</p>
+}
+else
+{
+    var maxPurpose = Model.ListingsByListingType.Max(p => p.Count);
+    <div class="chart">
+        @foreach (var point in Model.ListingsByListingType)
+        {
+            var pct = maxPurpose > 0 ? point.Count * 100 / maxPurpose : 0;
+            <div class="chart-row">
+                <span class="chart-label">@point.Label</span>
+                <div class="chart-track"><div class="chart-bar" style="width:@pct%"></div></div>
+                <span class="chart-count">@point.Count</span>
+            </div>
+        }
+    </div>
+}
 <h3>@L.T("TopContactedListings")</h3>
 @if (!Model.TopContactedListings.Any())
 {

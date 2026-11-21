@@ -580,6 +580,9 @@ public class ViewingAppointment
 
     public ViewingStatus Status { get; set; } = ViewingStatus.Pending;
 
+    /// <summary>اترسل تذكير المعاينة لطالبها قبلها بيوم؟ (مرة واحدة بس).</summary>
+    public bool ReminderSent { get; set; }
+
     [MaxLength(500)]
     public string? Message { get; set; }
 

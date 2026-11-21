@@ -1,4 +1,12 @@
 @model IEnumerable<Listing>
+@{
+    var sortOptions = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+    {
+        new(L.T("SortNewest"), "newest", ViewBag.Sort == "newest"),
+        new(L.T("SortPriceAsc"), "priceAsc", ViewBag.Sort == "priceAsc"),
+        new(L.T("SortPriceDesc"), "priceDesc", ViewBag.Sort == "priceDesc")
+    };
+}
 <h1>@L.T("Favorites")</h1>
 @if (!Model.Any())
 {
@@ -7,6 +15,13 @@
 }
 else
 {
+    <form class="filter-form" asp-controller="Favorites" asp-action="Index" method="get">
+        <label class="sort-label">
+            @L.T("SortBy")
+            <select name="sort" asp-items="sortOptions"></select>
+        </label>
+        <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
+    </form>
     <div class="actions">
         @if (User.Identity?.IsAuthenticated == true)
         {

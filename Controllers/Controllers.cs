@@ -44,6 +44,12 @@ public class HomeController : Controller
             .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
             .OrderByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt)
             .Take(5).ToListAsync();
+        ViewBag.PopularAreas = await _context.Listings
+            .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
+            .GroupBy(l => l.Area)
+            .Select(g => new ChartPoint { Label = g.Key, Count = g.Count() })
+            .OrderByDescending(pt => pt.Count)
+            .Take(6).ToListAsync();
         if (User.Identity?.IsAuthenticated == true)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -120,6 +126,18 @@ public class HomeController : Controller
 
     [HttpGet]
     public IActionResult Tips()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult PriceGuide()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult BuyingMistakes()
     {
         return View();
     }
@@ -919,6 +937,7 @@ public class ListingsController : Controller
             "priceasc" => "priceAsc",
             "pricedesc" => "priceDesc",
             "oldest" => "oldest",
+            "viewsdesc" => "viewsDesc",
             _ => "newest"
         };
         query = sortKey switch
@@ -926,6 +945,7 @@ public class ListingsController : Controller
             "priceAsc" => query.OrderBy(l => l.Price).ThenByDescending(l => l.CreatedAt),
             "priceDesc" => query.OrderByDescending(l => l.Price).ThenByDescending(l => l.CreatedAt),
             "oldest" => query.OrderBy(l => l.CreatedAt),
+            "viewsDesc" => query.OrderByDescending(l => l.ViewCount).ThenByDescending(l => l.CreatedAt),
             _ => query.OrderByDescending(l => l.CreatedAt)
         };
         ViewBag.Status = statusKey;
@@ -1445,6 +1465,20 @@ public class AdminDashboardViewModel
     public List<ChartPoint> TopContactedListings { get; set; } = new();
     /// <summary>أكثر 5 مستخدمين إضافة إعلانات.</summary>
     public List<ChartPoint> TopPosters { get; set; } = new();
+    /// <summary>متوسط سعر المتر حسب المنطقة — من الإعلانات المقبولة والمتاحة.</summary>
+    public List<AreaPricePoint> AreaPrices { get; set; } = new();
+    /// <summary>توزيع الإعلانات حسب نوع العقار (شقة/بيت/عمارة/محل/فيلا).</summary>
+    public List<ChartPoint> ListingsByPropertyType { get; set; } = new();
+    /// <summary>توزيع الإعلانات حسب الغرض (بيع/إيجار).</summary>
+    public List<ChartPoint> ListingsByListingType { get; set; } = new();
+}
+
+/// <summary>متوسط سعر المتر في منطقة: المنطقة ومتوسط السعر وعدد الإعلانات.</summary>
+public class AreaPricePoint
+{
+    public string Area { get; set; } = string.Empty;
+    public decimal AvgPricePerSqm { get; set; }
+    public int ListingsCount { get; set; }
 }
 
 /// <summary>نقطة في رسم بياني: تسمية وعدد.</summary>
@@ -1461,13 +1495,15 @@ public class AdminController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IWebHostEnvironment _env;
     private readonly Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> _hub;
+    private readonly LanguageService _language;
 
-    public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment env, Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub)
+    public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment env, Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub, LanguageService language)
     {
         _context = context;
         _userManager = userManager;
         _env = env;
         _hub = hub;
+        _language = language;
     }
 
     // دفع لحظي: أرقام الأدمن لمجموعة الأدمن، والجرس لكل المتصلين.
@@ -1639,6 +1675,27 @@ public class AdminController : Controller
                 : c.ListingId.ToString(),
             Count = c.Count
         }).ToList();
+        model.AreaPrices = allListings
+            .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable && l.AreaSqm > 0)
+            .GroupBy(l => l.Area)
+            .Select(g => new AreaPricePoint
+            {
+                Area = g.Key,
+                AvgPricePerSqm = g.Average(l => l.Price / l.AreaSqm),
+                ListingsCount = g.Count()
+            })
+            .OrderByDescending(p => p.AvgPricePerSqm)
+            .ToList();
+        model.ListingsByPropertyType = allListings
+            .GroupBy(l => l.PropertyType)
+            .Select(g => new ChartPoint { Label = _language.PropertyTypeText(g.Key), Count = g.Count() })
+            .OrderByDescending(pt => pt.Count)
+            .ToList();
+        model.ListingsByListingType = allListings
+            .GroupBy(l => l.ListingType)
+            .Select(g => new ChartPoint { Label = _language.ListingTypeText(g.Key), Count = g.Count() })
+            .OrderByDescending(pt => pt.Count)
+            .ToList();
         return View(model);
     }
 
@@ -3623,17 +3680,27 @@ public class FavoritesController : Controller
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? sort = null)
     {
+        var sortKey = (sort ?? "newest").ToLowerInvariant() switch
+        {
+            "priceasc" => "priceAsc",
+            "pricedesc" => "priceDesc",
+            _ => "newest"
+        };
+        ViewBag.Sort = sortKey;
         if (User.Identity?.IsAuthenticated == true)
         {
-            var listings = await _context.Favorites
+            var query = _context.Favorites
                 .Include(f => f.Listing).ThenInclude(l => l!.Owner)
                 .Include(f => f.Listing).ThenInclude(l => l!.Attachments)
-                .Where(f => f.UserId == CurrentUserId)
-                .OrderByDescending(f => f.CreatedAt)
-                .Select(f => f.Listing!)
-                .ToListAsync();
+                .Where(f => f.UserId == CurrentUserId);
+            var listings = sortKey switch
+            {
+                "priceAsc" => await query.OrderBy(f => f.Listing!.Price).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
+                "priceDesc" => await query.OrderByDescending(f => f.Listing!.Price).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
+                _ => await query.OrderByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync()
+            };
             ViewBag.FavoriteListingIds = listings.Select(l => l.Id).ToHashSet();
             return View(listings);
         }
@@ -3647,6 +3714,14 @@ public class FavoritesController : Controller
             .ToListAsync();
         var ordered = guestIds.Select(id => guestListings.FirstOrDefault(l => l.Id == id))
             .Where(l => l != null).Select(l => l!).ToList();
+        if (sortKey == "priceAsc")
+        {
+            ordered = ordered.OrderBy(l => l.Price).ToList();
+        }
+        else if (sortKey == "priceDesc")
+        {
+            ordered = ordered.OrderByDescending(l => l.Price).ToList();
+        }
         ViewBag.FavoriteListingIds = ordered.Select(l => l.Id).ToHashSet();
         return View(ordered);
     }

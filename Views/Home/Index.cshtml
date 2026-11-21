@@ -65,3 +65,18 @@
         </div>
     </section>
 }
+
+@if (ViewBag.PopularAreas != null && ((List<AqarakOnline.Controllers.ChartPoint>)ViewBag.PopularAreas).Any())
+{
+    <section>
+        <div class="section-head">
+            <h2>@L.T("PopularAreas")</h2>
+        </div>
+        <div class="actions">
+            @foreach (var area in (List<AqarakOnline.Controllers.ChartPoint>)ViewBag.PopularAreas)
+            {
+                <a class="btn btn-ghost" href="/Listings/Area/@Uri.EscapeDataString(area.Label)">@area.Label (@area.Count)</a>
+            }
+        </div>
+    </section>
+}

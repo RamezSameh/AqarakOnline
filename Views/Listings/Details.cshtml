@@ -1,4 +1,5 @@
 @model Listing
+@inject AqarakOnline.Services.TrustedAdvertiserService TrustedAdvertiser
 @{
     var detailsUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
     var isOwnListing = !string.IsNullOrEmpty(detailsUserId) && Model.OwnerId == detailsUserId;
@@ -43,6 +44,10 @@
     @if (Model.IsUrgent)
     {
         <span class="badge badge-urgent">🔥 @L.T("Urgent")</span>
+    }
+    @if (await TrustedAdvertiser.IsTrustedAsync(Model.OwnerId))
+    {
+        <span class="badge badge-trusted">✓ @L.T("TrustedAdvertiser")</span>
     }
     @if (Model.CreatedAt >= DateTime.UtcNow.AddDays(-1))
     {

@@ -43,6 +43,8 @@ builder.Services.Configure<ContactSettings>(builder.Configuration.GetSection("Co
 builder.Services.Configure<SmsSettings>(builder.Configuration.GetSection("Sms"));
 
 builder.Services.AddScoped<LanguageService>();
+builder.Services.AddScoped<TrustedAdvertiserService>();
+builder.Services.AddHostedService<ViewingReminderService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 

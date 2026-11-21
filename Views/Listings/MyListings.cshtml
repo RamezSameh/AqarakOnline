@@ -12,7 +12,8 @@
         new(L.T("SortNewest"), "newest", ViewBag.Sort == "newest"),
         new(L.T("SortOldest"), "oldest", ViewBag.Sort == "oldest"),
         new(L.T("SortPriceAsc"), "priceAsc", ViewBag.Sort == "priceAsc"),
-        new(L.T("SortPriceDesc"), "priceDesc", ViewBag.Sort == "priceDesc")
+        new(L.T("SortPriceDesc"), "priceDesc", ViewBag.Sort == "priceDesc"),
+        new(L.T("SortViewsDesc"), "viewsDesc", ViewBag.Sort == "viewsDesc")
     };
 }
 <h1>@L.T("MyListings")</h1>
@@ -43,6 +44,7 @@ else
                 <input type="hidden" name="id" value="@listing.Id" />
                 <button type="submit" class="btn btn-ghost">@(listing.IsAvailable ? L.T("StopListing") : L.T("StartListing"))</button>
             </form>
+            <a class="btn btn-ghost" asp-action="Delete" asp-route-id="@listing.Id">@L.T("Delete")</a>
         }
     </div>
 }
