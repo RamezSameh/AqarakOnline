@@ -905,6 +905,13 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
+    // ظل الهيدر عند السكرول.
+    var header = document.querySelector(".site-header");
+    if (header) {
+        window.addEventListener("scroll", function () {
+            header.classList.toggle("scrolled", window.scrollY > 10);
+        }, { passive: true });
+    }
     var backToTop = document.getElementById("backToTop");
     if (!backToTop) { return; }
     window.addEventListener("scroll", function () {

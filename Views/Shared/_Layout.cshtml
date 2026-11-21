@@ -18,12 +18,15 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     @* الوضع الفاتح/الداكن يُطبَّق قبل رسم الصفحة حتى لا يلمع الداكن أولًا. *@
     <script>try { document.documentElement.setAttribute("data-theme", localStorage.getItem("aqarak-theme") || "dark"); } catch (e) {}</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
     <header class="site-header">
         <div class="container header-inner">
-            <a class="brand" asp-controller="Home" asp-action="Index">@L.T("Brand")</a>
+            <a class="brand" asp-controller="Home" asp-action="Index"><span class="brand-icon">🏠</span> @L.T("Brand")</a>
             <nav class="main-nav" id="mainNav">
                 <a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">@L.T("Home")</a>
                 <a class="nav-link @(currentController == "Listings" && currentAction == "Index" ? "active" : "")" asp-controller="Listings" asp-action="Index">@L.T("Listings")</a>

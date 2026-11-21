@@ -99,6 +99,7 @@ else
     <video class="detail-video" controls src="/@video.FilePath"></video>
 }
 
+<div class="details-facts">
 <p><strong>@L.T("Area"):</strong> @Model.Area</p>
 <p><strong>@L.T("AreaSqm"):</strong> @Model.AreaSqm</p>
 <p><strong>@L.T("AdvertiserType"):</strong> @L.AdvertiserTypeText(Model.AdvertiserType)</p>
@@ -187,11 +188,12 @@ else
 {
     <p><strong>@L.T("ElevatorCount"):</strong> @Model.ElevatorCount</p>
 }
-<p><strong>@L.T("Price"):</strong> @L.PriceText(Model.Price, Model.ListingType)</p>
+<p class="details-price"><strong>@L.T("Price"):</strong> @L.PriceText(Model.Price, Model.ListingType)</p>
 @if (Model.IsPriceReduced)
 {
     <p><strong>@L.T("OriginalPrice"):</strong> <del>@Model.OriginalPrice.ToString("N0") جنيه</del></p>
 }
+</div>
 @{
     var avgSqm = ViewBag.AreaAvgPricePerSqm as decimal?;
     var mySqm = ViewBag.PricePerSqm as decimal?;
