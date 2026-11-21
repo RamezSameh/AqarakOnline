@@ -111,7 +111,6 @@ else
 @if (User.IsInRole("Admin"))
 {
     <h2>@L.T("AdvertiserData")</h2>
-    <p><strong>@L.T("FullName"):</strong> @(Model.Owner?.FullName ?? "-")</p>
     <p><strong>@L.T("PhoneNumber"):</strong> @(Model.Owner?.PhoneNumber ?? "-")</p>
     <p><strong>@L.T("Address"):</strong> @(Model.Owner?.Address ?? "-")</p>
     @if (!string.IsNullOrWhiteSpace(Model.DetailedAddress))
