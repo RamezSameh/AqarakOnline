@@ -206,6 +206,8 @@ public class LanguageService
         ["ListingsCount"] = ("عدد الإعلانات", "Listings count"),
         ["ListingsByPropertyType"] = ("الإعلانات حسب نوع العقار", "Listings by property type"),
         ["ListingsByListingType"] = ("الإعلانات حسب الغرض", "Listings by purpose"),
+        ["ListingsByAdvertiserType"] = ("الإعلانات حسب نوع المعلن", "Listings by advertiser type"),
+        ["UsersByStatus"] = ("المستخدمون حسب الحالة", "Users by status"),
         ["PriceGuide"] = ("كيف تقيّم سعر عقارك", "How to price your property"),
         ["BuyingMistakes"] = ("أخطاء شائعة عند الشراء", "Common buying mistakes"),
         ["AgreeToTerms"] = ("أوافق على", "I agree to the"),

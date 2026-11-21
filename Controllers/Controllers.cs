@@ -1471,6 +1471,10 @@ public class AdminDashboardViewModel
     public List<ChartPoint> ListingsByPropertyType { get; set; } = new();
     /// <summary>توزيع الإعلانات حسب الغرض (بيع/إيجار).</summary>
     public List<ChartPoint> ListingsByListingType { get; set; } = new();
+    /// <summary>توزيع الإعلانات حسب نوع المعلن (مالك/وسيط).</summary>
+    public List<ChartPoint> ListingsByAdvertiserType { get; set; } = new();
+    /// <summary>توزيع المستخدمين حسب حالة الحساب (معلّق/مفعّل/موقوف/محظور).</summary>
+    public List<ChartPoint> UsersByStatus { get; set; } = new();
 }
 
 /// <summary>متوسط سعر المتر في منطقة: المنطقة ومتوسط السعر وعدد الإعلانات.</summary>
@@ -1694,6 +1698,27 @@ public class AdminController : Controller
         model.ListingsByListingType = allListings
             .GroupBy(l => l.ListingType)
             .Select(g => new ChartPoint { Label = _language.ListingTypeText(g.Key), Count = g.Count() })
+            .OrderByDescending(pt => pt.Count)
+            .ToList();
+        model.ListingsByAdvertiserType = allListings
+            .GroupBy(l => l.AdvertiserType)
+            .Select(g => new ChartPoint { Label = _language.AdvertiserTypeText(g.Key), Count = g.Count() })
+            .OrderByDescending(pt => pt.Count)
+            .ToList();
+        model.UsersByStatus = users
+            .GroupBy(u => u.AccountStatus)
+            .Select(g => new ChartPoint
+            {
+                Label = g.Key switch
+                {
+                    AccountStatus.Pending => "معلّق",
+                    AccountStatus.Active => "مفعّل",
+                    AccountStatus.Suspended => "موقوف",
+                    AccountStatus.Blocked => "محظور",
+                    _ => g.Key.ToString()
+                },
+                Count = g.Count()
+            })
             .OrderByDescending(pt => pt.Count)
             .ToList();
         return View(model);
@@ -3686,6 +3711,7 @@ public class FavoritesController : Controller
         {
             "priceasc" => "priceAsc",
             "pricedesc" => "priceDesc",
+            "viewsdesc" => "viewsDesc",
             _ => "newest"
         };
         ViewBag.Sort = sortKey;
@@ -3699,6 +3725,7 @@ public class FavoritesController : Controller
             {
                 "priceAsc" => await query.OrderBy(f => f.Listing!.Price).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
                 "priceDesc" => await query.OrderByDescending(f => f.Listing!.Price).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
+                "viewsDesc" => await query.OrderByDescending(f => f.Listing!.ViewCount).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
                 _ => await query.OrderByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync()
             };
             ViewBag.FavoriteListingIds = listings.Select(l => l.Id).ToHashSet();
@@ -3721,6 +3748,10 @@ public class FavoritesController : Controller
         else if (sortKey == "priceDesc")
         {
             ordered = ordered.OrderByDescending(l => l.Price).ToList();
+        }
+        else if (sortKey == "viewsDesc")
+        {
+            ordered = ordered.OrderByDescending(l => l.ViewCount).ToList();
         }
         ViewBag.FavoriteListingIds = ordered.Select(l => l.Id).ToHashSet();
         return View(ordered);

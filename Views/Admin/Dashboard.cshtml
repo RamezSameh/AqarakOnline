@@ -398,6 +398,46 @@ else
         }
     </div>
 }
+<h3>@L.T("ListingsByAdvertiserType")</h3>
+@if (!Model.ListingsByAdvertiserType.Any())
+{
+    <p>لا توجد إعلانات بعد.</p>
+}
+else
+{
+    var maxAdvertiser = Model.ListingsByAdvertiserType.Max(p => p.Count);
+    <div class="chart">
+        @foreach (var point in Model.ListingsByAdvertiserType)
+        {
+            var pct = maxAdvertiser > 0 ? point.Count * 100 / maxAdvertiser : 0;
+            <div class="chart-row">
+                <span class="chart-label">@point.Label</span>
+                <div class="chart-track"><div class="chart-bar" style="width:@pct%"></div></div>
+                <span class="chart-count">@point.Count</span>
+            </div>
+        }
+    </div>
+}
+<h3>@L.T("UsersByStatus")</h3>
+@if (!Model.UsersByStatus.Any())
+{
+    <p>لا يوجد مستخدمون بعد.</p>
+}
+else
+{
+    var maxStatus = Model.UsersByStatus.Max(p => p.Count);
+    <div class="chart">
+        @foreach (var point in Model.UsersByStatus)
+        {
+            var pct = maxStatus > 0 ? point.Count * 100 / maxStatus : 0;
+            <div class="chart-row">
+                <span class="chart-label">@point.Label</span>
+                <div class="chart-track"><div class="chart-bar" style="width:@pct%"></div></div>
+                <span class="chart-count">@point.Count</span>
+            </div>
+        }
+    </div>
+}
 <h3>@L.T("TopContactedListings")</h3>
 @if (!Model.TopContactedListings.Any())
 {
