@@ -262,6 +262,8 @@ else
     </div>
     <div class="details-tab-panel active" id="tab-desc">
         <p>@Model.Description</p>
+        <span id="listingDescriptionText" hidden>@Model.Description</span>
+        <button type="button" class="btn btn-ghost" id="copyDescriptionBtn">نسخ الوصف 📋</button>
     </div>
     @if (Model.FeaturesList.Any())
     {
@@ -404,16 +406,35 @@ else
         <p><small>المعاينة بتتنسق عن طريق إدارة الموقع — لا يوجد تواصل مباشر مع المعلن.</small></p>
         <form asp-controller="Viewings" asp-action="Create" method="post" class="form">
             <input type="hidden" name="listingId" value="@Model.Id" />
-            <label>@L.T("ViewingDate")</label>
+            <label>1 — @L.T("ViewingDate")</label>
             <input type="datetime-local" id="requestedAtInput" name="requestedAt" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" required />
             <div class="time-chips">
                 <button type="button" class="btn btn-ghost time-chip" data-time="10:00">صباحًا</button>
                 <button type="button" class="btn btn-ghost time-chip" data-time="18:00">مساءً</button>
             </div>
-            <label>@L.T("ViewingMessage")</label>
+            <label>المدة المتوقعة</label>
+            <select name="duration">
+                <option value="">—</option>
+                <option value="30">30 دقيقة</option>
+                <option value="60">60 دقيقة</option>
+            </select>
+            <label>2 — @L.T("ViewingMessage")</label>
             <textarea name="message" rows="2" maxlength="500"></textarea>
-            <button type="submit" class="btn btn-primary">@L.T("BookViewing")</button>
+            <button type="submit" class="btn btn-primary">3 — @L.T("BookViewing")</button>
         </form>
+    </section>
+}
+
+@if (ViewBag.SimilarPrices is System.Collections.Generic.IEnumerable<dynamic> similarPrices && similarPrices.Any())
+{
+    <section>
+        <h2>أسعار مشابهة في @Model.Area</h2>
+        <ul class="similar-prices">
+            @foreach (var item in similarPrices)
+            {
+                <li><a asp-action="Details" asp-route-id="@item.Id">@item.Title</a> — @L.PriceText((decimal)item.Price, Model.ListingType)@(item.AreaSqm > 0 ? $" • {item.AreaSqm} م²" : "")</li>
+            }
+        </ul>
     </section>
 }
 
@@ -445,9 +466,21 @@ else
         {
             <a class="btn btn-primary" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id" asp-route-intent="rent">@L.T("RentIt")</a>
         }
+        <a class="btn btn-primary sticky-whatsapp" href="https://wa.me/@ContactOptions.Value.WhatsAppDigits?text=@Uri.EscapeDataString($"بخصوص الإعلان {Model.AdNumber}")" target="_blank" rel="noopener">💬 واتساب</a>
         <a class="btn btn-ghost" href="tel:@ContactOptions.Value.Phone">📞 @L.T("CallUs")</a>
     </div>
 }
 
 
 <button type="button" class="fab-share share-copy" data-url="@pageUrl" title="@L.T("Share")">🔗</button>
+
+<nav class="details-nav">
+    @if (ViewBag.PreviousListing != null)
+    {
+        <a class="btn btn-ghost" asp-action="Details" asp-route-id="@ViewBag.PreviousListing.Id">← الإعلان السابق: @ViewBag.PreviousListing.Title</a>
+    }
+    @if (ViewBag.NextListing != null)
+    {
+        <a class="btn btn-ghost" asp-action="Details" asp-route-id="@ViewBag.NextListing.Id">الإعلان التالي: @ViewBag.NextListing.Title →</a>
+    }
+</nav>

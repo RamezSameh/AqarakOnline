@@ -26,6 +26,8 @@
 <form asp-action="RequestReview" method="post" class="form">
     <label>@L.T("PhoneNumber")</label>
     <input type="tel" name="phoneNumber" dir="ltr" placeholder="01xxxxxxxxx" required />
+    <label>سبب طلب المراجعة (اختياري)</label>
+    <textarea name="reason" rows="2" maxlength="200"></textarea>
     <div class="actions">
         <button type="submit" class="btn btn-ghost">@L.T("RequestReview")</button>
     </div>

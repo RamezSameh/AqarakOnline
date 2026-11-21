@@ -740,7 +740,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
     function systemTheme() {
-        try { return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"; } catch (e) { return "dark"; }
+        var h = new Date().getHours();
+        return (h >= 6 && h < 18) ? "light" : "dark";
     }
     try {
         applyTheme(localStorage.getItem(themeKey) || systemTheme());
@@ -1407,15 +1408,27 @@ document.addEventListener("DOMContentLoaded", function () {
             url.searchParams.set("page", nextPage);
             loadMoreBtn.disabled = true;
             loadMoreBtn.textContent = "جاري التحميل...";
+            var grid = document.querySelector(".cards-grid");
+            var skeletons = [];
+            if (grid) {
+                for (var s = 0; s < 3; s++) {
+                    var sk = document.createElement("div");
+                    sk.className = "skeleton-card";
+                    grid.appendChild(sk);
+                    skeletons.push(sk);
+                }
+            }
             fetch(url.toString())
                 .then(function (r) { return r.text(); })
                 .then(function (html) {
+                    skeletons.forEach(function (sk) { sk.remove(); });
                     var doc = new DOMParser().parseFromString(html, "text/html");
                     var grid = document.querySelector(".cards-grid");
                     var newGrid = doc.querySelector(".cards-grid");
                     if (grid && newGrid) {
                         newGrid.querySelectorAll(":scope > .listing-card").forEach(function (el) {
                             grid.appendChild(el);
+                            el.classList.add("revealed");
                         });
                     }
                     var next = nextPage + 1;
@@ -1464,4 +1477,167 @@ document.addEventListener("DOMContentLoaded", function () {
         var loader = document.getElementById("pageLoader");
         if (loader) { loader.classList.add("loading"); }
     });
+});
+
+// Batch 28 — design 10
+document.addEventListener("DOMContentLoaded", function () {
+    // (44) ظهور تدريجي للكروت عند التمرير.
+    var cards = document.querySelectorAll(".listing-card");
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        cards.forEach(function (c) { c.classList.add("revealed"); });
+    } else if ("IntersectionObserver" in window) {
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) {
+                if (e.isIntersecting) { e.target.classList.add("revealed"); observer.unobserve(e.target); }
+            });
+        }, { threshold: 0.05 });
+        cards.forEach(function (c) { observer.observe(c); });
+    } else {
+        cards.forEach(function (c) { c.classList.add("revealed"); });
+    }
+    // (12) نسخ الوصف.
+    var copyDescBtn = document.getElementById("copyDescriptionBtn");
+    if (copyDescBtn) {
+        copyDescBtn.addEventListener("click", function () {
+            var textEl = document.getElementById("listingDescriptionText");
+            var text = textEl ? textEl.textContent : "";
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    if (window.showToast) { window.showToast("تم النسخ ✓"); }
+                });
+            }
+        });
+    }
+    // (16) اقتراح عنوان تلقائي من نوع العقار والغرف والمنطقة.
+    var suggestTitleBtn = document.getElementById("suggestTitleBtn");
+    if (suggestTitleBtn) {
+        suggestTitleBtn.addEventListener("click", function () {
+            var titleInput = document.getElementById("Title");
+            if (!titleInput || titleInput.value.trim()) { return; }
+            var typeSelect = document.getElementById("PropertyType");
+            var roomsInput = document.getElementById("Rooms");
+            var areaSelect = document.getElementById("Area");
+            var typeText = typeSelect ? typeSelect.options[typeSelect.selectedIndex].text : "";
+            var rooms = roomsInput && roomsInput.value ? roomsInput.value + " غرف في " : "";
+            var area = areaSelect ? areaSelect.value : "";
+            var suggestion = (typeText + " " + rooms + area).trim();
+            if (suggestion) {
+                titleInput.value = suggestion;
+                titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+        });
+    }
+    // (21) مقارنة كل المفضلة دفعة واحدة (بحد أقصى 3).
+    var compareAllBtn = document.getElementById("compareAllBtn");
+    if (compareAllBtn) {
+        compareAllBtn.addEventListener("click", function () {
+            var toggles = document.querySelectorAll(".compare-toggle[data-id]");
+            var clicked = 0;
+            toggles.forEach(function (btn) {
+                if (clicked < 3 && btn.textContent.trim() !== "✓") { btn.click(); clicked++; }
+            });
+            if (clicked === 0 && window.showToast) { window.showToast("المقارنة ممتلئة (3 كحد أقصى)"); }
+        });
+    }
+    // (25) تمييز الأفضل في كل صف بالمقارنة (الأرخص سعرًا، والأعلى في الباقي).
+    var compareTable = document.querySelector(".compare-table");
+    if (compareTable) {
+        compareTable.querySelectorAll("tbody tr").forEach(function (row) {
+            var cells = Array.from(row.querySelectorAll("td"));
+            if (cells.length < 2) { return; }
+            var values = cells.map(function (td) {
+                var num = parseFloat(td.textContent.replace(/[^0-9.]/g, ""));
+                return isNaN(num) ? null : num;
+            });
+            if (values.some(function (v) { return v === null; })) { return; }
+            var label = row.querySelector("th") ? row.querySelector("th").textContent : "";
+            var best = label.indexOf("السعر") >= 0 ? Math.min.apply(null, values) : Math.max.apply(null, values);
+            cells.forEach(function (td, i) { if (values[i] === best) { td.classList.add("best-value"); } });
+        });
+    }
+    // (26) مؤشر قوة كلمة المرور.
+    var passwordInput = document.getElementById("Password");
+    var strengthBar = document.getElementById("passwordStrengthBar");
+    var strengthText = document.getElementById("passwordStrengthText");
+    if (passwordInput && strengthBar) {
+        passwordInput.addEventListener("input", function () {
+            var v = passwordInput.value;
+            var score = 0;
+            if (v.length >= 8) { score++; }
+            if (/[a-z]/.test(v) && /[A-Z]/.test(v)) { score++; }
+            if (/\d/.test(v)) { score++; }
+            if (/[^a-zA-Z0-9]/.test(v)) { score++; }
+            var widths = ["0%", "25%", "50%", "75%", "100%"];
+            var colors = ["transparent", "#ef4444", "#f59e0b", "#a3e635", "#22c55e"];
+            var texts = ["", "ضعيفة", "متوسطة", "قوية", "ممتازة"];
+            strengthBar.style.width = widths[score];
+            strengthBar.style.background = colors[score];
+            if (strengthText) { strengthText.textContent = texts[score] ? "قوة كلمة المرور: " + texts[score] : ""; }
+        });
+    }
+    // (28) تحديث أحدث الإعلانات.
+    var refreshLatestBtn = document.getElementById("refreshLatestBtn");
+    if (refreshLatestBtn) {
+        refreshLatestBtn.addEventListener("click", function () { window.location.reload(); });
+    }
+    // (29) عدد النتائج لحظيًا أثناء الفلترة.
+    var filterForm = document.querySelector(".filters-box.filter-form");
+    var searchInput = document.getElementById("searchInput");
+    if (filterForm && searchInput) {
+        var liveCount = document.createElement("span");
+        liveCount.id = "liveResultsCount";
+        searchInput.parentNode.appendChild(liveCount);
+        var timer = null;
+        filterForm.addEventListener("input", function () {
+            if (timer) { clearTimeout(timer); }
+            timer = setTimeout(function () {
+                var params = new URLSearchParams(new FormData(filterForm));
+                params.set("page", "1");
+                fetch("/Listings?" + params.toString())
+                    .then(function (r) { return r.text(); })
+                    .then(function (html) {
+                        var doc = new DOMParser().parseFromString(html, "text/html");
+                        var bar = doc.querySelector(".results-bar span");
+                        liveCount.textContent = bar ? bar.textContent : "";
+                    })
+                    .catch(function () { liveCount.textContent = ""; });
+            }, 600);
+        });
+    }
+    // (33) بحث الموبايل في الهيدر.
+    var mobileSearchBtn = document.getElementById("mobileSearchBtn");
+    var mobileSearchForm = document.getElementById("mobileSearchForm");
+    if (mobileSearchBtn && mobileSearchForm) {
+        mobileSearchBtn.addEventListener("click", function () {
+            var hidden = mobileSearchForm.hidden;
+            mobileSearchForm.hidden = !hidden;
+            if (hidden) {
+                var input = mobileSearchForm.querySelector("input");
+                if (input) { input.focus(); }
+            }
+        });
+    }
+    // (46) مؤشر التحميل بنسبة مئوية.
+    var pageLoader = document.getElementById("pageLoader");
+    if (pageLoader) {
+        var pct = document.createElement("span");
+        pct.id = "pageLoaderPct";
+        pct.className = "page-loader-pct";
+        pct.hidden = true;
+        pageLoader.after(pct);
+        document.querySelectorAll("a[href]").forEach(function (a) {
+            a.addEventListener("click", function () {
+                var href = a.getAttribute("href");
+                if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:") || a.target === "_blank" || href.startsWith("http")) { return; }
+                var progress = 0;
+                pct.hidden = false;
+                pct.textContent = "0%";
+                var interval = setInterval(function () {
+                    progress = Math.min(progress + Math.floor(Math.random() * 12) + 4, 70);
+                    pct.textContent = progress + "%";
+                    if (progress >= 70) { clearInterval(interval); }
+                }, 200);
+            });
+        });
+    }
 });

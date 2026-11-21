@@ -266,6 +266,10 @@ public class AccountController : Controller
                 await _context.Notifications.Where(n => n.IsActive && (n.TargetUserId == null || n.TargetUserId == userId)).MaxAsync(n => (DateTime?)n.CreatedAt)
             }.Max()
         };
+        ViewBag.TopViewedListings = await _context.Listings
+            .Where(l => l.OwnerId == userId)
+            .OrderByDescending(l => l.ViewCount).Take(5)
+            .Select(l => new { l.Title, l.ViewCount, l.Id }).ToListAsync();
         return View(model);
     }
 
@@ -276,7 +280,7 @@ public class AccountController : Controller
     /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RequestReview(string phoneNumber)
+    public async Task<IActionResult> RequestReview(string phoneNumber, string? reason = null)
     {
         var phone = PhoneHelper.Normalize(phoneNumber ?? string.Empty);
         var user = await _userManager.FindByNameAsync(phone);
@@ -297,7 +301,7 @@ public class AccountController : Controller
                     _context.Notifications.Add(new Notification
                     {
                         Title = "طلب مراجعة حساب",
-                        Message = $"{user.FullName} ({user.PhoneNumber}) طلب مراجعة حسابه.",
+                        Message = $"{user.FullName} ({user.PhoneNumber}) طلب مراجعة حسابه." + (string.IsNullOrWhiteSpace(reason) ? "" : $" السبب: {reason.Trim()}"),
                         TargetUserId = admin.Id,
                         Url = "/Admin/Users",
                         CreatedAt = DateTime.UtcNow,

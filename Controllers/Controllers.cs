@@ -56,6 +56,8 @@ public class HomeController : Controller
             .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved && l.ListingType == ListingType.Rent)
             .OrderByDescending(l => l.LastBumpedAt ?? l.CreatedAt)
             .Take(4).ToListAsync();
+        ViewBag.TodayListingsCount = await _context.Listings
+            .CountAsync(l => l.Approval == ListingApproval.Approved && l.CreatedAt >= DateTime.UtcNow.Date);
         ViewBag.PopularAreas = await _context.Listings
             .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
             .GroupBy(l => l.Area)
@@ -530,6 +532,16 @@ public class ListingsController : Controller
             .ThenBy(l => Math.Abs(l.Price - listing.Price))
             .Take(4)
             .ToListAsync();
+        ViewBag.PreviousListing = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable && l.CreatedAt < listing.CreatedAt)
+            .OrderByDescending(l => l.CreatedAt).Select(l => new { l.Id, l.Title }).FirstOrDefaultAsync();
+        ViewBag.NextListing = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable && l.CreatedAt > listing.CreatedAt)
+            .OrderBy(l => l.CreatedAt).Select(l => new { l.Id, l.Title }).FirstOrDefaultAsync();
+        var areaPrices = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable && l.Area == listing.Area && l.Id != listing.Id)
+            .OrderBy(l => l.Price).Select(l => new { l.Id, l.Title, l.Price, l.AreaSqm }).Take(50).ToListAsync();
+        ViewBag.SimilarPrices = areaPrices.OrderBy(l => Math.Abs(l.Price - listing.Price)).Take(5).ToList();
         return View(listing);
     }
 
@@ -548,6 +560,10 @@ public class ListingsController : Controller
         }
         ViewBag.AreaPage = area;
         ViewBag.CanonicalUrl = $"{Request.Scheme}://{Request.Host}/Listings/Area/{Uri.EscapeDataString(area)}";
+        var areaSqmPrices = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable && l.Area == area && l.AreaSqm > 0)
+            .Select(l => l.Price / l.AreaSqm).ToListAsync();
+        ViewBag.AreaAvgPricePerSqm = areaSqmPrices.Any() ? areaSqmPrices.Average() : (decimal?)null;
         return await Index(search: null, listingType: null, propertyType: null,
             minPrice: null, maxPrice: null, onlyAvailable: false,
             minArea: null, maxArea: null, sort: null, page: 1,
@@ -1020,6 +1036,31 @@ public class ListingsController : Controller
         return RedirectToAction(nameof(MyListings));
     }
 
+    /// <summary>تجديد كل إعلاناتي اللي عدى عليها 7 أيام من آخر تجديد — كل إعلان لسه في فترة الحظر بيتخطى.</summary>
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BumpAll()
+    {
+        var mine = await _context.Listings
+            .Where(l => l.OwnerId == CurrentUserId)
+            .ToListAsync();
+        var bumped = 0;
+        foreach (var listing in mine)
+        {
+            if (listing.LastBumpedAt.HasValue && listing.LastBumpedAt.Value.AddDays(7) > DateTime.UtcNow)
+            {
+                continue;
+            }
+            listing.LastBumpedAt = DateTime.UtcNow;
+            await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId, "تجديد", "تم تجديد الإعلان.");
+            bumped++;
+        }
+        await _context.SaveChangesAsync();
+        TempData["Info"] = bumped > 0 ? $"تم تجديد {bumped} إعلان." : "مفيش إعلانات جاهزة للتجديد دلوقتي.";
+        return RedirectToAction(nameof(MyListings));
+    }
+
     /// <summary>
     /// نسخ الإعلان: نسخة جديدة بنفس البيانات والمرفقات (ملفات منسوخة)،
     /// معلّقة تنتظر موافقة الأدمن — وتفتح صفحة التعديل لمراجعتها.
@@ -1449,6 +1490,7 @@ public class AdminUserRow
     public int ListingsCount { get; set; }
     public int ApprovedListingsCount { get; set; }
     public int PendingListingsCount { get; set; }
+    public DateTime? LastActivityAt { get; set; }
 }
 
 public class AdminDashboardViewModel
@@ -1589,7 +1631,8 @@ public class AdminController : Controller
                 IsAdmin = roles.Contains("Admin"),
                 ListingsCount = await userListings.CountAsync(),
                 ApprovedListingsCount = await userListings.CountAsync(l => l.Approval == ListingApproval.Approved),
-                PendingListingsCount = await userListings.CountAsync(l => l.Approval == ListingApproval.Pending)
+                PendingListingsCount = await userListings.CountAsync(l => l.Approval == ListingApproval.Pending),
+                LastActivityAt = await userListings.MaxAsync(l => (DateTime?)l.CreatedAt)
             });
         }
 
@@ -1739,6 +1782,13 @@ public class AdminController : Controller
         model.RentListings = allListings.Count(l => l.ListingType == ListingType.Rent);
         ViewBag.LatestListings = allListings.OrderByDescending(l => l.CreatedAt).Take(5).ToList();
         ViewBag.LatestUsers = users.OrderByDescending(u => u.CreatedAt).Take(5).ToList();
+        ViewBag.LatestReports = await _context.ListingReports.Include(r => r.Listing)
+            .OrderByDescending(r => r.CreatedAt).Take(5).ToListAsync();
+        ViewBag.LatestRequests = await _context.ContactRequests.Include(r => r.Listing)
+            .OrderByDescending(r => r.CreatedAt).Take(5).ToListAsync();
+        ViewBag.AvailablePct = allListings.Count > 0
+            ? (int)Math.Round((double)allListings.Count(l => l.IsAvailable) / allListings.Count * 100)
+            : 0;
         model.ListingsByAdvertiserType = allListings
             .GroupBy(l => l.AdvertiserType)
             .Select(g => new ChartPoint { Label = _language.AdvertiserTypeText(g.Key), Count = g.Count() })
@@ -1791,8 +1841,12 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public IActionResult ImportListings()
+    public async Task<IActionResult> ImportListings()
     {
+        ViewBag.LastImport = await _context.ListingAudits
+            .Where(a => a.Action == "استيراد")
+            .OrderByDescending(a => a.CreatedAt)
+            .Select(a => (DateTime?)a.CreatedAt).FirstOrDefaultAsync();
         return View();
     }
 
@@ -2418,7 +2472,8 @@ public class AdminController : Controller
                 IsAdmin = roles.Contains("Admin"),
                 ListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == user.Id),
                 ApprovedListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == user.Id && l.Approval == ListingApproval.Approved),
-                PendingListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == user.Id && l.Approval == ListingApproval.Pending)
+                PendingListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == user.Id && l.Approval == ListingApproval.Pending),
+                LastActivityAt = await _context.Listings.Where(l => l.OwnerId == user.Id).MaxAsync(l => (DateTime?)l.CreatedAt)
             });
         }
         return View(rows);
@@ -2684,12 +2739,16 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Requests(string? search = null, string? status = null)
+    public async Task<IActionResult> Requests(string? search = null, string? status = null, int? listingId = null)
     {
         var requestsQuery = _context.ContactRequests
             .Include(r => r.Listing)
             .Include(r => r.Buyer)
             .AsQueryable();
+        if (listingId.HasValue)
+        {
+            requestsQuery = requestsQuery.Where(r => r.ListingId == listingId.Value);
+        }
         if (status == "replied")
         {
             requestsQuery = requestsQuery.Where(r => r.IsReplied);
@@ -2712,6 +2771,10 @@ public class AdminController : Controller
             .ToListAsync();
         ViewBag.Search = search;
         ViewBag.Status = status;
+        ViewBag.ListingId = listingId;
+        ViewBag.RequestListings = await _context.Listings
+            .Where(l => _context.ContactRequests.Any(r => r.ListingId == l.Id))
+            .OrderByDescending(l => l.CreatedAt).Select(l => new { l.Id, l.AdNumber, l.Title }).ToListAsync();
         return View(requests);
     }
 
@@ -2836,7 +2899,7 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Listings(string? search = null, string? approval = null)
+    public async Task<IActionResult> Listings(string? search = null, string? approval = null, string? propertyType = null)
     {
         var query = _context.Listings.Include(l => l.Owner).AsQueryable();
         if (!string.IsNullOrWhiteSpace(search))
@@ -2848,9 +2911,14 @@ public class AdminController : Controller
         {
             query = query.Where(l => l.Approval == approvalValue);
         }
+        if (Enum.TryParse<PropertyType>(propertyType, out var propertyTypeValue))
+        {
+            query = query.Where(l => l.PropertyType == propertyTypeValue);
+        }
         var listings = await query.OrderByDescending(l => l.CreatedAt).ToListAsync();
         ViewBag.Search = search;
         ViewBag.Approval = approval;
+        ViewBag.PropertyType = propertyType;
         return View(listings);
     }
 
@@ -3815,19 +3883,24 @@ public class ViewingsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? status = null)
     {
         // طلباتي أنا فقط — طلبات الآخرين لا تظهر لي.
-        var mine = await _context.ViewingAppointments
+        var query = _context.ViewingAppointments
             .Include(v => v.Listing)
-            .Where(v => v.RequesterId == CurrentUserId)
-            .OrderByDescending(v => v.CreatedAt).ToListAsync();
+            .Where(v => v.RequesterId == CurrentUserId);
+        if (Enum.TryParse<ViewingStatus>(status, out var statusValue))
+        {
+            query = query.Where(v => v.Status == statusValue);
+        }
+        var mine = await query.OrderByDescending(v => v.CreatedAt).ToListAsync();
+        ViewBag.Status = status;
         return View(mine);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(int listingId, DateTime requestedAt, string? message)
+    public async Task<IActionResult> Create(int listingId, DateTime requestedAt, string? message, string? duration = null)
     {
         var listing = await _context.Listings.FirstOrDefaultAsync(l => l.Id == listingId);
         if (listing == null)
@@ -3844,6 +3917,11 @@ public class ViewingsController : Controller
             return RedirectToAction("Details", "Listings", new { id = listingId });
         }
         var cleanMessage = string.IsNullOrWhiteSpace(message) ? null : message.Trim();
+        if (!string.IsNullOrWhiteSpace(duration))
+        {
+            var durationNote = $"المدة المتوقعة: {duration.Trim()} دقيقة";
+            cleanMessage = string.IsNullOrWhiteSpace(cleanMessage) ? durationNote : $"{cleanMessage} — {durationNote}";
+        }
         if (cleanMessage != null && cleanMessage.Length > 500)
         {
             cleanMessage = cleanMessage[..500];
@@ -4045,6 +4123,22 @@ public class FavoritesController : Controller
         await _context.SaveChangesAsync();
         TempData["Info"] = "تم حذف كل المفضلة.";
         return RedirectToAction(nameof(Index));
+    }
+}
+
+public class FooterStatsViewComponent : ViewComponent
+{
+    private readonly ApplicationDbContext _context;
+
+    public FooterStatsViewComponent(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<IViewComponentResult> InvokeAsync()
+    {
+        var count = await _context.Listings.CountAsync(l => l.IsAvailable && l.Approval == ListingApproval.Approved);
+        return View(count);
     }
 }
 

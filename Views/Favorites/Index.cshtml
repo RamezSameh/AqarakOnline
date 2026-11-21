@@ -39,6 +39,7 @@ else
         <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
     </form>
     <div class="actions">
+        <button type="button" id="compareAllBtn" class="btn btn-primary">مقارنة الكل ⚖️</button>
         @if (User.Identity?.IsAuthenticated == true)
         {
             <form asp-controller="Favorites" asp-action="ClearAll" method="post" class="inline-form" onsubmit="return confirm('حذف كل المفضلة؟');">

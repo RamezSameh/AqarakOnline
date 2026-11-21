@@ -51,6 +51,7 @@
     <label>@L.T("Title")</label>
     <input asp-for="Title" placeholder="مثال: شقة 3 غرف في مدينة نصر" />
     <small id="titleCounter" class="char-counter"></small>
+    <button type="button" class="btn btn-ghost" id="suggestTitleBtn">اقتراح عنوان ✨</button>
     <span asp-validation-for="Title" class="field-error"></span>
 
     <label>@L.T("ListingType")</label>
@@ -172,7 +173,7 @@
     <label><input asp-for="HasSecurity" type="checkbox" /> @L.T("Security")</label>
     <label><input asp-for="AcceptsInstallments" type="checkbox" /> @L.T("AcceptsInstallments")</label>
     <label><input asp-for="IsPriceNegotiable" type="checkbox" /> @L.T("Negotiable")</label>
-    <label><input asp-for="IsUrgent" type="checkbox" /> 🔥 @L.T("Urgent")</label>
+    <label class="urgent-option"><input asp-for="IsUrgent" type="checkbox" /> 🔥 @L.T("Urgent")</label>
 
     <label><input asp-for="HasElectricityMeter" type="checkbox" /> @L.T("ElectricityMeter")</label>
     <label><input asp-for="HasGasMeter" type="checkbox" /> @L.T("GasMeter")</label>
@@ -236,6 +237,7 @@
         <button type="submit" class="btn btn-primary">@L.T("Save")</button>
         <button type="button" id="previewListingBtn" class="btn btn-ghost">👁 @L.T("PreviewListing")</button>
         <a class="btn btn-ghost" asp-action="Index">@L.T("Cancel")</a>
+        <button type="reset" class="btn btn-ghost">مسح النموذج</button>
     </div>
 </form>
 

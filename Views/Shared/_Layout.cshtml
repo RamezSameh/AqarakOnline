@@ -17,7 +17,7 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     @* الوضع الفاتح/الداكن يُطبَّق قبل رسم الصفحة حتى لا يلمع الداكن أولًا. *@
-    <script>try { document.documentElement.setAttribute("data-theme", localStorage.getItem("aqarak-theme") || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")); } catch (e) { document.documentElement.setAttribute("data-theme", "dark"); }</script>
+    <script>try { document.documentElement.setAttribute("data-theme", localStorage.getItem("aqarak-theme") || (function () { var h = new Date().getHours(); return (h >= 6 && h < 18) ? "light" : "dark"; })()); } catch (e) { document.documentElement.setAttribute("data-theme", "dark"); }</script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -37,6 +37,7 @@
                     <div class="user-menu">
                         <button type="button" class="nav-link user-menu-btn" id="userMenuBtn">👤 @L.T("MyAccount") ▾</button>
                         <div class="user-menu-dropdown" id="userMenuDropdown" hidden>
+                            <span class="user-menu-name">👤 @displayName</span>
                             <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">📋 @L.T("MyListings")</a>
                             <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>
                             <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">🔔 @L.T("SavedSearches")</a>
@@ -66,6 +67,7 @@
                 <form class="header-search" asp-controller="Listings" asp-action="Index" method="get">
                     <input type="text" name="search" placeholder="ابحث..." aria-label="بحث" />
                 </form>
+                <button type="button" id="mobileSearchBtn" class="btn btn-ghost header-search-btn" aria-label="بحث">🔍</button>
                 <button type="button" id="themeToggle" class="btn btn-ghost" title="الوضع الفاتح / الداكن">☀️</button>
                 @await Component.InvokeAsync("NotificationBell")
                 <a class="lang-switch" asp-controller="Language" asp-action="Set" asp-route-lang="@(L.IsArabic ? "en" : "ar")" asp-route-returnUrl="@Context.Request.Path">@(L.IsArabic ? "English" : "العربية")</a>
@@ -80,6 +82,10 @@
             </div>
             <button type="button" class="nav-toggle" id="navToggle" aria-label="القائمة" aria-expanded="false" aria-controls="mainNav">☰</button>
         </div>
+        <form class="header-search-mobile" id="mobileSearchForm" asp-controller="Listings" asp-action="Index" method="get" hidden>
+            <input type="text" name="search" placeholder="ابحث عن عقار..." aria-label="بحث" />
+            <button type="submit" class="btn btn-primary">بحث</button>
+        </form>
     </header>
     @* لوحة الإدارة الجانبية: خارج الـ header وقائمة الموبايل عمدًا حتى
        لا يخفيها قفل القائمة (display:none يخفي حتى العناصر fixed). *@
@@ -100,6 +106,7 @@
             <div class="footer-col">
                 <p class="footer-brand">@L.T("Brand")</p>
                 <p>@L.T("Tagline")</p>
+                @await Component.InvokeAsync("FooterStats")
             </div>
             <div class="footer-col">
                 <p class="footer-heading">روابط سريعة</p>

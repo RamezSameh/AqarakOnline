@@ -10,6 +10,19 @@
             <option value="replied" selected="@(ViewBag.Status == "replied")">تم الرد</option>
         </select>
     </label>
+    <label class="sort-label">
+        الإعلان
+        <select name="listingId">
+            <option value="" selected="@(ViewBag.ListingId == null)">الكل</option>
+            @if (ViewBag.RequestListings != null)
+            {
+                @foreach (var listing in ViewBag.RequestListings)
+                {
+                    <option value="@listing.Id" selected="@(ViewBag.ListingId == listing.Id)">@listing.AdNumber — @listing.Title</option>
+                }
+            }
+        </select>
+    </label>
     <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
     <a class="btn btn-ghost" asp-action="Requests">@L.T("ClearFilter")</a>
 </form>
@@ -32,6 +45,11 @@ else
                 <div class="actions">
                     <a class="btn btn-ghost" href="@waUrl" target="_blank" rel="noreferrer">@L.T("OpenWhatsApp")</a>
                     <a class="btn btn-ghost" href="tel:@request.BuyerPhone">📞 اتصال</a>
+                    <form asp-action="AddBlockedPhone" method="post" class="inline-form" onsubmit="return confirm('حظر الرقم @request.BuyerPhone؟');">
+                        <input type="hidden" name="phoneNumber" value="@request.BuyerPhone" />
+                        <input type="hidden" name="reason" value="من طلب تواصل" />
+                        <button type="submit" class="btn btn-ghost">🚫 حظر الرقم</button>
+                    </form>
                     @if (request.IsReplied)
                     {
                         <span>@L.T("Replied")</span>

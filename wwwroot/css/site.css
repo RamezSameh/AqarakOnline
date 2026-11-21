@@ -859,3 +859,62 @@ main h1 { font-weight: 800; }
 /* 49 — page loader */
 .page-loader { position: fixed; top: 0; inset-inline-start: 0; height: 3px; width: 0; background: linear-gradient(90deg, #6366f1, #8b5cf6); z-index: 999; transition: width .4s ease; }
 .page-loader.loading { width: 70%; }
+
+/* Batch 28 — design 10 */
+@media (max-width: 640px) {
+    .listing-card h3 { font-size: 16px; }
+    .listing-price { font-size: 26px; }
+}
+@media (hover: hover) and (min-width: 641px) {
+    .listing-card .actions .share-copy, .listing-card .actions a[href^="https://t.me"] { opacity: 0; transition: opacity .3s ease; }
+    .listing-card:hover .actions .share-copy, .listing-card:hover .actions a[href^="https://t.me"] { opacity: 1; }
+}
+.listing-card { opacity: 0; transform: translateY(12px); transition: opacity .5s ease, transform .5s ease; }
+.listing-card.revealed { opacity: 1; transform: translateY(0); }
+.listing-card.revealed:hover { transform: translateY(-4px) rotate(-.5deg); }
+@media (prefers-reduced-motion: reduce) {
+    .listing-card { opacity: 1; transform: none; transition: none; }
+    .listing-card.revealed:hover { transform: none; }
+    .availability-bar.available { animation: none; }
+    .nav-create-primary { animation: none; }
+}
+.listing-card.availability-available { border-inline-start: 3px solid #22c55e; }
+.listing-card.availability-unavailable { border-inline-start: 3px solid #64748b; }
+.listing-card.featured-card { position: relative; }
+.listing-card.featured-card::before { content: "⭐ مميز"; position: absolute; top: 14px; left: -34px; transform: rotate(-45deg); background: #f59e0b; color: #fff; padding: 4px 36px; font-size: 12px; font-weight: 800; z-index: 4; box-shadow: 0 2px 6px rgba(0, 0, 0, .3); }
+.listing-type-strip { height: 6px; }
+.listing-type-Sale { background: #6366f1; }
+.listing-type-Rent { background: #22c55e; }
+.gallery-main { background: #000; border-radius: 12px; padding: 8px; }
+.details-facts { display: block; }
+.details-facts p { display: flex; justify-content: space-between; gap: 12px; border: none; border-bottom: 1px solid #334155; border-radius: 0; background: transparent; padding: 10px 4px; }
+.details-facts p strong { color: #94a3b8; }
+.details-facts p.details-price { background: rgba(99, 102, 241, .15); border-radius: 10px; padding: 12px 16px; border-bottom: none; }
+.availability-bar.available { animation: availPulse 2s ease-in-out infinite; }
+@keyframes availPulse { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
+.urgent-option { background: rgba(239, 68, 68, .12); border: 1px solid #ef4444; border-radius: 8px; padding: 8px 12px; }
+.password-strength { height: 8px; background: #334155; border-radius: 999px; overflow: hidden; margin-top: 6px; }
+.password-strength-bar { height: 100%; width: 0; transition: width .3s ease, background .3s ease; }
+.details-nav { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+.similar-prices { list-style: none; padding: 0; display: grid; gap: 8px; }
+.similar-prices li { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 10px 14px; }
+[data-theme="light"] .similar-prices li { background: #fff; }
+.best-value { background: rgba(34, 197, 94, .15) !important; font-weight: 800; }
+.sticky-whatsapp { flex: 1; font-size: 17px; padding: 12px; }
+.header-search-btn { display: none; }
+@media (max-width: 900px) {
+    .header-search-btn { display: inline-flex; }
+}
+.header-search-mobile { display: flex; gap: 8px; padding: 10px 16px; }
+.header-search-mobile[hidden] { display: none; }
+@media (min-width: 901px) {
+    .header-search-mobile { display: none; }
+}
+.user-menu-name { display: block; padding: 10px 14px; font-weight: 700; border-bottom: 1px solid #334155; }
+.nav-create-primary { animation: ctaShake 3s ease-in-out infinite; }
+@keyframes ctaShake { 0%, 88%, 100% { transform: translateX(0); } 90%, 94% { transform: translateX(-2px); } 92%, 96% { transform: translateX(2px); } }
+.page-loader-pct { position: fixed; top: 6px; inset-inline-end: 12px; z-index: 400; background: #6366f1; color: #fff; font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+.page-loader-pct[hidden] { display: none; }
+.skeleton-card { height: 340px; border-radius: 16px; background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); background-size: 200% 100%; animation: skeletonShimmer 1.2s infinite; }
+@keyframes skeletonShimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+#liveResultsCount { font-size: 13px; font-weight: 700; color: #c7d2fe; }

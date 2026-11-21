@@ -7,6 +7,18 @@
     <div class="listing-card stat-card"><div class="listing-body"><h3>تنبيهات غير مقروءة</h3><p class="stat-number">@Model.UnreadNotificationsCount</p></div></div>
 </div>
 <p>آخر نشاط: @(Model.LastActivityAt.HasValue ? L.RelativeTime(Model.LastActivityAt.Value) : "-")</p>
+@if (ViewBag.TopViewedListings is System.Collections.Generic.IEnumerable<dynamic> topViewed && topViewed.Any())
+{
+    <h2>مشاهدات إعلاناتي</h2>
+    <div class="chart">
+        @foreach (var item in topViewed)
+        {
+            var maxViews = topViewed.Max(x => (int)x.ViewCount);
+            var width = maxViews > 0 ? (int)((double)item.ViewCount / maxViews * 100) : 0;
+            <div class="chart-row"><span class="chart-label">@item.Title</span><div class="chart-track"><div class="chart-bar" style="width:@width%"></div></div><span class="chart-value">@item.ViewCount</span></div>
+        }
+    </div>
+}
 <div class="quick-links">
     <a class="btn btn-ghost quick-link" asp-controller="Listings" asp-action="MyListings">📋 إعلاناتي</a>
     <a class="btn btn-ghost quick-link" asp-controller="Favorites" asp-action="Index">♥ المفضلة</a>

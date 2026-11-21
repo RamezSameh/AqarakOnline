@@ -13,6 +13,16 @@
             <option value="Rejected" selected="@(ViewBag.Approval == "Rejected")">مرفوض</option>
         </select>
     </label>
+    <label class="sort-label">
+        نوع العقار
+        <select name="propertyType">
+            <option value="" selected="@(string.IsNullOrWhiteSpace(ViewBag.PropertyType))">الكل</option>
+            @foreach (PropertyType pt in Enum.GetValues(typeof(PropertyType)))
+            {
+                <option value="@pt" selected="@(ViewBag.PropertyType == pt.ToString())">@L.PropertyTypeText(pt)</option>
+            }
+        </select>
+    </label>
     <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
 </form>
 @if (!Model.Any())

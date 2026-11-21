@@ -1,5 +1,9 @@
 <h1>@L.T("ImportListings")</h1>
 <p>استيراد إعلانات دفعة واحدة من ملف CSV (احفظ ملف Excel بصيغة CSV UTF-8). الإعلانات المستوردة بتتنشر فورًا، بلا صور — الصور تتضاف بعدها من التعديل. صاحب كل إعلان لازم يكون مسجَّلًا على الموقع برقم موبايله.</p>
+@if (ViewBag.LastImport != null)
+{
+    <p>آخر استيراد: @(((DateTime)ViewBag.LastImport).ToLocalTime().ToString("dd/MM/yyyy HH:mm"))</p>
+}
 <p><a class="btn btn-primary" asp-action="ImportTemplate">⬇ @L.T("ImportTemplate")</a></p>
 <h2>الأعمدة (بالترتيب)</h2>
 <ul>

@@ -27,6 +27,8 @@
         <input asp-for="Password" type="password" />
         <button type="button" class="btn btn-ghost password-toggle" aria-label="إظهار كلمة المرور">إظهار</button>
     </div>
+    <div class="password-strength"><div class="password-strength-bar" id="passwordStrengthBar"></div></div>
+    <small id="passwordStrengthText" class="char-counter"></small>
     <span asp-validation-for="Password" class="field-error"></span>
     <label>@L.T("ConfirmPassword")</label>
     <div class="password-field">

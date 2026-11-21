@@ -16,6 +16,7 @@
     <div class="hero-stats">
         <span>🏠 @ViewBag.AvailableListingsCount إعلان متاح</span>
         <span>📍 @ViewBag.AreasCount منطقة</span>
+        <span>🆕 @ViewBag.TodayListingsCount إعلان اليوم</span>
     </div>
 </section>
 
@@ -67,6 +68,7 @@
 <section>
     <div class="section-head">
         <h2>@L.T("LatestListings")</h2>
+        <button type="button" class="btn btn-ghost" id="refreshLatestBtn">↻ تحديث</button>
         <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index">@L.T("SeeAll")</a>
     </div>
     <div class="latest-filter">

@@ -85,6 +85,14 @@
         <h1>إعلانات @ViewBag.AreaPage</h1>
         <p class="hero-tagline">@totalCount إعلان</p>
         <p>تصفح أحدث إعلانات @ViewBag.AreaPage — بيع وإيجار، بأسعار ومساحات متنوعة.</p>
+        @if (ViewBag.AreaAvgPricePerSqm is decimal areaAvg)
+        {
+            <p>متوسط سعر المتر في @ViewBag.AreaPage: @areaAvg.ToString("N0") جنيه/م²</p>
+        }
+        <div class="hero-actions">
+            <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index" asp-route-area="@ViewBag.AreaPage" asp-route-listingType="Sale">بيع</a>
+            <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index" asp-route-area="@ViewBag.AreaPage" asp-route-listingType="Rent">إيجار</a>
+        </div>
     </section>
 }
 else

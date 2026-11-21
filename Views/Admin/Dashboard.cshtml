@@ -6,6 +6,27 @@
 {
     <p class="alert-info pending-banner">⏳ يوجد @Model.PendingListings إعلان معلّق بانتظار المراجعة.</p>
 }
+<p>نسبة الإعلانات المتاحة: @ViewBag.AvailablePct%</p>
+@if (ViewBag.LatestReports is List<ListingReport> latestReports && latestReports.Any())
+{
+    <h2>آخر البلاغات</h2>
+    <ul class="latest-list">
+        @foreach (var report in latestReports)
+        {
+            <li>@(report.Listing?.AdNumber ?? "-") — @L.ReportReasonText(report.Reason) • @L.RelativeTime(report.CreatedAt)</li>
+        }
+    </ul>
+}
+@if (ViewBag.LatestRequests is List<ContactRequest> latestRequests && latestRequests.Any())
+{
+    <h2>آخر طلبات التواصل</h2>
+    <ul class="latest-list">
+        @foreach (var request in latestRequests)
+        {
+            <li>@(request.Listing?.AdNumber ?? "-") — @request.BuyerName • @L.RelativeTime(request.CreatedAt)</li>
+        }
+    </ul>
+}
 
 <div class="dash-tabs" role="tablist">
     <button type="button" class="dash-tab-btn active" data-tab="dash-overview">نظرة عامة</button>

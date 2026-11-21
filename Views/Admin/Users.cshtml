@@ -40,6 +40,7 @@ else
                 <p>@(row.User.Email ?? "-")</p>
                 <p>@row.Role • @row.User.AccountStatus</p>
                 <p>@row.ListingsCount (مقبول: @row.ApprovedListingsCount، قيد المراجعة: @row.PendingListingsCount)</p>
+                <p>آخر نشاط: @(row.LastActivityAt.HasValue ? L.RelativeTime(row.LastActivityAt.Value) : "-")</p>
                 <div class="actions">
                     @if (row.User.AccountStatus == AccountStatus.Pending)
                     {

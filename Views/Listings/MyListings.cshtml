@@ -18,6 +18,9 @@
 }
 <h1>@L.T("MyListings")</h1>
 <p class="my-listings-counts">مقبول: @Model.Count(l => l.Approval == ListingApproval.Approved) • معلّق: @Model.Count(l => l.Approval == ListingApproval.Pending) • مرفوض: @Model.Count(l => l.Approval == ListingApproval.Rejected)</p>
+<form asp-action="BumpAll" method="post" class="inline-form" onsubmit="return confirm('تجديد كل إعلاناتك اللي عدى عليها 7 أيام؟');">
+    <button type="submit" class="btn btn-primary">تجديد الكل 🔄</button>
+</form>
 <form class="filter-form" asp-action="MyListings" method="get">
     <label class="sort-label">
         @L.T("Status")

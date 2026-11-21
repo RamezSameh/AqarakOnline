@@ -1,6 +1,19 @@
 @model List<ViewingAppointment>
 <h1>@L.T("Viewings")</h1>
 <p><small>المعاينة بتتنسق عن طريق إدارة الموقع — لا يوجد تواصل مباشر مع المعلن.</small></p>
+<form class="filter-form" asp-action="Index" method="get">
+    <label class="sort-label">
+        الحالة
+        <select name="status">
+            <option value="" selected="@(string.IsNullOrWhiteSpace(ViewBag.Status))">الكل</option>
+            <option value="Pending" selected="@(ViewBag.Status == "Pending")">معلّق</option>
+            <option value="Confirmed" selected="@(ViewBag.Status == "Confirmed")">مؤكد</option>
+            <option value="Declined" selected="@(ViewBag.Status == "Declined")">مرفوض</option>
+            <option value="Cancelled" selected="@(ViewBag.Status == "Cancelled")">ملغي</option>
+        </select>
+    </label>
+    <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
+</form>
 @if (!Model.Any())
 {
     <p>@L.T("NoViewings")</p>
