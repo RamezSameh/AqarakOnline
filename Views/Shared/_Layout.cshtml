@@ -126,6 +126,12 @@
                 <p class="footer-brand">@L.T("Brand")</p>
                 <p>@L.T("Tagline")</p>
                 @await Component.InvokeAsync("FooterStats")
+                <p class="footer-heading">مناطق شائعة</p>
+                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="مدينة نصر">مدينة نصر</a></p>
+                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="المعادي">المعادي</a></p>
+                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="التجمع الخامس">التجمع الخامس</a></p>
+                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="6 أكتوبر">6 أكتوبر</a></p>
+                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="المهندسين">المهندسين</a></p>
             </div>
             <details class="footer-col">
                 <summary class="footer-heading">روابط سريعة</summary>
@@ -142,14 +148,6 @@
                 <p>🆕 <a asp-controller="Listings" asp-action="Index" asp-route-sort="newest">أحدث الإعلانات</a></p>
                 <p>👁️ <a asp-controller="Listings" asp-action="Index" asp-route-sort="viewsDesc">الأكثر مشاهدة</a></p>
                 }
-            </details>
-            <details class="footer-col">
-                <summary class="footer-heading">مناطق شائعة</summary>
-                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="مدينة نصر">مدينة نصر</a></p>
-                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="المعادي">المعادي</a></p>
-                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="التجمع الخامس">التجمع الخامس</a></p>
-                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="6 أكتوبر">6 أكتوبر</a></p>
-                <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="المهندسين">المهندسين</a></p>
             </details>
             <details class="footer-col">
                 <summary class="footer-heading">تواصل معنا</summary>
