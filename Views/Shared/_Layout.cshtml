@@ -29,12 +29,24 @@
         <div class="container header-inner">
             <a class="brand" asp-controller="Home" asp-action="Index"><span class="brand-icon">🏠</span> @L.T("Brand")</a>
             <nav class="main-nav" id="mainNav">
+                <div class="drawer-head">
+                    <span class="brand-icon">🏠</span>
+                    <div class="drawer-head-text"><strong>@L.T("Brand")</strong><small>@L.T("Tagline")</small></div>
+                    <button type="button" class="drawer-close" id="drawerClose" aria-label="إغلاق">✕</button>
+                </div>
                 <span class="nav-section">الإعلانات</span>
                 <a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">🏠 @L.T("Home")</a>
                 <a class="nav-link @(currentController == "Listings" && currentAction == "Index" ? "active" : "")" asp-controller="Listings" asp-action="Index">🏘️ @L.T("Listings")</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
-                    @* باقي الخصائص ظاهرة عادي في الـ header على اليمين. *@
+                    <span class="nav-section">حسابي</span>
+                    <div class="drawer-only">
+                        <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">📋 @L.T("MyListings")</a>
+                        <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>
+                        <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">🔔 @L.T("SavedSearches")</a>
+                        <a class="nav-link @(currentController == "Viewings" ? "active" : "")" asp-controller="Viewings" asp-action="Index">📅 @L.T("Viewings")</a>
+                        <a class="nav-link @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">👤 @L.T("MyAccount")</a>
+                    </div>
                     <span class="nav-section">إضافة</span>
                     <a class="nav-cta nav-create-primary @(currentController == "Listings" && currentAction == "Create" ? "active" : "")" asp-controller="Listings" asp-action="Create">➕ @L.T("CreateListing")</a>
                     @* غلاف display:contents حتى تُستبدل الإدارة لحظيًا من غير كسر توزيع الـ flex. *@
@@ -88,6 +100,7 @@
             <button type="submit" class="btn btn-primary">بحث</button>
         </form>
     </header>
+    <div id="navBackdrop" class="nav-backdrop" hidden></div>
     @* لوحة الإدارة الجانبية: خارج الـ header وقائمة الموبايل عمدًا حتى
        لا يخفيها قفل القائمة (display:none يخفي حتى العناصر fixed). *@
     <span id="adminSidePanel" style="display:contents">@await Component.InvokeAsync("AdminNav", new { panelOnly = true })</span>

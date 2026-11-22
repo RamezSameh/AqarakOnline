@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // زر Escape، أو دوسة على أي رابط جواها.
     var navToggle = document.getElementById("navToggle");
     var mainNav = document.getElementById("mainNav");
+    var navBackdrop = document.getElementById("navBackdrop");
+    var drawerClose = document.getElementById("drawerClose");
     function setNavOpen(open) {
         if (!mainNav) {
             return;
@@ -18,6 +20,14 @@ document.addEventListener("DOMContentLoaded", function () {
             navToggle.setAttribute("aria-expanded", open ? "true" : "false");
             navToggle.textContent = open ? "✕" : "☰";
         }
+        if (navBackdrop) { navBackdrop.hidden = !open; }
+        document.body.style.overflow = open ? "hidden" : "";
+    }
+    if (drawerClose) {
+        drawerClose.addEventListener("click", function () { setNavOpen(false); });
+    }
+    if (navBackdrop) {
+        navBackdrop.addEventListener("click", function () { setNavOpen(false); });
     }
     if (navToggle && mainNav) {
         navToggle.addEventListener("click", function () {
