@@ -692,7 +692,11 @@ public class ListingsController : Controller
     [Route("Listings/Area/{area}")]
     public async Task<IActionResult> Area(string area)
     {
-        if (string.IsNullOrWhiteSpace(area) || !Models.ListingAreas.All.Contains(area))
+        // Batch 44 — كان الشرط `ListingAreas.All.Contains(area)` يرجّع 404 لأي
+        // منطقة خارج قائمة الـ 26 (مثل روابط الفوتر المختصرة، أو منطقة من
+        // استيراد CSV) رغم وجود إعلانات فيها. الآن أي منطقة غير فارغة تعرض
+        // إعلاناتها، ولو بلا إعلانات تظهر حالة «لا توجد نتائج» بدل صفحة 404.
+        if (string.IsNullOrWhiteSpace(area))
         {
             return NotFound();
         }
