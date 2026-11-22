@@ -2,6 +2,7 @@
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var bodyClass = currentController == "Listings" && currentAction == "Details" ? "page-details" : "";
     var headerUser = User.Identity?.IsAuthenticated == true ? await HeaderUserManager.GetUserAsync(User) : null;
     var displayName = !string.IsNullOrWhiteSpace(headerUser?.FullName) ? headerUser!.FullName : User.Identity?.Name;
 }
@@ -23,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="@bodyClass">
     <div id="pageLoader" class="page-loader"></div>
     <header class="site-header">
         <div class="container header-inner">
@@ -155,6 +156,14 @@
         </div>
         <p class="footer-copy">© 2026 @L.T("Brand") — جميع الحقوق محفوظة</p>
     </footer>
+    @* Batch 33 (1) — شريط تنقل سفلي في الموبايل. *@
+    <nav class="mobile-bottom-nav" aria-label="التنقل السريع">
+        <a asp-controller="Home" asp-action="Index" class="@(currentController == "Home" ? "active" : "")"><span class="nav-ico">🏠</span><span>الرئيسية</span></a>
+        <a asp-controller="Listings" asp-action="Index" class="@(currentController == "Listings" && (currentAction == "Index" || currentAction == "Area") ? "active" : "")"><span class="nav-ico">🔍</span><span>بحث</span></a>
+        <a asp-controller="Listings" asp-action="Create" class="create-link @(currentController == "Listings" && currentAction == "Create" ? "active" : "")"><span class="nav-ico">+</span><span>أضف إعلان</span></a>
+        <a asp-controller="Favorites" asp-action="Index" class="@(currentController == "Favorites" ? "active" : "")"><span class="nav-ico">♥</span><span>المفضلة</span></a>
+        <a asp-controller="Account" asp-action="MyAccount" class="@(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")"><span class="nav-ico">👤</span><span>حسابي</span></a>
+    </nav>
     @if (currentController == "Admin")
     {
         <aside class="admin-sidebar">
@@ -186,6 +195,19 @@
        يعود site.js تلقائيًا للتحديث الدوري كل 30 ثانية. *@
     <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
     <button type="button" id="backToTop" class="back-to-top" title="@L.T("BackToTop")" aria-label="@L.T("BackToTop")"><svg viewBox="0 0 36 36" class="back-to-top-ring" aria-hidden="true"><circle cx="18" cy="18" r="16" class="ring-bg" /><circle cx="18" cy="18" r="16" class="ring-fg" /></svg><span class="back-to-top-arrow">↑</span></button>
+    @* Batch 33 (3) — ورقة إجراءات الكارت في الموبايل. *@
+    <div id="cardSheetBackdrop" class="sheet-backdrop"></div>
+    <div id="cardSheet" class="card-sheet" role="dialog" aria-label="خيارات الإعلان">
+        <div class="sheet-handle"></div>
+        <h3 id="cardSheetTitle"></h3>
+        <button type="button" class="sheet-action" id="cardSheetFav">♥ <span>المفضلة</span></button>
+        <button type="button" class="sheet-action" id="cardSheetCompare">⚖️ <span>مقارنة</span></button>
+        <button type="button" class="sheet-action" id="cardSheetCopy">🔗 <span>نسخ الرابط</span></button>
+        <a class="sheet-action" id="cardSheetWhats" target="_blank" rel="noopener">💬 <span>مشاركة واتساب</span></a>
+        <a class="sheet-action" id="cardSheetDetails">👁 <span>عرض التفاصيل</span></a>
+        <a class="sheet-action" id="cardSheetCall" href="tel:@ContactOptions.Value.Phone">📞 <span>اتصال</span></a>
+        <button type="button" class="sheet-action" id="cardSheetClose">✕ <span>إغلاق</span></button>
+    </div>
     <script src="~/js/site.js" defer></script>
 </body>
 </html>

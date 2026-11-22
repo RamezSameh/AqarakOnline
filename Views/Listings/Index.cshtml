@@ -102,6 +102,7 @@ else
 
 <div class="search-layout">
     <aside class="search-sidebar">
+<div class="sheet-handle" aria-hidden="true"></div>
 <button type="button" id="filterSheetClose" class="filter-sheet-close" aria-label="إغلاق">✕</button>
 <details class="filters-box" open>
     <summary>@L.T("Filters")</summary>
@@ -119,26 +120,26 @@ else
 
                 <details class="filter-group" open>
             <summary>السعر</summary>
-<input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="@L.T("MinPrice")" min="0" step="any" />
-        <input type="number" name="maxPrice" id="maxPriceInput" value="@ViewBag.MaxPrice" placeholder="@L.T("MaxPrice")" min="0" step="any" />
+<input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="@L.T("MinPrice")" min="0" step="any" inputmode="decimal" />
+        <input type="number" name="maxPrice" id="maxPriceInput" value="@ViewBag.MaxPrice" placeholder="@L.T("MaxPrice")" min="0" step="any" inputmode="decimal" />
         <input type="range" id="priceMaxSlider" min="0" max="10000000" step="100000" value="@(ViewBag.MaxPrice ?? 10000000)" aria-label="أقصى سعر" />        </details>
 
                 <details class="filter-group" open>
             <summary>المساحة</summary>
-<input type="number" name="minArea" value="@ViewBag.MinArea" placeholder="@L.T("MinArea")" min="1" step="1" />
+<input type="number" name="minArea" value="@ViewBag.MinArea" placeholder="@L.T("MinArea")" min="1" step="1" inputmode="numeric" />
         <div class="area-chips">
             <button type="button" class="btn btn-ghost area-chip" data-min="50">+50 م²</button>
             <button type="button" class="btn btn-ghost area-chip" data-min="100">+100 م²</button>
             <button type="button" class="btn btn-ghost area-chip" data-min="150">+150 م²</button>
         </div>
-        <input type="number" name="maxArea" id="maxAreaInput" value="@ViewBag.MaxArea" placeholder="@L.T("MaxArea")" min="1" step="1" />
+        <input type="number" name="maxArea" id="maxAreaInput" value="@ViewBag.MaxArea" placeholder="@L.T("MaxArea")" min="1" step="1" inputmode="numeric" />
         <input type="range" id="areaMaxSlider" min="0" max="1000" step="10" value="@(ViewBag.MaxArea ?? 1000)" aria-label="أقصى مساحة" />        </details>
 
                 <details class="filter-group" open>
             <summary>المواصفات</summary>
-<input type="number" name="minRooms" value="@ViewBag.MinRooms" placeholder="@L.T("MinRooms")" min="0" step="1" />
-        <input type="number" name="minFloor" value="@ViewBag.MinFloor" placeholder="@L.T("MinFloor")" min="0" step="1" />
-        <input type="number" name="maxFloor" value="@ViewBag.MaxFloor" placeholder="@L.T("MaxFloor")" min="0" step="1" />
+<input type="number" name="minRooms" value="@ViewBag.MinRooms" placeholder="@L.T("MinRooms")" min="0" step="1" inputmode="numeric" />
+        <input type="number" name="minFloor" value="@ViewBag.MinFloor" placeholder="@L.T("MinFloor")" min="0" step="1" inputmode="numeric" />
+        <input type="number" name="maxFloor" value="@ViewBag.MaxFloor" placeholder="@L.T("MaxFloor")" min="0" step="1" inputmode="numeric" />
         <div class="filter-chips">
             <label class="filter-chip"><input type="radio" name="furnishing" value="" checked="@(string.IsNullOrWhiteSpace(ViewBag.Furnishing?.ToString()))" /> @L.T("All")</label>
             <label class="filter-chip"><input type="radio" name="furnishing" value="Full" checked="@(ViewBag.Furnishing == "Full")" /> @L.T("FurnishingFull")</label>
@@ -153,7 +154,7 @@ else
             }
         </div>
         <select name="rentPeriod" asp-items="rentPeriodOptions"></select>
-        <input type="number" name="minBuildingFloors" value="@ViewBag.MinBuildingFloors" placeholder="@L.T("MinBuildingFloors")" min="0" step="1" />        </details>
+        <input type="number" name="minBuildingFloors" value="@ViewBag.MinBuildingFloors" placeholder="@L.T("MinBuildingFloors")" min="0" step="1" inputmode="numeric" />        </details>
 
                 <details class="filter-group" open>
             <summary>المرافق</summary>

@@ -101,35 +101,35 @@
     <div class="form-row">
         <div>
     <label>@L.T("Price")</label>
-    <input asp-for="Price" type="number" min="0" step="any" placeholder="مثال: 1500000" />
+    <input asp-for="Price" type="number" min="0" step="any" placeholder="مثال: 1500000" inputmode="decimal" />
     <span asp-validation-for="Price" class="field-error"></span>
     <small id="suggestedPriceHint"></small>
     <small id="priceFormatted" class="price-formatted"></small>
         </div>
         <div>
     <label>@L.T("AreaSqm")</label>
-    <div class="input-unit"><input asp-for="AreaSqm" type="number" min="1" step="1" placeholder="مثال: 120" /><span>م²</span></div>
+    <div class="input-unit"><input asp-for="AreaSqm" type="number" min="1" step="1" placeholder="مثال: 120" inputmode="numeric" /><span>م²</span></div>
     <span asp-validation-for="AreaSqm" class="field-error"></span>
         </div>
     </div>
 
     <label>@L.T("Rooms")</label>
-    <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="Rooms" type="number" min="0" max="50" step="1" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
+    <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="Rooms" type="number" min="0" max="50" step="1" inputmode="numeric" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
     <span asp-validation-for="Rooms" class="field-error"></span>
 
     <label>@L.T("Bathrooms")</label>
-    <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="Bathrooms" type="number" min="0" max="20" step="1" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
+    <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="Bathrooms" type="number" min="0" max="20" step="1" inputmode="numeric" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
     <span asp-validation-for="Bathrooms" class="field-error"></span>
 
     <div id="floorField" style="@(Model.PropertyType != PropertyType.Apartment ? "display:none;" : "")">
         <label>@L.T("Floor")</label>
-        <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="Floor" type="number" min="0" max="60" step="1" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
+        <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="Floor" type="number" min="0" max="60" step="1" inputmode="numeric" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
         <span asp-validation-for="Floor" class="field-error"></span>
     </div>
 
     <div id="apartmentsCountField" style="@(Model.PropertyType != PropertyType.Building ? "display:none;" : "")">
         <label>@L.T("ApartmentsCount")</label>
-        <input asp-for="ApartmentsCount" type="number" min="1" max="1000" step="1" />
+        <input asp-for="ApartmentsCount" type="number" min="1" max="1000" step="1" inputmode="numeric" />
         <span asp-validation-for="ApartmentsCount" class="field-error"></span>
     </div>
 
@@ -156,7 +156,7 @@
     <label class="toggle-label"><input asp-for="HasParking" type="checkbox" /><span class="toggle-slider"></span> @L.T("Parking")</label>
     <label class="toggle-label"><input asp-for="HasElevator" type="checkbox" /><span class="toggle-slider"></span> @L.T("Elevator")</label>
     <label>@L.T("ElevatorCount")</label>
-    <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="ElevatorCount" type="number" min="1" max="20" step="1" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
+    <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="ElevatorCount" type="number" min="1" max="20" step="1" inputmode="numeric" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
     <span asp-validation-for="ElevatorCount" class="field-error"></span>
     <label class="toggle-label"><input asp-for="HasBalcony" type="checkbox" /><span class="toggle-slider"></span> @L.T("Balcony")</label>
     <label class="toggle-label"><input asp-for="HasAirConditioning" type="checkbox" /><span class="toggle-slider"></span> @L.T("AirConditioning")</label>
@@ -173,7 +173,7 @@
     </select>
 
     <label>@L.T("DepositMonths")</label>
-    <input asp-for="DepositMonths" type="number" min="0" max="24" step="1" />
+    <input asp-for="DepositMonths" type="number" min="0" max="24" step="1" inputmode="numeric" />
 
     <label>@L.T("Meters")</label>
     <label><input asp-for="HasElectricityMeter" type="checkbox" /> @L.T("ElectricityMeter")</label>
@@ -181,10 +181,10 @@
     <label><input asp-for="HasWaterMeter" type="checkbox" /> @L.T("WaterMeter")</label>
 
     <label>@L.T("LandArea")</label>
-    <input asp-for="LandAreaSqm" type="number" min="0" step="1" />
+    <input asp-for="LandAreaSqm" type="number" min="0" step="1" inputmode="numeric" />
 
     <label>@L.T("BuildingFloors")</label>
-    <input asp-for="BuildingFloors" type="number" min="0" max="100" step="1" />
+    <input asp-for="BuildingFloors" type="number" min="0" max="100" step="1" inputmode="numeric" />
 
     @if (isEdit)
     {
@@ -204,13 +204,13 @@
     <label>صور توضيحية (حتى 5 صور)</label>
     <div id="photoDropZone" class="drop-zone">
         <span>@L.T("DropPhotosHere")</span>
-        <input asp-for="PhotoFiles" type="file" accept="image/*" multiple />
+        <input asp-for="PhotoFiles" type="file" accept="image/*" multiple capture="environment" />
         <div id="photoPreview" class="photo-preview"></div>
         <button type="button" id="clearPhotosBtn" class="btn btn-ghost">حذف كل الصور المختارة</button>
     </div>
     <small>الصور بتتصغّر وتتضغط تلقائيًا عند الرفع، وحجم الصورة الواحدة 10 ميجا بحد أقصى.</small>
     <label>فيديو (حتى 25 ميجا)</label>
-    <input asp-for="VideoFile" type="file" accept="video/*" />
+    <input asp-for="VideoFile" type="file" accept="video/*" capture="environment" />
     <div id="videoPreview" class="video-preview"></div>
 
     @if (isEdit && Model.Attachments.Any(a => a.Kind == AttachmentKind.Photo))

@@ -1831,4 +1831,87 @@ document.addEventListener("DOMContentLoaded", function () {
     if (sidebar && filterClose) {
         filterClose.addEventListener("click", function () { sidebar.classList.remove("open"); });
     }
+
+    // Batch 33 (4) — سحب ورقة للأسفل يغلقها (الفلاتر + ورقة الكارت).
+    function addSheetSwipe(sheet, closeFn) {
+        if (!sheet) return;
+        var handle = sheet.querySelector(".sheet-handle");
+        if (!handle) return;
+        var startY = 0, dy = 0, dragging = false;
+        handle.addEventListener("touchstart", function (e) {
+            if (e.touches.length !== 1) return;
+            dragging = true; startY = e.touches[0].clientY; dy = 0;
+            sheet.style.transition = "none";
+        }, { passive: true });
+        handle.addEventListener("touchmove", function (e) {
+            if (!dragging) return;
+            dy = e.touches[0].clientY - startY;
+            if (dy > 0) sheet.style.transform = "translateY(" + dy + "px)";
+        }, { passive: true });
+        handle.addEventListener("touchend", function () {
+            if (!dragging) return;
+            dragging = false;
+            sheet.style.transition = "";
+            sheet.style.transform = "";
+            if (dy > 90) closeFn();
+        });
+    }
+    if (sidebar) addSheetSwipe(sidebar, function () { sidebar.classList.remove("open"); });
+
+    // Batch 33 (11) — أكورديون الفوتر في الموبايل.
+    document.querySelectorAll(".footer-heading").forEach(function (h) {
+        h.addEventListener("click", function () {
+            if (!window.matchMedia("(max-width: 640px)").matches) return;
+            var col = h.closest(".footer-col");
+            if (col) col.classList.toggle("open");
+        });
+    });
+
+    // Batch 33 (3) — ورقة إجراءات الكارت في الموبايل.
+    var cardSheet = document.getElementById("cardSheet");
+    var cardSheetBackdrop = document.getElementById("cardSheetBackdrop");
+    var cardSheetTitle = document.getElementById("cardSheetTitle");
+    var currentCard = null;
+    function openCardSheet(card) {
+        if (!cardSheet || !card) return;
+        currentCard = card;
+        var titleEl = card.querySelector(".listing-body h3 a");
+        var title = titleEl ? titleEl.textContent.trim() : "";
+        var detailsLink = card.querySelector(".view-details-full");
+        var shareBtn = card.querySelector(".actions .share-copy");
+        var url = shareBtn ? shareBtn.getAttribute("data-url") : (detailsLink ? detailsLink.href : location.href);
+        if (cardSheetTitle) cardSheetTitle.textContent = title;
+        var whats = document.getElementById("cardSheetWhats");
+        if (whats) whats.href = "https://wa.me/?text=" + encodeURIComponent((title ? title + " - " : "") + url);
+        var det = document.getElementById("cardSheetDetails");
+        if (det && detailsLink) det.href = detailsLink.href;
+        cardSheet.classList.add("open");
+        if (cardSheetBackdrop) cardSheetBackdrop.classList.add("open");
+    }
+    function closeCardSheet() {
+        if (cardSheet) cardSheet.classList.remove("open");
+        if (cardSheetBackdrop) cardSheetBackdrop.classList.remove("open");
+        currentCard = null;
+    }
+    document.addEventListener("click", function (e) {
+        var menuBtn = e.target.closest(".card-menu-btn");
+        if (menuBtn) openCardSheet(menuBtn.closest(".listing-card"));
+    });
+    if (cardSheetBackdrop) cardSheetBackdrop.addEventListener("click", closeCardSheet);
+    var cardSheetClose = document.getElementById("cardSheetClose");
+    if (cardSheetClose) cardSheetClose.addEventListener("click", closeCardSheet);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeCardSheet(); });
+    function sheetAction(id, fn) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("click", function () {
+            if (!currentCard) return;
+            fn(currentCard);
+            closeCardSheet();
+        });
+    }
+    sheetAction("cardSheetFav", function (card) { var b = card.querySelector(".favorite-btn"); if (b) b.click(); });
+    sheetAction("cardSheetCompare", function (card) { var b = card.querySelector(".compare-toggle"); if (b) b.click(); });
+    sheetAction("cardSheetCopy", function (card) { var b = card.querySelector(".actions .share-copy"); if (b) b.click(); });
+    if (cardSheet) addSheetSwipe(cardSheet, closeCardSheet);
 });

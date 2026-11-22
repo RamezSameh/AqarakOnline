@@ -75,6 +75,7 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
                 <button type="button" class="btn btn-ghost favorite-btn guest-favorite" data-id="@Model.Id" title="إضافة إلى المفضلة">♡</button>
             }
             <button type="button" class="btn btn-ghost compare-toggle" data-id="@Model.Id" data-add="⚖️" data-added="✓" data-max="@L.T("CompareMax")" title="@L.T("AddToCompare")">⚖️</button>
+            <button type="button" class="btn btn-ghost card-menu-btn" data-id="@Model.Id" title="خيارات" aria-label="خيارات">⋮</button>
         </div>
     </div>
     <div class="listing-body">

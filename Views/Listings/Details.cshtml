@@ -474,6 +474,7 @@ else
 @if (Model.IsAvailable)
 {
     <div class="sticky-contact">
+        <span class="sticky-price">@L.PriceText(Model.Price, Model.ListingType)</span>
         @if (Model.ListingType == ListingType.Sale)
         {
             <a class="btn btn-primary" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id" asp-route-intent="buy">@L.T("Buy")</a>

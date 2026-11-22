@@ -873,6 +873,7 @@ main h1 { font-weight: 800; }
 .listing-card.revealed { opacity: 1; transform: translateY(0); }
 .listing-card.revealed:hover { transform: translateY(-4px) rotate(-.5deg); }
 @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
     .listing-card { opacity: 1; transform: none; transition: none; }
     .listing-card.revealed:hover { transform: none; }
     .availability-bar.available { animation: none; }
@@ -1087,3 +1088,94 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
 /* Batch 31 — إصلاح تنسيق الفورم: الليبلز والحقول اللي جوه حاويات (خطوات التسجيل، أقسام تعديل المستخدم، صف السعر/المساحة) كانت بتتدفق inline جنب بعض، فكل حقل يطلع جنب الليبل الغلط. الليبل يبقى block فوق حقله، والحقل بملء العرض. الاستثناءات: مفاتيح التبديل وبطاقات اختيار النوع واختيارات المميزات ليهم تنسيقهم الخاص. */
 .form label:not(.toggle-label):not(.type-option):not(.features-picker *) { display: block; }
 .form input:not([type="checkbox"]):not([type="radio"]), .form select, .form textarea { width: 100%; }
+
+/* Batch 33 — تحسينات الموبايل: شريط تنقل سفلي + ورقة إجراءات الكارت + سحب الفلاتر + هوامش آمنة + تصغير المحتوى والأزرار. */
+/* (6) منع التمرير الأفقي نهائيًا — clip لا يكسر الـ sticky مثل hidden */
+html, body { overflow-x: hidden; overflow-x: clip; }
+/* (3) ورقة إجراءات الكارت + مقبض السحب — مخفية افتراضيًا وتظهر بكلاس open */
+.card-menu-btn { display: none; }
+.sheet-backdrop, .card-sheet { display: none; }
+.sheet-handle { display: none; }
+.sticky-price { display: none; }
+@media (max-width: 1024px) {
+    /* (4) مقبض سحب ورقة الفلاتر */
+    .search-sidebar .sheet-handle { display: block; width: 48px; height: 6px; border-radius: 999px; background: #64748b; margin: 2px auto 10px; touch-action: none; cursor: grab; }
+}
+@media (max-width: 860px) {
+    /* (1) شريط التنقل السفلي */
+    body { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+    .mobile-bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 120; height: calc(56px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); background: rgba(15, 23, 42, .97); border-top: 1px solid #334155; }
+    .mobile-bottom-nav a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: #94a3b8; text-decoration: none; font-size: 11px; font-weight: 700; min-width: 0; }
+    .mobile-bottom-nav a .nav-ico { font-size: 20px; line-height: 1; }
+    .mobile-bottom-nav a.active { color: #818cf8; }
+    .mobile-bottom-nav a.create-link { color: #fff; }
+    .mobile-bottom-nav a.create-link .nav-ico { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #4f46e5); display: grid; place-items: center; font-size: 24px; margin-top: -16px; box-shadow: 0 4px 12px rgba(0,0,0,.45); }
+    [data-theme="light"] .mobile-bottom-nav { background: rgba(255, 255, 255, .97); border-top-color: #e2e8f0; }
+    [data-theme="light"] .mobile-bottom-nav a { color: #64748b; }
+    [data-theme="light"] .mobile-bottom-nav a.active { color: #4f46e5; }
+    /* زر إنشاء الإعلان العائم يختفي — صار في الشريط السفلي */
+    .fab-create { display: none !important; }
+    /* (5) العناصر العائمة ترتفع فوق الشريط السفلي + هوامش النوتش */
+    .filter-fab { bottom: calc(72px + env(safe-area-inset-bottom)); }
+    .compare-bar { bottom: calc(72px + env(safe-area-inset-bottom)); }
+    .toast { bottom: calc(72px + env(safe-area-inset-bottom)); }
+    .back-to-top { bottom: calc(72px + env(safe-area-inset-bottom)); }
+    .fab-call { bottom: calc(72px + env(safe-area-inset-bottom)); }
+    /* (2) شريط النتائج ثابت تحت الهيدر أثناء التمرير */
+    .results-bar { position: sticky; top: 112px; z-index: 40; }
+    /* (10) مقبض سلايدر أكبر للمس */
+    .filter-group input[type="range"] { -webkit-appearance: none; appearance: none; height: 10px; border-radius: 999px; background: #334155; }
+    .filter-group input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 30px; height: 30px; border-radius: 50%; background: #6366f1; border: 3px solid #fff; cursor: pointer; }
+    .filter-group input[type="range"]::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: #6366f1; border: 3px solid #fff; cursor: pointer; }
+    /* (3) زر ⋮ على الكارت + الورقة السفلية */
+    .card-menu-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(15, 23, 42, .75); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; backdrop-filter: blur(4px); }
+    .sheet-backdrop.open { display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, .55); z-index: 220; }
+    .card-sheet.open { display: block; position: fixed; bottom: 0; inset-inline: 0; z-index: 230; background: #1e293b; border-radius: 16px 16px 0 0; padding: 8px 16px calc(20px + env(safe-area-inset-bottom)); box-shadow: 0 -8px 32px rgba(0,0,0,.5); }
+    [data-theme="light"] .card-sheet.open { background: #f8fafc; }
+    .card-sheet .sheet-handle { display: block; width: 48px; height: 6px; border-radius: 999px; background: #64748b; margin: 4px auto 8px; touch-action: none; cursor: grab; }
+    .card-sheet h3 { font-size: 16px; margin: 4px 0 8px; }
+    .sheet-action { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 8px; background: transparent; border: none; border-bottom: 1px solid #334155; color: #f1f5f9; font: inherit; font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer; text-align: start; }
+    .sheet-action:last-child { border-bottom: none; }
+    [data-theme="light"] .sheet-action { color: #0f172a; border-bottom-color: #e2e8f0; }
+    /* (14) زر الرجوع للنتائج ثابت في التفاصيل */
+    .details-back-wrap { position: fixed; top: 112px; inset-inline-start: 12px; z-index: 60; }
+    .details-back-wrap .btn { background: rgba(30, 41, 59, .95); border-color: #334155; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+    [data-theme="light"] .details-back-wrap .btn { background: rgba(255, 255, 255, .95); border-color: #cbd5e1; }
+}
+@media (max-width: 640px) {
+    /* (9) السعر في شريط التواصل + الشريط يرتفع فوق شريط التنقل */
+    .sticky-contact { flex-wrap: wrap; bottom: calc(56px + env(safe-area-inset-bottom)); }
+    .sticky-contact .sticky-price { display: block; flex: 1 1 100%; text-align: center; font-size: 17px; font-weight: 800; color: #c7d2fe; }
+    [data-theme="light"] .sticky-contact .sticky-price { color: #4338ca; }
+    body.page-details .main-content { padding-bottom: calc(172px + env(safe-area-inset-bottom)); }
+    body.page-details .back-to-top { bottom: calc(244px + env(safe-area-inset-bottom)); }
+    body.page-details .fab-call { display: none; }
+    .fab-share { bottom: calc(180px + env(safe-area-inset-bottom)); }
+    /* (11) أقسام الفوتر أكورديون */
+    .footer-col .footer-heading { cursor: pointer; }
+    .footer-col .footer-heading::after { content: " ＋"; float: inline-end; font-weight: 800; }
+    .footer-col.open .footer-heading::after { content: " －"; }
+    .footer-col:nth-child(2) p:not(.footer-heading), .footer-col:nth-child(3) p:not(.footer-heading), .footer-col:nth-child(4) p:not(.footer-heading) { display: none; }
+    .footer-col.open p:not(.footer-heading) { display: block; }
+    /* (12) بطاقة الدخول/التسجيل بملء الشاشة */
+    .auth-card { width: 100vw; margin-inline: calc(50% - 50vw); border-radius: 0; border-inline: none; max-width: none; padding: 20px 16px; }
+    /* (15) رسوم لوحة الأدمن: العنوان فوق والشريط بعرض كامل */
+    .chart-row { flex-wrap: wrap; row-gap: 4px; }
+    .chart-row .chart-label { min-width: 0; flex: 1 1 100%; }
+    /* (16) تصغير المحتوى والأزرار لتناسب الشاشة */
+    .container { width: 94%; }
+    .btn { padding: 8px 12px; font-size: 14px; }
+    .listing-body { padding: 12px; }
+    .listing-body h3 { font-size: 17px; }
+    .listing-price { font-size: 20px; padding: 4px 8px; }
+    .badge { font-size: 11px; padding: 2px 8px; }
+    .listing-area, .listing-facts, .listing-published, .listing-views { font-size: 13px; }
+    .details-title { font-size: 24px; }
+    .details-quick-summary { font-size: 14px; padding: 10px 12px; }
+    .form input:not([type="checkbox"]):not([type="radio"]), .form select, .form textarea { padding: 8px 10px; }
+    .card-photo-actions .btn { padding: 4px 8px; font-size: 14px; }
+    .filter-fab { padding: 10px 16px; font-size: 15px; }
+    .header-actions .bell-btn, .header-actions .lang-switch { min-height: 40px; }
+    .cards-grid { gap: 12px; }
+    .results-bar { font-size: 14px; padding: 8px 12px; }
+}
