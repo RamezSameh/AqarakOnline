@@ -42,7 +42,6 @@
     }
     <script type="application/ld+json">@Html.Raw(jsonLd)</script>
 }
-<div class="details-back-wrap"><a class="btn btn-ghost" asp-action="Index">← @L.T("BackToList")</a></div>
 <div class="reading-progress"><div id="readingProgressBar"></div></div>
 <h1 class="details-title">@typeIcon @Model.Title</h1>
 <div class="listing-meta">
@@ -118,16 +117,6 @@ else
 {
     <div class="detail-photo placeholder">@L.T("NoPhoto")</div>
 }
-<aside class="details-summary">
-    <p class="details-price">@L.PriceText(Model.Price, Model.ListingType)</p>
-    <p>📐 @L.T("AreaSqm"): @Model.AreaSqm م²</p>
-    @if (Model.Rooms.HasValue)
-    {
-        <p>🛏️ @L.T("Rooms"): @Model.Rooms</p>
-    }
-    <p>@L.PropertyTypeText(Model.PropertyType) • @Model.Area</p>
-    <p class="availability-text">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</p>
-</aside>
 @if (video != null)
 {
     <video class="detail-video" controls src="/@video.FilePath"></video>
@@ -254,51 +243,24 @@ else
     <p><strong>@L.T("ApprovalStatus"):</strong> @L.ApprovalText(Model.Approval)</p>
 }
 
-<div class="details-tabs">
-    <div class="details-tab-buttons" role="tablist">
-        <button type="button" class="details-tab-btn active" data-tab="tab-desc">@L.T("Details")</button>
-        @if (Model.FeaturesList.Any())
+<section class="details-section">
+    <h2>@L.T("Details")</h2>
+    <p>@Model.Description</p>
+    <span id="listingDescriptionText" hidden>@Model.Description</span>
+    <button type="button" class="btn btn-ghost" id="copyDescriptionBtn">نسخ الوصف 📋</button>
+</section>
+@if (Model.FeaturesList.Any())
+{
+<section class="details-section">
+    <h2>@L.T("Features")</h2>
+    <ul>
+        @foreach (var feature in Model.FeaturesList)
         {
-            <button type="button" class="details-tab-btn" data-tab="tab-features">@L.T("Features")</button>
+            <li>@feature</li>
         }
-        @if (photos.Any())
-        {
-            <button type="button" class="details-tab-btn" data-tab="tab-photos">الصور</button>
-        }
-        <button type="button" class="details-tab-btn" data-tab="tab-meters">المرافق</button>
-        @if (Model.ListingType == ListingType.Sale)
-        {
-            <button type="button" class="details-tab-btn" data-tab="tab-calc">@L.T("Calculator")</button>
-        }
-    </div>
-    <div class="details-tab-panel active" id="tab-desc">
-        <p>@Model.Description</p>
-        <span id="listingDescriptionText" hidden>@Model.Description</span>
-        <button type="button" class="btn btn-ghost" id="copyDescriptionBtn">نسخ الوصف 📋</button>
-    </div>
-    @if (Model.FeaturesList.Any())
-    {
-        <div class="details-tab-panel" id="tab-features" hidden>
-            <ul>
-                @foreach (var feature in Model.FeaturesList)
-                {
-                    <li>@feature</li>
-                }
-            </ul>
-        </div>
-    }
-    @if (photos.Any())
-    {
-        <div class="details-tab-panel" id="tab-photos" hidden>
-            <div class="tab-photos-grid">
-                @foreach (var photo in photos)
-                {
-                    <img src="/@photo.FilePath" class="tab-photo" alt="@Model.Title" loading="lazy" />
-                }
-            </div>
-        </div>
-    }
-    <div class="details-tab-panel" id="tab-meters" hidden>
+    </ul>
+</section>
+}
 <section class="meters-table">
     <h2>العدادات والمرافق</h2>
     <div class="meters-grid">
@@ -322,32 +284,6 @@ else
         </div>
     </div>
 </section>
-    </div>
-    @if (Model.ListingType == ListingType.Sale)
-    {
-        <div class="details-tab-panel" id="tab-calc" hidden>
-            <section class="calculator" id="calculator">
-                <h2>@L.T("Calculator")</h2>
-                <div class="form">
-                    <label>@L.T("Price")</label>
-                    <input id="calcPrice" type="number" min="0" step="any" value="@Model.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
-                    <label>@L.T("DownPayment")</label>
-                    <input id="calcDown" type="number" min="0" step="any" value="@((Model.Price * 0.2m).ToString("0", System.Globalization.CultureInfo.InvariantCulture))" />
-                    <label>@L.T("Years")</label>
-                    <input id="calcYears" type="number" min="1" max="30" step="1" value="10" />
-                    <label>@L.T("InterestRate")</label>
-                    <input id="calcRate" type="number" min="0" max="100" step="any" value="18" />
-                    <p><strong>@L.T("MonthlyInstallment"):</strong> <span id="calcResult">-</span></p>
-                    <div class="calc-bar"><div class="calc-bar-down" id="calcBarDown"></div><div class="calc-bar-loan" id="calcBarLoan"></div></div>
-                    <p class="calc-legend"><span class="calc-legend-down">■ الدفعة الأولى</span> <span class="calc-legend-loan">■ المبلغ المتبقي</span></p>
-                    <small>@L.T("CalculatorNote")</small>
-                </div>
-            </section>
-        </div>
-    }
-</div>
-
-<div class="actions details-side-actions">
     @if (User.Identity?.IsAuthenticated == true)
     {
         var isFavorite = ViewBag.IsFavorite == true;
@@ -412,8 +348,9 @@ else
 
 
 {
+    <details class="viewing-details">
+        <summary>📅 @L.T("BookViewing")</summary>
     <section class="viewing-form">
-        <h2>@L.T("BookViewing")</h2>
         <p><small>المعاينة بتتنسق عن طريق إدارة الموقع — لا يوجد تواصل مباشر مع المعلن.</small></p>
         <form asp-controller="Viewings" asp-action="Create" method="post" class="form">
             <input type="hidden" name="listingId" value="@Model.Id" />
@@ -439,6 +376,7 @@ else
             <button type="submit" class="btn btn-primary">3 — @L.T("BookViewing")</button>
         </form>
     </section>
+    </details>
 }
 
 @if (ViewBag.SimilarPrices is System.Collections.Generic.IEnumerable<dynamic> similarPrices && similarPrices.Any())

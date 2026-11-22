@@ -183,7 +183,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 .notification-item p { margin: 0 0 8px; }
 /* شاشات متوسطة وصغيرة: الـ navbar يتحول لقائمة قابلة للطي. */
 @media (max-width: 860px) {
-    .nav-toggle { display: inline-block; order: 3; min-width: 44px; min-height: 44px; font-size: 20px; }
+    .nav-toggle { display: inline-block; order: 2; min-width: 44px; min-height: 44px; font-size: 20px; }
     .header-inner { gap: 10px; flex-wrap: wrap; min-height: 56px; padding: 8px 0; }
     .brand { flex: 1; order: 1; }
     .header-actions { order: 2; margin-inline-start: 0; gap: 8px; }
@@ -969,12 +969,7 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
 /* (15) شريط المقارنة مدمج في الموبايل */
 @media (max-width: 640px) { .compare-bar { padding: 8px 12px; gap: 8px; max-width: calc(100vw - 24px); } .compare-bar .btn { padding: 8px 12px; font-size: 14px; } }
 /* (16) ملخص الإعلان في التفاصيل — عمود ثانٍ على الديسكتوب */
-.details-summary { border: 1px solid #334155; border-radius: 16px; padding: 16px; background: #1e293b; margin: 16px 0; }
-.details-summary p { margin: 6px 0; }
-.details-summary .details-price { font-size: 24px; font-weight: 800; color: #c7d2fe; }
-@media (min-width: 900px) { .details-summary { float: inline-end; width: 300px; margin: 0 0 16px 16px; } }
-[data-theme="light"] .details-summary { background: #fff; border-color: #e2e8f0; }
-[data-theme="light"] .details-summary .details-price { color: #4338ca; }
+/* (4) صندوق ملخص التفاصيل — أُلغي في Batch 34. */
 /* (19) نموذج الإضافة بعمودين على الديسكتوب */
 @media (min-width: 900px) {
     #listingForm { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; row-gap: 0; }
@@ -1137,10 +1132,7 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     .sheet-action { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 8px; background: transparent; border: none; border-bottom: 1px solid #334155; color: #f1f5f9; font: inherit; font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer; text-align: start; }
     .sheet-action:last-child { border-bottom: none; }
     [data-theme="light"] .sheet-action { color: #0f172a; border-bottom-color: #e2e8f0; }
-    /* (14) زر الرجوع للنتائج ثابت في التفاصيل */
-    .details-back-wrap { position: fixed; top: 112px; inset-inline-start: 12px; z-index: 60; }
-    .details-back-wrap .btn { background: rgba(30, 41, 59, .95); border-color: #334155; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
-    [data-theme="light"] .details-back-wrap .btn { background: rgba(255, 255, 255, .95); border-color: #cbd5e1; }
+    /* (14) زر الرجوع للنتائج — أُلغي في Batch 34. */
 }
 @media (max-width: 640px) {
     /* (9) السعر في شريط التواصل + الشريط يرتفع فوق شريط التنقل */
@@ -1179,3 +1171,41 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     .cards-grid { gap: 12px; }
     .results-bar { font-size: 14px; padding: 8px 12px; }
 }
+
+/* Batch 34 — تعديلات التفاصيل والفلاتر وحسابي والتنقل. */
+/* (8) مقاس ثابت لصور التفاصيل والفيديو — كل الصور بنفس الحجم */
+.gallery-main-photo { aspect-ratio: 4/3; }
+.detail-video { aspect-ratio: 16/9; }
+/* (3) أقسام التفاصيل الظاهرة بدل التبويبات */
+.details-section { border: 1px solid #334155; border-radius: 16px; padding: 16px; background: #1e293b; margin: 16px 0; }
+.details-section h2 { margin-top: 0; }
+[data-theme="light"] .details-section { background: #fff; border-color: #e2e8f0; }
+/* (2) المعاينة قابلة للطي — مقفولة افتراضي */
+.viewing-details { border: 1px solid #334155; border-radius: 16px; padding: 12px 16px; background: #1e293b; margin: 16px 0; }
+.viewing-details summary { cursor: pointer; font-weight: 800; font-size: 18px; padding: 4px 0; }
+.viewing-details .viewing-form { margin-top: 12px; }
+[data-theme="light"] .viewing-details { background: #fff; border-color: #e2e8f0; }
+/* (6) تنسيق الفلاتر — مجموعات مكدسة بعرض كامل */
+.filters-box .filter-form { display: block; margin: 12px 0 0; }
+.filters-box .filter-group { border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; background: rgba(15, 23, 42, .4); }
+.filters-box .filter-group summary { cursor: pointer; font-weight: 800; font-size: 15px; padding: 2px 0; }
+.filters-box .filter-group input[type="number"], .filters-box .filter-group select { width: 100%; margin-bottom: 8px; }
+.filters-box .filter-group .filter-row input[type="number"] { margin-bottom: 0; }
+.filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+.filter-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin: 8px 0; }
+.filter-checks label { display: flex; align-items: center; gap: 8px; margin: 0; }
+.filter-actions { position: sticky; bottom: 0; display: flex; gap: 10px; padding: 12px 0 4px; background: #0f172a; z-index: 5; }
+.filter-actions .btn { flex: 1; text-align: center; justify-content: center; }
+.filters-box .filter-form .btn-primary[type="submit"] { position: static; width: auto; box-shadow: none; }
+[data-theme="light"] .filters-box .filter-group { background: rgba(255, 255, 255, .6); border-color: #cbd5e1; }
+[data-theme="light"] .filter-actions { background: #f8fafc; }
+@media (max-width: 640px) {
+    .filter-actions { bottom: calc(72px + env(safe-area-inset-bottom)); }
+}
+/* (10) حسابي — قيمة الرسم وتنسيق التنبيهات وتصغير الأرقام */
+.chart-value { min-width: 32px; text-align: end; font-weight: 700; }
+.account-notifications { list-style: none; padding: 0; margin: 0; }
+.account-notifications li { padding: 10px 0; border-bottom: 1px solid #334155; }
+.account-notifications li:last-child { border-bottom: none; }
+.account-notifications li span { color: #94a3b8; font-size: 13px; }
+@media (max-width: 640px) { .stat-card .stat-number { font-size: 28px; } }

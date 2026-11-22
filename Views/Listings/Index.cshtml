@@ -118,28 +118,34 @@ else
         <select name="listingType" asp-items="listingTypes"></select>
         <select name="propertyType" asp-items="propertyTypes"></select>        </details>
 
-                <details class="filter-group" open>
+                <details class="filter-group">
             <summary>السعر</summary>
+<div class="filter-row">
 <input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="@L.T("MinPrice")" min="0" step="any" inputmode="decimal" />
         <input type="number" name="maxPrice" id="maxPriceInput" value="@ViewBag.MaxPrice" placeholder="@L.T("MaxPrice")" min="0" step="any" inputmode="decimal" />
+        </div>
         <input type="range" id="priceMaxSlider" min="0" max="10000000" step="100000" value="@(ViewBag.MaxPrice ?? 10000000)" aria-label="أقصى سعر" />        </details>
 
-                <details class="filter-group" open>
+                <details class="filter-group">
             <summary>المساحة</summary>
+<div class="filter-row">
 <input type="number" name="minArea" value="@ViewBag.MinArea" placeholder="@L.T("MinArea")" min="1" step="1" inputmode="numeric" />
+        <input type="number" name="maxArea" id="maxAreaInput" value="@ViewBag.MaxArea" placeholder="@L.T("MaxArea")" min="1" step="1" inputmode="numeric" />
+        </div>
         <div class="area-chips">
             <button type="button" class="btn btn-ghost area-chip" data-min="50">+50 م²</button>
             <button type="button" class="btn btn-ghost area-chip" data-min="100">+100 م²</button>
             <button type="button" class="btn btn-ghost area-chip" data-min="150">+150 م²</button>
         </div>
-        <input type="number" name="maxArea" id="maxAreaInput" value="@ViewBag.MaxArea" placeholder="@L.T("MaxArea")" min="1" step="1" inputmode="numeric" />
         <input type="range" id="areaMaxSlider" min="0" max="1000" step="10" value="@(ViewBag.MaxArea ?? 1000)" aria-label="أقصى مساحة" />        </details>
 
-                <details class="filter-group" open>
+                <details class="filter-group">
             <summary>المواصفات</summary>
 <input type="number" name="minRooms" value="@ViewBag.MinRooms" placeholder="@L.T("MinRooms")" min="0" step="1" inputmode="numeric" />
-        <input type="number" name="minFloor" value="@ViewBag.MinFloor" placeholder="@L.T("MinFloor")" min="0" step="1" inputmode="numeric" />
+        <div class="filter-row">
+<input type="number" name="minFloor" value="@ViewBag.MinFloor" placeholder="@L.T("MinFloor")" min="0" step="1" inputmode="numeric" />
         <input type="number" name="maxFloor" value="@ViewBag.MaxFloor" placeholder="@L.T("MaxFloor")" min="0" step="1" inputmode="numeric" />
+        </div>
         <div class="filter-chips">
             <label class="filter-chip"><input type="radio" name="furnishing" value="" checked="@(string.IsNullOrWhiteSpace(ViewBag.Furnishing?.ToString()))" /> @L.T("All")</label>
             <label class="filter-chip"><input type="radio" name="furnishing" value="Full" checked="@(ViewBag.Furnishing == "Full")" /> @L.T("FurnishingFull")</label>
@@ -156,8 +162,9 @@ else
         <select name="rentPeriod" asp-items="rentPeriodOptions"></select>
         <input type="number" name="minBuildingFloors" value="@ViewBag.MinBuildingFloors" placeholder="@L.T("MinBuildingFloors")" min="0" step="1" inputmode="numeric" />        </details>
 
-                <details class="filter-group" open>
+                <details class="filter-group">
             <summary>المرافق</summary>
+<div class="filter-checks">
 <label><input type="checkbox" name="hasParking" value="true" checked="@(ViewBag.HasParking == true)" /> @L.T("Parking")</label>
         <label><input type="checkbox" name="hasElevator" value="true" checked="@(ViewBag.HasElevator == true)" /> @L.T("Elevator")</label>
         <label><input type="checkbox" name="hasBalcony" value="true" checked="@(ViewBag.HasBalcony == true)" /> @L.T("Balcony")</label>
@@ -167,9 +174,10 @@ else
         <label><input type="checkbox" name="negotiableOnly" value="true" checked="@(ViewBag.NegotiableOnly == true)" /> @L.T("NegotiableOnly")</label>
         <label><input type="checkbox" name="hasElectricityMeter" value="true" checked="@(ViewBag.HasElectricityMeter == true)" /> @L.T("ElectricityMeter")</label>
         <label><input type="checkbox" name="hasGasMeter" value="true" checked="@(ViewBag.HasGasMeter == true)" /> @L.T("GasMeter")</label>
-        <label><input type="checkbox" name="hasWaterMeter" value="true" checked="@(ViewBag.HasWaterMeter == true)" /> @L.T("WaterMeter")</label>        </details>
+        <label><input type="checkbox" name="hasWaterMeter" value="true" checked="@(ViewBag.HasWaterMeter == true)" /> @L.T("WaterMeter")</label>
+        </div>        </details>
 
-                <details class="filter-group" open>
+                <details class="filter-group">
             <summary>أخرى</summary>
 <label class="sort-label">
             @L.T("Recency")
@@ -197,8 +205,10 @@ else
         </div>
         <label><input type="checkbox" name="onlyAvailable" value="true" checked="@(ViewBag.OnlyAvailable == true)" /> @L.T("OnlyAvailable")</label>        </details>
 
+        <div class="filter-actions">
         <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
         <a class="btn btn-ghost" asp-action="Index">@L.T("ClearFilter")</a>
+        </div>
     </form>
 </details>
     </aside>

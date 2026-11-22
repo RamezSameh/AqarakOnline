@@ -1,0 +1,19 @@
+<h1>@L.T("Calculator")</h1>
+<p>احسب قسطك الشهري قبل ما تشتري: اكتب سعر العقار والدفعة الأولى وعدد السنين وسعر الفائدة، والنتيجة بتتحدث لحظيًا.</p>
+<section class="calculator" id="calculator">
+    <div class="form">
+        <label>@L.T("Price")</label>
+        <input id="calcPrice" type="number" min="0" step="any" placeholder="مثال: 1500000" inputmode="decimal" />
+        <label>@L.T("DownPayment")</label>
+        <input id="calcDown" type="number" min="0" step="any" placeholder="مثال: 300000" inputmode="decimal" />
+        <label>@L.T("Years")</label>
+        <input id="calcYears" type="number" min="1" max="30" step="1" value="10" inputmode="numeric" />
+        <label>@L.T("InterestRate")</label>
+        <input id="calcRate" type="number" min="0" max="100" step="any" value="18" inputmode="decimal" />
+        <p><strong>@L.T("MonthlyInstallment"):</strong> <span id="calcResult">-</span></p>
+        <div class="calc-bar"><div class="calc-bar-down" id="calcBarDown"></div><div class="calc-bar-loan" id="calcBarLoan"></div></div>
+        <p class="calc-legend"><span class="calc-legend-down">■ الدفعة الأولى</span> <span class="calc-legend-loan">■ المبلغ المتبقي</span></p>
+        <small>@L.T("CalculatorNote")</small>
+    </div>
+</section>
+<p><a class="btn btn-primary" asp-controller="Listings" asp-action="Index">🏘️ @L.T("Listings")</a></p>

@@ -161,6 +161,12 @@ public class HomeController : Controller
     }
 
     [HttpGet]
+    public IActionResult Calculator()
+    {
+        return View();
+    }
+
+    [HttpGet]
     public IActionResult BuyingMistakes()
     {
         return View();

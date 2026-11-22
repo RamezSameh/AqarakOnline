@@ -12,8 +12,10 @@
 <section class="account-card">
 <h2>نشاطي</h2>
 <p>آخر نشاط: @(Model.LastActivityAt.HasValue ? L.RelativeTime(Model.LastActivityAt.Value) : "-")</p>
+</section>
 @if (ViewBag.TopViewedListings is System.Collections.Generic.IEnumerable<dynamic> topViewed && topViewed.Any())
 {
+<section class="account-card">
     <h2>مشاهدات إعلاناتي</h2>
     <div class="chart">
         @foreach (var item in topViewed)
@@ -23,8 +25,8 @@
             <div class="chart-row"><span class="chart-label">@item.Title</span><div class="chart-track"><div class="chart-bar" style="width:@width%"></div></div><span class="chart-value">@item.ViewCount</span></div>
         }
     </div>
-}
 </section>
+}
 <section class="account-card">
 <h2>روابط سريعة</h2>
 <div class="quick-links">
@@ -42,7 +44,7 @@
 }
 else
 {
-    <ul>
+    <ul class="account-notifications">
         @foreach (var notification in Model.RecentNotifications)
         {
             <li>

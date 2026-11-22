@@ -519,7 +519,6 @@ document.addEventListener("DOMContentLoaded", function () {
             compareBar.hidden = true;
             return;
         }
-        compareBar.hidden = false;
         compareCount.textContent = ids.length + " / 3";
         compareLink.href = "/Listings/Compare?ids=" + ids.join(",");
     }
@@ -540,6 +539,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         } else {
             ids.push(id);
+            if (compareBar) { compareBar.hidden = false; }
         }
         localStorage.setItem(compareKey, JSON.stringify(ids));
         renderCompare();
