@@ -101,8 +101,10 @@
             <input type="text" name="search" placeholder="ابحث عن عقار..." aria-label="بحث" />
             <button type="submit" class="btn btn-primary">بحث</button>
         </form>
+        @* Batch 38 — الخلفية جوّه الـ header عمدًا: الدرج z-300 والخلفية z-290 لازم
+           يبقوا في نفس سياق التكديس، وإلا الخلفية (برّه الهيدر) بتغطي الدرج كله. *@
+        <div id="navBackdrop" class="nav-backdrop" hidden></div>
     </header>
-    <div id="navBackdrop" class="nav-backdrop" hidden></div>
     @* لوحة الإدارة الجانبية: خارج الـ header وقائمة الموبايل عمدًا حتى
        لا يخفيها قفل القائمة (display:none يخفي حتى العناصر fixed). *@
     @if (User.IsInRole("Admin"))
