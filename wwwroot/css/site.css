@@ -9,6 +9,14 @@ a { color: #a5b4fc; }
 .header-inner { display: flex; align-items: center; gap: 28px; min-height: 68px; flex-wrap: wrap; }
 .brand { font-size: 22px; font-weight: 800; color: #fff; text-decoration: none; white-space: nowrap; }
 .main-nav { display: flex; align-items: center; gap: 20px; min-width: 0; flex: 1; flex-wrap: wrap; }
+/* Batch 42 — الهيدر صفّان على الديسكتوب: الروابط في سطر مستقل تحت البراند
+   والأدوات. السبب: الروابط بقت 8 (بعد Batch 41) + البحث + الجرس + حسابي +
+   خروج = ~1950px، بينما حاوية الهيدر 1311px على شاشة 1366 — مستحيل سطر
+   واحد، فالـ nav كان بيتضغط ويكسر رابط ورا رابط والهيدر يوصل ~330px. */
+@media (min-width: 861px) {
+    .header-inner { row-gap: 4px; }
+    .main-nav { order: 3; flex: 1 1 100%; }
+}
 .header-actions .btn { white-space: nowrap; }
 .profile-link { padding: 10px 14px; border: 1px solid #334155; border-radius: 8px; color: #cbd5e1; text-decoration: none; white-space: nowrap; }
 .profile-link:hover { color: #fff; border-color: #475569; }
@@ -488,7 +496,7 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 [data-theme="light"] .viewing-card { background: #fff; border-color: #e2e8f0; }
 
 /* (8) أيقونات الهيدر */
-@media (min-width: 901px) { .nav-link, .nav-cta { display: inline-flex; align-items: center; gap: 6px; } }
+@media (min-width: 861px) { .nav-link, .nav-cta { display: inline-flex; align-items: center; gap: 6px; } }
 .main-nav .nav-link, .main-nav .nav-cta { display: flex; align-items: center; justify-content: center; gap: 6px; }
 
 /* (9) طلبات التواصل كبطاقات */
@@ -557,7 +565,7 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 @media (max-width: 640px) { .fab-create { display: grid; place-items: center; position: fixed; bottom: 76px; inset-inline-end: 16px; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; font-size: 30px; line-height: 1; text-decoration: none; z-index: 60; box-shadow: 0 8px 20px rgba(0, 0, 0, .45); } }
 /* (35) شريط بحث مصغر في الهيدر */
 .header-search { display: none; }
-@media (min-width: 901px) { .header-search { display: block; } .header-search input { width: 150px; padding: 8px 10px; } }
+@media (min-width: 861px) { .header-search { display: block; } .header-search input { width: 150px; padding: 8px 10px; } }
 /* (36-44) بطاقات الأدمن */
 .admin-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 20px; }
 .admin-card { border: 1px solid #334155; border-inline-start: 4px solid #64748b; border-radius: 12px; padding: 16px; background: #1e293b; }
@@ -906,12 +914,15 @@ main h1 { font-weight: 800; }
 .best-value { background: rgba(34, 197, 94, .15) !important; font-weight: 800; }
 .sticky-whatsapp { flex: 1; font-size: 17px; padding: 12px; }
 .header-search-btn { display: none; }
-@media (max-width: 900px) {
+/* Batch 42 — توحيد نقاط الهيدر على 860px (نقطة الدرج): قاعدة الـ 900px من
+   Batch 29 كانت بتظهر عناوين الأقسام بعرض كامل + الأدوات في سطر مستقل في
+   نافذة 861–900px، والهيدر يتضخم هناك بلا سبب. */
+@media (max-width: 860px) {
     .header-search-btn { display: inline-flex; }
 }
 .header-search-mobile { display: flex; gap: 8px; padding: 10px 16px; }
 .header-search-mobile[hidden] { display: none; }
-@media (min-width: 901px) {
+@media (min-width: 861px) {
     .header-search-mobile { display: none; }
 }
 .user-menu-name { display: block; padding: 10px 14px; font-weight: 700; border-bottom: 1px solid #334155; }
@@ -935,7 +946,7 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
 @media (min-width: 900px) { .footer-grid { grid-template-columns: 1.2fr 1fr 1fr; } }
 /* (2) أقسام قائمة الموبايل */
 .nav-section { display: none; }
-@media (max-width: 900px) {
+@media (max-width: 860px) {
     .nav-section { display: block; width: 100%; font-weight: 800; color: #94a3b8; padding: 12px 12px 4px; font-size: 14px; }
     /* (1) الهيدر في الموبايل بسطرين */
     .header-actions { order: 3; flex: 1 1 100%; overflow-x: auto; }
