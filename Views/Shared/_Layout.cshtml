@@ -195,7 +195,7 @@
     </div>
     }
     <a class="fab-create" asp-controller="Listings" asp-action="Create" title="@L.T("CreateListing")">＋</a>
-    <a class="fab-call" href="tel:@ContactOptions.Value.Phone" aria-label="اتصال">📞</a>
+    @* Batch 35 (3) — زر المشاركة العائم اتشال؛ وزرار الاتصال العائم اتشال في Batch 39. *@
     @* مكتبة SignalR من CDN (مطابقة لإصدار .NET 8). لو تعذّر تحميلها،
        يعود site.js تلقائيًا للتحديث الدوري كل 30 ثانية. *@
     <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>

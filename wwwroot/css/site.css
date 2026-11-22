@@ -1047,11 +1047,6 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
     #registerStep1[hidden], #registerStep2[hidden] { display: block; }
     #registerNextBtn, #registerPrevBtn { display: none; }
 }
-/* (49) زر اتصال عائم في الموبايل على كل الصفحات */
-.fab-call { display: none; }
-@media (max-width: 640px) {
-    .fab-call { display: grid; place-items: center; position: fixed; bottom: 76px; inset-inline-start: 16px; width: 56px; height: 56px; border-radius: 50%; background: #22c55e; color: #fff; font-size: 24px; z-index: 60; box-shadow: 0 4px 16px rgba(0,0,0,.35); text-decoration: none; }
-}
 /* (50) شريط تقدم القراءة أعلى صفحة التفاصيل */
 .reading-progress { position: fixed; top: 0; inset-inline: 0; height: 4px; z-index: 300; background: transparent; }
 #readingProgressBar { height: 100%; width: 0; background: #6366f1; }
@@ -1115,7 +1110,6 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     .compare-bar { bottom: calc(72px + env(safe-area-inset-bottom)); }
     .toast { bottom: calc(72px + env(safe-area-inset-bottom)); }
     .back-to-top { bottom: calc(72px + env(safe-area-inset-bottom)); }
-    .fab-call { bottom: calc(72px + env(safe-area-inset-bottom)); }
     /* (2) شريط النتائج ثابت تحت الهيدر أثناء التمرير */
     .results-bar { position: sticky; top: 96px; z-index: 40; }
     /* (10) مقبض سلايدر أكبر للمس */
@@ -1141,7 +1135,6 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     [data-theme="light"] .sticky-contact .sticky-price { color: #4338ca; }
     body.page-details .main-content { padding-bottom: calc(172px + env(safe-area-inset-bottom)); }
     body.page-details .back-to-top { bottom: calc(166px + env(safe-area-inset-bottom)); }
-    body.page-details .fab-call { display: none; }
     /* (11) أقسام الفوتر أكورديون — <details> أصلي يشتغل من غير JS */
     .footer-col .footer-heading { cursor: pointer; list-style: none; }
     .footer-col .footer-heading::-webkit-details-marker { display: none; }
