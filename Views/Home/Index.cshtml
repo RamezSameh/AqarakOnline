@@ -123,7 +123,7 @@
             <h2>@L.T("MostViewed")</h2>
             <a class="btn btn-ghost" asp-controller="Listings" asp-action="Index" asp-route-sort="viewsDesc">@L.T("SeeAll")</a>
         </div>
-        <div class="cards-grid">
+        <div class="cards-slider">
             @{ var mostViewedRank = 1; }
             @foreach (var listing in (List<Listing>)ViewBag.MostViewed)
             {
