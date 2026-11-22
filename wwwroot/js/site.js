@@ -97,7 +97,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // بتفويض الأحداث حتى تعمل بعد استبدال HTML الإدارة لحظيًا.
     function setAdminOpen(open) {
         var side = document.getElementById("adminSide");
-        var btn = document.getElementById("adminSideBtn");
         if (!side) {
             return;
         }
@@ -106,16 +105,17 @@ document.addEventListener("DOMContentLoaded", function () {
         if (open) {
             setNavOpen(false);
         }
-        if (btn) {
-            btn.setAttribute("aria-expanded", open ? "true" : "false");
-        }
+        // Batch 45 — حدّث كل أزرار فتح الإدارة (زرار الدرج + زرار الهيدر في الموبايل).
+        document.querySelectorAll(".admin-side-toggle").forEach(function (b) {
+            b.setAttribute("aria-expanded", open ? "true" : "false");
+        });
     }
     document.addEventListener("click", function (event) {
         var side = document.getElementById("adminSide");
         if (!side) {
             return;
         }
-        if (event.target.closest("#adminSideBtn")) {
+        if (event.target.closest(".admin-side-toggle")) {
             setBellOpen(false);
             setAdminOpen(!side.classList.contains("open"));
             return;

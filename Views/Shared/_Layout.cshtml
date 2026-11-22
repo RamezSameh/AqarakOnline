@@ -81,6 +81,14 @@
                 @await Component.InvokeAsync("NotificationBell")
                 @if (User.Identity?.IsAuthenticated == true)
                 {
+                    @* Batch 45 — زرار الإدارة في الهيدر على الموبايل بس: زرار
+                       الإدارة في الدرج تحت آخر القايمة (بعد ~800px من الروابط)
+                       فمش باين على شاشات الهواتف من غير تمرير. ده بيفتح لوحة
+                       الإدارة على طول، وظاهر للأدمن بس. *@
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <button type="button" class="btn btn-ghost admin-header-btn admin-side-toggle" id="adminSideBtnMobile" aria-label="الإدارة" title="الإدارة">🛡️</button>
+                    }
                     @* قائمة الحساب المنسدلة — مكان رابط البروفايل القديم. *@
                     <div class="user-menu">
                         <button type="button" class="nav-link user-menu-btn" id="userMenuBtn">👤 <span class="user-menu-label">@L.T("MyAccount")</span> ▾</button>

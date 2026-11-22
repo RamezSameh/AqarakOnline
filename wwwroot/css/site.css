@@ -227,6 +227,10 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 .admin-nav-btn { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border: none; border-radius: 8px; background: transparent; color: #cbd5e1; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .admin-nav-btn:hover { color: #fff; background: #1e293b; }
 .admin-nav-btn.active { color: #fff; background: #6366f1; }
+/* Batch 45 — زرار الإدارة في الهيدر: مخفي على الديسكتوب (الزرار موجود
+   أصلًا في صف روابط الهيدر)، وظاهر على الموبايل بس (≤860px) للأدمن. */
+.admin-header-btn { display: none; }
+@media (max-width: 860px) { .admin-header-btn { display: inline-flex; } }
 /* اللوحة الجانبية للإدارة: تنزلق من اليمين فوق المحتوى. */
 .admin-side { position: fixed; inset: 0; z-index: 200; visibility: hidden; transition: visibility 0s linear 0.3s; }
 .admin-side.open { visibility: visible; transition-delay: 0s; }

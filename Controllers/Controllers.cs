@@ -590,7 +590,10 @@ public class ListingsController : Controller
                 .Select(f => f.ListingId)
                 .ToListAsync()).ToHashSet();
         }
-        return View(listings);
+        // Batch 45 — اسم الفيو صريح: الـ Area بيستدعي Index مباشرة، ولو
+        // الفيو من غير اسم الـ ViewResult بياخد اسم الأكشن الحالي (Area)
+        // فكان بيدوّر على Area.cshtml مش موجودة ويرمي 500 بدل صفحة المنطقة.
+        return View("Index", listings);
     }
 
     /// <summary>اقتراحات أثناء الكتابة في البحث: مناطق مطابقة + عناوين إعلانات مطابقة.</summary>

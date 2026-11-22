@@ -75,7 +75,7 @@
 else
 {
 @* زرار واحد للإدارة يفتح لوحة جانبية بكل خصائص الأدمن. *@
-<button type="button" class="admin-nav-btn @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" id="adminSideBtn" aria-haspopup="true" aria-expanded="false">
+<button type="button" class="admin-nav-btn admin-side-toggle @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")" id="adminSideBtn" aria-haspopup="true" aria-expanded="false">
     الإدارة
     @if (total > 0)
     {
