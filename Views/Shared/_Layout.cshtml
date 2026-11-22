@@ -169,11 +169,14 @@
         </aside>
     }
     @* شريط المقارنة: يظهر لما تختار إعلانات للمقارنة من الكروت أو التفاصيل. *@
+    @if (currentController != "Account")
+    {
     <div id="compareBar" class="compare-bar" hidden>
         <span id="compareCount"></span>
         <a id="compareLink" class="btn btn-primary" href="#">@L.T("CompareNow")</a>
         <button type="button" id="compareClear" class="btn btn-ghost">@L.T("ClearCompare")</button>
     </div>
+    }
     <a class="fab-create" asp-controller="Listings" asp-action="Create" title="@L.T("CreateListing")">＋</a>
     <a class="fab-call" href="tel:@ContactOptions.Value.Phone" aria-label="اتصال">📞</a>
     @* مكتبة SignalR من CDN (مطابقة لإصدار .NET 8). لو تعذّر تحميلها،

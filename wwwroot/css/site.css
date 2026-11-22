@@ -1083,3 +1083,7 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
     .panel-account { border-top: 1px solid #334155; padding: 12px 16px 0; }
 }
 [data-theme="light"] .main-nav { background: #f8fafc; }
+
+/* Batch 31 — إصلاح تنسيق الفورم: الليبلز والحقول اللي جوه حاويات (خطوات التسجيل، أقسام تعديل المستخدم، صف السعر/المساحة) كانت بتتدفق inline جنب بعض، فكل حقل يطلع جنب الليبل الغلط. الليبل يبقى block فوق حقله، والحقل بملء العرض. الاستثناءات: مفاتيح التبديل وبطاقات اختيار النوع واختيارات المميزات ليهم تنسيقهم الخاص. */
+.form label:not(.toggle-label):not(.type-option):not(.features-picker *) { display: block; }
+.form input:not([type="checkbox"]):not([type="radio"]), .form select, .form textarea { width: 100%; }
