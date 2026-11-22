@@ -83,6 +83,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<CollectionListing> CollectionListings => Set<CollectionListing>();
     public DbSet<ViewingSlot> ViewingSlots => Set<ViewingSlot>();
     public DbSet<WhatsAppOutbox> WhatsAppOutbox => Set<WhatsAppOutbox>();
+    public DbSet<BlockedIp> BlockedIps => Set<BlockedIp>();
+    public DbSet<TrustedIpAddress> TrustedIpAddresses => Set<TrustedIpAddress>();
 }
 
 public static class SeedData

@@ -18,6 +18,7 @@
     <label>@L.T("YourMessage")</label>
     <textarea asp-for="Message" rows="5"></textarea>
     <span asp-validation-for="Message" class="field-error"></span>
+    <partial name="_Turnstile" />
     <div class="actions">
         <button type="submit" class="btn btn-primary">@L.T("SendMessage")</button>
     </div>

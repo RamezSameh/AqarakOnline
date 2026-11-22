@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -19,12 +21,31 @@ public class HomeController : Controller
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _configuration;
     private readonly Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> _hub;
+    private readonly TurnstileService _turnstile;
 
-    public HomeController(ApplicationDbContext context, IConfiguration configuration, Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub)
+    public HomeController(ApplicationDbContext context, IConfiguration configuration, Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub, TurnstileService turnstile)
     {
         _context = context;
         _configuration = configuration;
         _hub = hub;
+        _turnstile = turnstile;
+    }
+
+    /// <summary>تحقق Turnstile (إن كان مفعّلًا) — يرجع false مع خطأ في النموذج عند الفشل.</summary>
+    private async Task<bool> CheckTurnstileAsync()
+    {
+        if (!await _turnstile.IsEnabledAsync())
+        {
+            return true;
+        }
+        var token = Request.Form["cf-turnstile-response"].ToString();
+        if (string.IsNullOrWhiteSpace(token)
+            || !await _turnstile.VerifyAsync(token, HttpContext.Connection.RemoteIpAddress?.ToString()))
+        {
+            ModelState.AddModelError(string.Empty, "تعذّر التحقق من أنك لست روبوتًا — حدّث الصفحة وحاول مجددًا.");
+            return false;
+        }
+        return true;
     }
 
     public async Task<IActionResult> Index()
@@ -89,6 +110,7 @@ public class HomeController : Controller
     }
 
     /// <summary>مؤشر الأسعار العلني (Batch 41 — تميّز 3): متوسط سعر المتر لكل منطقة واتجاهه.</summary>
+    [OutputCache(PolicyName = "Static300")]
     public async Task<IActionResult> PriceIndex()
     {
         var rows = await _context.Listings
@@ -181,9 +203,14 @@ public class HomeController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("contact")]
     public async Task<IActionResult> Contact(ContactMessage model)
     {
         if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+        if (!await CheckTurnstileAsync())
         {
             return View(model);
         }
@@ -214,42 +241,49 @@ public class HomeController : Controller
     }
 
     [HttpGet]
+    [OutputCache(PolicyName = "Static300")]
     public IActionResult SellGuide()
     {
         return View();
     }
 
     [HttpGet]
+    [OutputCache(PolicyName = "Static300")]
     public IActionResult Terms()
     {
         return View();
     }
 
     [HttpGet]
+    [OutputCache(PolicyName = "Static300")]
     public IActionResult Privacy()
     {
         return View();
     }
 
     [HttpGet]
+    [OutputCache(PolicyName = "Static300")]
     public IActionResult Tips()
     {
         return View();
     }
 
     [HttpGet]
+    [OutputCache(PolicyName = "Static300")]
     public IActionResult PriceGuide()
     {
         return View();
     }
 
     [HttpGet]
+    [OutputCache(PolicyName = "Static300")]
     public IActionResult Calculator()
     {
         return View();
     }
 
     [HttpGet]
+    [OutputCache(PolicyName = "Static300")]
     public IActionResult BuyingMistakes()
     {
         return View();
@@ -292,6 +326,7 @@ public class ListingsController : Controller
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
     [HttpGet]
+    [EnableRateLimiting("search")]
     public async Task<IActionResult> Index(
         string? search, ListingType? listingType, PropertyType? propertyType,
         decimal? minPrice, decimal? maxPrice, bool onlyAvailable = false,
@@ -560,6 +595,7 @@ public class ListingsController : Controller
 
     /// <summary>اقتراحات أثناء الكتابة في البحث: مناطق مطابقة + عناوين إعلانات مطابقة.</summary>
     [HttpGet]
+    [EnableRateLimiting("search")]
     public async Task<IActionResult> Suggest(string? term)
     {
         if (string.IsNullOrWhiteSpace(term) || term.Trim().Length < 2)
@@ -718,6 +754,7 @@ public class ListingsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(100_000_000)]
+    [EnableRateLimiting("upload")]
     public async Task<IActionResult> Create(Listing listing, string[]? selectedFeatures = null, string? customFeatures = null)
     {
         listing.Features = ListingFeatureComposer.ComposeFeatures(selectedFeatures, customFeatures);
@@ -794,6 +831,7 @@ public class ListingsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(100_000_000)]
+    [EnableRateLimiting("upload")]
     public async Task<IActionResult> Edit(int id, Listing model, string? photoOrder, string[]? selectedFeatures = null, string? customFeatures = null)
     {
         var listing = await _context.Listings.Include(l => l.Attachments)
@@ -1478,6 +1516,7 @@ public class ContactController : Controller
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("contact")]
     public async Task<IActionResult> Contact(ContactRequest request, string? preferredTime = null)
     {
         var listing = await _context.Listings.FindAsync(request.ListingId);
@@ -3723,6 +3762,103 @@ public class AdminController : Controller
             setting.Value = value;
         }
         await _context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// إعدادات الأمان (Batch 43): مفاتيح Cloudflare Turnstile (كابتشا التسجيل
+    /// والدخول والتواصل). بدونها يبقى التحقق متوقفًا والموقع شغالًا عاديًا.
+    /// </summary>
+    public async Task<IActionResult> Security()
+    {
+        var settings = await _context.SiteSettings
+            .Where(s => s.Key.StartsWith("Turnstile:"))
+            .ToDictionaryAsync(s => s.Key, s => s.Value);
+        ViewBag.SiteKey = settings.TryGetValue("Turnstile:SiteKey", out var siteKey) ? siteKey : string.Empty;
+        ViewBag.SecretKey = settings.TryGetValue("Turnstile:SecretKey", out var secret) ? secret : string.Empty;
+        ViewBag.Enabled = settings.TryGetValue("Turnstile:Enabled", out var enabled) && enabled == "true";
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Security(string siteKey, string secretKey, bool enabled)
+    {
+        await SaveSiteSettingAsync("Turnstile:SiteKey", (siteKey ?? string.Empty).Trim());
+        await SaveSiteSettingAsync("Turnstile:SecretKey", (secretKey ?? string.Empty).Trim());
+        await SaveSiteSettingAsync("Turnstile:Enabled", enabled ? "true" : "false");
+        TempData["Info"] = "تم حفظ إعدادات الأمان.";
+        return RedirectToAction(nameof(Security));
+    }
+
+    /// <summary>عناوين IP المحظورة + الموثوقة (Batch 43).</summary>
+    [HttpGet]
+    public async Task<IActionResult> BlockedIps()
+    {
+        var now = DateTime.UtcNow;
+        var blocked = await _context.BlockedIps.OrderByDescending(b => b.BlockedAt).ToListAsync();
+        ViewBag.Blocked = blocked;
+        ViewBag.Trusted = await _context.TrustedIpAddresses.OrderByDescending(t => t.LastSeenAt).ToListAsync();
+        ViewBag.MyIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+        ViewBag.Now = now;
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddBlockedIp(string ipAddress, string? reason = null)
+    {
+        if (!System.Net.IPAddress.TryParse((ipAddress ?? string.Empty).Trim(), out var parsed))
+        {
+            TempData["Error"] = "عنوان IP غير صحيح.";
+            return RedirectToAction(nameof(BlockedIps));
+        }
+        var ip = parsed.ToString();
+        var now = DateTime.UtcNow;
+        if (await _context.BlockedIps.AnyAsync(b => b.IpAddress == ip
+            && (b.BlockedUntil == null || b.BlockedUntil > now)))
+        {
+            TempData["Info"] = "العنوان محظور بالفعل.";
+            return RedirectToAction(nameof(BlockedIps));
+        }
+        _context.BlockedIps.Add(new BlockedIp
+        {
+            IpAddress = ip,
+            Reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim(),
+            IsAuto = false,
+            BlockedAt = now,
+            BlockedUntil = null
+        });
+        await _context.SaveChangesAsync();
+        IpBlockHelper.InvalidateCache(HttpContext.RequestServices);
+        TempData["Info"] = "تم حظر العنوان.";
+        return RedirectToAction(nameof(BlockedIps));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveBlockedIp(int id)
+    {
+        var blocked = await _context.BlockedIps.FindAsync(id);
+        if (blocked != null)
+        {
+            _context.BlockedIps.Remove(blocked);
+            await _context.SaveChangesAsync();
+            IpBlockHelper.InvalidateCache(HttpContext.RequestServices);
+        }
+        return RedirectToAction(nameof(BlockedIps));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveTrustedIp(int id)
+    {
+        var trusted = await _context.TrustedIpAddresses.FindAsync(id);
+        if (trusted != null)
+        {
+            _context.TrustedIpAddresses.Remove(trusted);
+            await _context.SaveChangesAsync();
+        }
+        return RedirectToAction(nameof(BlockedIps));
     }
 }
 

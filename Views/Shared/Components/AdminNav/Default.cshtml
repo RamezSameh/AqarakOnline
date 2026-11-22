@@ -67,6 +67,8 @@
         <a class="admin-feature @(currentAction == "Collections" || currentAction == "ManageCollection" ? "active" : "")" asp-controller="Admin" asp-action="Collections">🗂️ المجموعات المختارة</a>
         <a class="admin-feature @(currentAction == "WhatsAppOutbox" ? "active" : "")" asp-controller="Admin" asp-action="WhatsAppOutbox">💬 واتساب</a>
         <a class="admin-feature @(currentAction == "Facebook" ? "active" : "")" asp-controller="Admin" asp-action="Facebook">📘 فيسبوك</a>
+        <a class="admin-feature @(currentAction == "Security" ? "active" : "")" asp-controller="Admin" asp-action="Security">🛡️ الأمان</a>
+        <a class="admin-feature @(currentAction == "BlockedIps" ? "active" : "")" asp-controller="Admin" asp-action="BlockedIps">🚫 حظر IP</a>
     </aside>
 </div>
 }

@@ -1,8 +1,15 @@
 using System.Globalization;
+using System.Net;
+using System.Threading.RateLimiting;
 using AqarakOnline.Data;
 using AqarakOnline.Models;
 using AqarakOnline.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,24 +52,113 @@ builder.Services.Configure<SmsSettings>(builder.Configuration.GetSection("Sms"))
 builder.Services.AddScoped<LanguageService>();
 builder.Services.AddScoped<TrustedAdvertiserService>();
 builder.Services.AddHttpClient<FacebookService>();
+builder.Services.AddHttpClient<TurnstileService>();
+builder.Services.AddSingleton<LoginAbuseTracker>();
+builder.Services.AddMemoryCache();
+
+// Batch 43 — ضغط الردود (HTML/CSS/JS) لتخفيف الحمل؛ EnableForHttps لازم
+// لأن الموقع HTTPS وراء Cloudflare (الافتراضي لا يضغط على HTTPS).
+builder.Services.AddResponseCompression(options => { options.EnableForHttps = true; });
+
+// Batch 43 — كاش للصفحات العامة الثابتة (5 دقائق) + سياسة تمنع تخزين
+// أي رد لمستخدم مسجّل دخول حتى لا يتسرب محتواه لمستخدم آخر.
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("Static300", policy =>
+    {
+        policy.AddPolicy<AnonymousOnlyCachePolicy>();
+        policy.Expire(TimeSpan.FromMinutes(5));
+    });
+});
+
+// Batch 43 — تحديد معدل الطلبات لكل IP (بعد ForwardedHeaders حتى يكون
+// العنوان هو عنوان الزائر الحقيقي وراء Cloudflare Tunnel).
+// auth: دخول/تسجيل 10/دقيقة • contact: تواصل 5/10 دقائق •
+// search: بحث واقتراحات 60/دقيقة • upload: إنشاء/تعديل إعلان 10/10 دقائق.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "text/plain; charset=utf-8";
+        await context.HttpContext.Response.WriteAsync("طلبات كثيرة جدًا من عنوانك — حاول بعد دقيقة.", token);
+    };
+    RateLimitPartition<string> PerIp(HttpContext ctx, int limit, TimeSpan window) =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = limit,
+                Window = window,
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+    options.AddPolicy("auth", ctx => PerIp(ctx, 10, TimeSpan.FromMinutes(1)));
+    options.AddPolicy("contact", ctx => PerIp(ctx, 5, TimeSpan.FromMinutes(10)));
+    options.AddPolicy("search", ctx => PerIp(ctx, 60, TimeSpan.FromMinutes(1)));
+    options.AddPolicy("upload", ctx => PerIp(ctx, 10, TimeSpan.FromMinutes(10)));
+});
+
 builder.Services.AddHostedService<ViewingReminderService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 
 var app = builder.Build();
 
+// Batch 43 — IP الحقيقي وراء Cloudflare Tunnel: cloudflared يعمل محليًا،
+// فيرث X-Forwarded-For تلقائيًا (الـ loopback موثوق افتراضيًا). لازم يكون
+// أول وسيط حتى يقرأ الـ rate limiting وحظر الـ IP العنوان الصحيح.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 // رؤوس أمان أساسية على كل رد: منع sniffing لنوع المحتوى، منع التضمين
 // في إطارات (حماية من clickjacking)، وسياسة referrer وصلاحيات محافظة.
-// ملحوظة: لا يوجد CSP صارم هنا عمدًا، لأن الواجهة تستخدم أنماطًا مضمّنة؛
-// إضافة CSP صارم لاحقًا تتطلب فصل الأنماط والسكربتات في ملفات خارجية أولًا.
+// Batch 43 — CSP أساسي: يسمح فقط بمصادر الموقع نفسه + ما يستخدمه فعلًا
+// (خطوط Google، SignalR من jsDelivr، Turnstile) ويمنع أي سكربت/إطار غريب.
+// 'unsafe-inline' باقٍ عمدًا لأن الواجهة تستخدم أنماطًا وسكربتات مضمّنة؛
+// CSP مشدد بلا unsafe-inline يحتاج فصلها في ملفات خارجية أولًا.
 app.Use(async (context, next) =>
 {
     context.Response.Headers["X-Content-Type-Options"] = "nosniff";
     context.Response.Headers["X-Frame-Options"] = "DENY";
     context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
     context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    context.Response.Headers["Content-Security-Policy"] =
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://challenges.cloudflare.com; " +
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+        "font-src 'self' https://fonts.gstatic.com; " +
+        "img-src 'self' data: https:; " +
+        "media-src 'self'; " +
+        "connect-src 'self' https://challenges.cloudflare.com; " +
+        "frame-src https://challenges.cloudflare.com; " +
+        "object-src 'none'; " +
+        "base-uri 'self'; " +
+        "form-action 'self'; " +
+        "frame-ancestors 'none';";
     await next();
 });
+
+// Batch 43 — حظر الـ IP: أي عنوان محظور (يدوي أو تلقائي) يأخذ 403 قبل أي شيء.
+// الـ loopback مستثنى عمدًا (تجربة محلية)؛ الفحص رخيص (مجموعة في الذاكرة 60 ثانية).
+app.Use(async (context, next) =>
+{
+    var remote = context.Connection.RemoteIpAddress;
+    if (remote != null && !IPAddress.IsLoopback(remote)
+        && await IpBlockHelper.IsBlockedAsync(context.RequestServices, remote.ToString()))
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        context.Response.ContentType = "text/plain; charset=utf-8";
+        await context.Response.WriteAsync("تم حظر هذا العنوان مؤقتًا لكثرة محاولات الدخول الفاشلة. تواصل مع إدارة الموقع.");
+        return;
+    }
+    await next();
+});
+
+app.UseResponseCompression();
 
 // اللغة: عربي افتراضيًا، وتُحفظ في كوكي aqarak-lang.
 app.Use(async (context, next) =>
@@ -96,6 +192,7 @@ if (app.Configuration.GetValue<bool>("UseHttpsRedirection", true))
 app.UseStaticFiles();
 app.UseStatusCodePagesWithReExecute("/Home/Error404");
 app.UseRouting();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -122,6 +219,10 @@ app.Use(async (context, next) =>
     }
     await next();
 });
+
+// Batch 43 — كاش الصفحات العامة: بعد وسيط الصيانة عمدًا حتى لا تُقدَّم
+// صفحة مخزَّنة أثناء الصيانة، وقبل الـ endpoints.
+app.UseOutputCache();
 
 app.MapControllerRoute(
     name: "default",

@@ -1,0 +1,9 @@
+@inject AqarakOnline.Services.TurnstileService Turnstile
+@{
+    var turnstile = await Turnstile.GetConfigAsync();
+}
+@if (turnstile.Enabled && !string.IsNullOrWhiteSpace(turnstile.SiteKey))
+{
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <div class="cf-turnstile" data-sitekey="@turnstile.SiteKey" data-theme="auto"></div>
+}

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 using System.Security.Claims;
 using AqarakOnline.Data;
 using AqarakOnline.Models;
@@ -7,6 +8,7 @@ using AqarakOnline.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AqarakOnline.Controllers;
@@ -69,19 +71,122 @@ public class AccountController : Controller
     private readonly IConfiguration _configuration;
     private readonly Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> _hub;
     private readonly ApplicationDbContext _context;
+    private readonly TurnstileService _turnstile;
+    private readonly LoginAbuseTracker _abuse;
 
     public AccountController(
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
         IConfiguration configuration,
         Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub,
-        ApplicationDbContext context)
+        ApplicationDbContext context,
+        TurnstileService turnstile,
+        LoginAbuseTracker abuse)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _configuration = configuration;
         _hub = hub;
         _context = context;
+        _turnstile = turnstile;
+        _abuse = abuse;
+    }
+
+    /// <summary>تحقق Turnstile (إن كان مفعّلًا) — يرجع false مع خطأ في النموذج عند الفشل.</summary>
+    private async Task<bool> CheckTurnstileAsync()
+    {
+        if (!await _turnstile.IsEnabledAsync())
+        {
+            return true;
+        }
+        var token = Request.Form["cf-turnstile-response"].ToString();
+        if (string.IsNullOrWhiteSpace(token)
+            || !await _turnstile.VerifyAsync(token, HttpContext.Connection.RemoteIpAddress?.ToString()))
+        {
+            ModelState.AddModelError(string.Empty, "تعذّر التحقق من أنك لست روبوتًا — حدّث الصفحة وحاول مجددًا.");
+            return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Batch 43 — بعد كل محاولة دخول فاشلة: يعدّها للـ IP؛ عند 10 محاولات
+    /// في 15 دقيقة يحظر الـ IP ساعة تلقائيًا وينبّه الأدمن (ما لم يكن العنوان
+    /// موثوقًا — دخول أدمن ناجح سابق — أو محظورًا بالفعل). الـ loopback لا يُحظر.
+    /// </summary>
+    private async Task NoteFailedLoginAsync()
+    {
+        var remote = HttpContext.Connection.RemoteIpAddress;
+        if (remote == null || IPAddress.IsLoopback(remote))
+        {
+            return;
+        }
+        var ip = remote.ToString();
+        var count = _abuse.RecordFailure(ip);
+        if (count < LoginAbuseTracker.MaxFailures)
+        {
+            return;
+        }
+        var now = DateTime.UtcNow;
+        if (await _context.BlockedIps.AnyAsync(b => b.IpAddress == ip
+            && (b.BlockedUntil == null || b.BlockedUntil > now)))
+        {
+            return;
+        }
+        if (await _context.TrustedIpAddresses.AnyAsync(t => t.IpAddress == ip))
+        {
+            return;
+        }
+        _context.BlockedIps.Add(new BlockedIp
+        {
+            IpAddress = ip,
+            Reason = $"محاولات دخول فاشلة متكررة ({count} خلال 15 دقيقة)",
+            IsAuto = true,
+            BlockedAt = now,
+            BlockedUntil = now.AddHours(1)
+        });
+        await _context.SaveChangesAsync();
+        IpBlockHelper.InvalidateCache(HttpContext.RequestServices);
+        var adminEmail = _configuration["AdminEmail"];
+        var admin = !string.IsNullOrWhiteSpace(adminEmail)
+            ? await _context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail)
+            : null;
+        if (admin != null)
+        {
+            _context.Notifications.Add(new Notification
+            {
+                Title = "⚠️ حظر IP تلقائي",
+                Message = $"تم حظر {ip} لمدة ساعة بعد {count} محاولة دخول فاشلة خلال 15 دقيقة.",
+                TargetUserId = admin.Id,
+                Url = "/Admin/BlockedIps",
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            await _context.SaveChangesAsync();
+            await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
+            await _hub.Clients.All.SendAsync("refreshBell");
+        }
+    }
+
+    /// <summary>دخول أدمن ناجح → عنوانه موثوق، فلا يطاله الحظر التلقائي أبدًا.</summary>
+    private async Task TrustIpAsync()
+    {
+        var remote = HttpContext.Connection.RemoteIpAddress;
+        if (remote == null || IPAddress.IsLoopback(remote))
+        {
+            return;
+        }
+        var ip = remote.ToString();
+        var existing = await _context.TrustedIpAddresses.FirstOrDefaultAsync(t => t.IpAddress == ip);
+        if (existing == null)
+        {
+            _context.TrustedIpAddresses.Add(new TrustedIpAddress { IpAddress = ip, LastSeenAt = DateTime.UtcNow });
+        }
+        else
+        {
+            existing.LastSeenAt = DateTime.UtcNow;
+        }
+        await _context.SaveChangesAsync();
     }
 
     [HttpGet]
@@ -92,9 +197,14 @@ public class AccountController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Login(LoginViewModel model)
     {
         if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+        if (!await CheckTurnstileAsync())
         {
             return View(model);
         }
@@ -104,6 +214,7 @@ public class AccountController : Controller
         if (user == null)
         {
             // رسالة عامة عمدًا: لا نكشف إن كان الرقم مسجَّلًا أم لا.
+            await NoteFailedLoginAsync();
             ModelState.AddModelError(string.Empty, "رقم الموبايل أو كلمة المرور غير صحيحة.");
             return View(model);
         }
@@ -125,6 +236,10 @@ public class AccountController : Controller
             phone, model.Password, model.RememberMe, lockoutOnFailure: true);
         if (result.Succeeded)
         {
+            if (await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                await TrustIpAsync();
+            }
             if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
             {
                 return Redirect(model.ReturnUrl);
@@ -133,10 +248,12 @@ public class AccountController : Controller
         }
         if (result.IsLockedOut)
         {
+            await NoteFailedLoginAsync();
             ModelState.AddModelError(string.Empty, "تم قفل الحساب مؤقتًا لكثرة محاولات الدخول الخاطئة. حاول بعد 15 دقيقة.");
             return View(model);
         }
 
+        await NoteFailedLoginAsync();
         ModelState.AddModelError(string.Empty, "رقم الموبايل أو كلمة المرور غير صحيحة.");
         return View(model);
     }
@@ -149,9 +266,14 @@ public class AccountController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
         if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+        if (!await CheckTurnstileAsync())
         {
             return View(model);
         }
@@ -282,6 +404,7 @@ public class AccountController : Controller
     /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("contact")]
     public async Task<IActionResult> RequestReview(string phoneNumber, string? reason = null)
     {
         var phone = PhoneHelper.Normalize(phoneNumber ?? string.Empty);

@@ -834,3 +834,41 @@ public class WhatsAppOutbox
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? SentAt { get; set; }
 }
+
+/// <summary>
+/// عنوان IP محظور: يرفض الوسيط كل طلباته بـ 403. الحظر اليدوي بلا نهاية
+/// (BlockedUntil = null)؛ الحظر التلقائي ينتهي بعد ساعة. العناوين الموثوقة
+/// (دخول أدمن ناجح) لا تُحظر تلقائيًا أبدًا حتى لا يقفل الأدمن على نفسه.
+/// </summary>
+public class BlockedIp
+{
+    public int Id { get; set; }
+
+    [MaxLength(45)]
+    public string IpAddress { get; set; } = string.Empty;
+
+    [MaxLength(200)]
+    public string? Reason { get; set; }
+
+    /// <summary>حظر تلقائي من كاشف التخمين، أم يدوي من الأدمن.</summary>
+    public bool IsAuto { get; set; }
+
+    public DateTime BlockedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>نهاية الحظر؛ null تعني حظرًا دائمًا حتى يرفعه الأدمن.</summary>
+    public DateTime? BlockedUntil { get; set; }
+}
+
+/// <summary>
+/// عنوان IP موثوق: سجّل دخول أدمن ناجح منه. الحظر التلقائي يتخطاه،
+/// حتى لو تكررت محاولات فاشلة من نفس العنوان (الأدمن نفسه يغلط أحيانًا).
+/// </summary>
+public class TrustedIpAddress
+{
+    public int Id { get; set; }
+
+    [MaxLength(45)]
+    public string IpAddress { get; set; } = string.Empty;
+
+    public DateTime LastSeenAt { get; set; } = DateTime.UtcNow;
+}

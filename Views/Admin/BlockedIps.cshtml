@@ -1,0 +1,70 @@
+@{
+    var blocked = (List<BlockedIp>)ViewBag.Blocked;
+    var trusted = (List<TrustedIpAddress>)ViewBag.Trusted;
+    var myIp = (string?)ViewBag.MyIp;
+    var now = (DateTime)ViewBag.Now;
+}
+<h1>🚫 عناوين IP المحظورة</h1>
+<p>أي عنوان هنا يأخذ 403 على كل صفحات الموقع. الحظر التلقائي (بعد 10 محاولات دخول فاشلة في 15 دقيقة) ينتهي بعد ساعة لوحده؛ الحظر اليدوي دائم حتى ترفعه.</p>
+@if (!string.IsNullOrWhiteSpace(myIp))
+{
+    <p><small>عنوانك الحالي: <strong dir="ltr">@myIp</strong> — لا تحظره، وإلا لن تصل للوحة الإدارة.</small></p>
+}
+<form asp-action="AddBlockedIp" method="post" class="form">
+    <label>عنوان IP</label>
+    <input type="text" name="ipAddress" dir="ltr" placeholder="مثال: 196.123.45.67" required />
+    <label>السبب</label>
+    <input type="text" name="reason" maxlength="200" />
+    <div class="actions">
+        <button type="submit" class="btn btn-primary">حظر العنوان</button>
+    </div>
+</form>
+@if (!blocked.Any())
+{
+    <p>لا توجد عناوين محظورة.</p>
+}
+else
+{
+    <div class="admin-cards">
+        @foreach (var b in blocked)
+        {
+            var active = b.BlockedUntil == null || b.BlockedUntil > now;
+            <article class="admin-card blocked-card">
+                <h3 dir="ltr">@b.IpAddress</h3>
+                <p>@(b.Reason ?? "-")</p>
+                <p><small>@(b.IsAuto ? "تلقائي" : "يدوي") • @b.BlockedAt.ToString("yyyy-MM-dd HH:mm") • @(active ? (b.BlockedUntil == null ? "نشط (دائم)" : "نشط حتى " + b.BlockedUntil.Value.ToString("yyyy-MM-dd HH:mm")) : "منتهي")</small></p>
+                <div class="actions">
+                    <form asp-action="RemoveBlockedIp" method="post" class="inline-form">
+                        <input type="hidden" name="id" value="@b.Id" />
+                        <button type="submit" class="btn btn-ghost">رفع الحظر</button>
+                    </form>
+                </div>
+            </article>
+        }
+    </div>
+}
+<h2>عناوين موثوقة</h2>
+<p><small>عناوين سجّلت دخول أدمن ناجحًا — الحظر التلقائي لا يطالها أبدًا.</small></p>
+@if (!trusted.Any())
+{
+    <p>لا توجد عناوين موثوقة بعد.</p>
+}
+else
+{
+    <div class="admin-cards">
+        @foreach (var t in trusted)
+        {
+            <article class="admin-card">
+                <h3 dir="ltr">@t.IpAddress</h3>
+                <p><small>آخر دخول أدمن: @t.LastSeenAt.ToString("yyyy-MM-dd HH:mm")</small></p>
+                <div class="actions">
+                    <form asp-action="RemoveTrustedIp" method="post" class="inline-form">
+                        <input type="hidden" name="id" value="@t.Id" />
+                        <button type="submit" class="btn btn-ghost">إزالة الثقة</button>
+                    </form>
+                </div>
+            </article>
+        }
+    </div>
+}
+<p><a class="btn btn-ghost" asp-action="Security">🛡️ إعدادات الأمان</a></p>

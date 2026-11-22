@@ -15,6 +15,7 @@
     </div>
     <span asp-validation-for="Password" class="field-error"></span>
     <label><input asp-for="RememberMe" type="checkbox" /> @L.T("RememberMe")</label>
+    <partial name="_Turnstile" />
     <div class="actions">
         <button type="submit" class="btn btn-primary">@L.T("Login")</button>
         <a class="btn btn-ghost" asp-action="Register">@L.T("NoAccount")</a>

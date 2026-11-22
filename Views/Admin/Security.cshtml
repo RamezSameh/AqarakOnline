@@ -1,0 +1,21 @@
+@{
+    var siteKey = (string)ViewBag.SiteKey;
+    var secretKey = (string)ViewBag.SecretKey;
+    var enabled = (bool)ViewBag.Enabled;
+}
+<h1>🛡️ الأمان — Turnstile</h1>
+<p>كابتشا Cloudflare Turnstile على نماذج التسجيل والدخول والتواصل: تمنع البوتات من إنشاء حسابات أو إغراق التواصل، من غير ألغاز مزعجة للزائر.</p>
+<p><small>منين تجيب المفاتيح؟ من Cloudflare (مجاني، من غير بطاقة): افتح <strong>dash.cloudflare.com ← Turnstile ← Add Site</strong>، اختر «Managed»، وحط دومين الموقع، وخد الـ <strong>Site Key</strong> والـ <strong>Secret Key</strong> والصقهم هنا. لحد ما تحطهم، التحقق يفضل متوقف والموقع شغال عادي.</small></p>
+<form asp-action="Security" method="post" class="form" style="max-width:560px">
+    <label>المفتاح العام (Site Key)</label>
+    <input type="text" name="siteKey" value="@siteKey" maxlength="100" placeholder="مثال: 0x4AAAAAAA..." />
+    <label>المفتاح السري (Secret Key)</label>
+    <input type="password" name="secretKey" value="@secretKey" maxlength="200" autocomplete="off" />
+    <label>
+        <input type="checkbox" name="enabled" value="true" checked="@enabled" /> تفعيل التحقق في التسجيل والدخول والتواصل
+    </label>
+    <button type="submit" class="btn btn-primary">حفظ الإعدادات</button>
+</form>
+<p><small>الحالة الحالية: @(enabled ? "التحقق مفعّل" : "التحقق متوقف")@(string.IsNullOrWhiteSpace(siteKey) || string.IsNullOrWhiteSpace(secretKey) ? " — المفاتيح ناقصة، لن يظهر الودجت." : "")</small></p>
+<p><small>حمايات تانية شغالة من غير إعدادات: تحديد معدل الطلبات لكل IP (دخول/تسجيل 10 في الدقيقة، تواصل 5 في 10 دقائق، بحث 60 في الدقيقة، رفع 10 في 10 دقائق)، وحظر IP تلقائي بعد 10 محاولات دخول فاشلة في 15 دقيقة، ورأس CSP، وضغط الردود.</small></p>
+<p><a class="btn btn-ghost" asp-action="BlockedIps">🚫 عناوين IP المحظورة</a></p>

@@ -41,6 +41,7 @@
         @L.T("AgreeToTerms") <a asp-controller="Home" asp-action="Terms">@L.T("TermsOfUse")</a>
     </label>
     <span asp-validation-for="AcceptTerms" class="field-error"></span>
+    <partial name="_Turnstile" />
     <div class="actions">
         <button type="button" class="btn btn-ghost" id="registerPrevBtn">→ السابق</button>
         <button type="submit" class="btn btn-primary">@L.T("Register")</button>
