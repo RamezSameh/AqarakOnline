@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         fetch("/Notifications/Bell")
             .then(function (response) {
-                if (!response.ok) {
+                if (!response.ok || response.url.indexOf("/Notifications/Bell") === -1) {
                     return null;
                 }
                 return response.text();
@@ -160,7 +160,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (span) {
             fetch("/Admin/NavBadges")
                 .then(function (response) {
-                    if (!response.ok) {
+                    if (!response.ok || response.url.indexOf("/Admin/NavBadges") === -1) {
                         return null;
                     }
                     return response.text();
@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (panelSpan) {
             fetch("/Admin/NavBadges?panelOnly=true")
                 .then(function (response) {
-                    if (!response.ok) {
+                    if (!response.ok || response.url.indexOf("/Admin/NavBadges") === -1) {
                         return null;
                     }
                     return response.text();

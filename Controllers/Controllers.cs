@@ -3279,9 +3279,18 @@ public class AdminController : Controller
     }
 
     // نسخة حديثة من روابط الأدمن بالأرقام، يعيد المتصفح جلبها عند إشارة التحديث.
-    [Authorize(Roles = "Admin")]
+    // مهم: من غير [Authorize] عمدًا — الـ redirect لصفحة الدخول كان بيرجّع
+    // صفحة كاملة للـ fetch فيتحقن نسخة تانية من الموقع كله جوه #adminSidePanel.
+    // لغير الأدمن نرجّع 401 فيتجاهلها الجافاسكريبت.
     [HttpGet]
-    public IActionResult NavBadges(bool panelOnly = false) => ViewComponent("AdminNav", new { panelOnly });
+    public IActionResult NavBadges(bool panelOnly = false)
+    {
+        if (!User.IsInRole("Admin"))
+        {
+            return Unauthorized();
+        }
+        return ViewComponent("AdminNav", new { panelOnly });
+    }
 
     [HttpGet]
     public IActionResult CreateNotification()

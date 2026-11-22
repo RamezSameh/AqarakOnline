@@ -103,7 +103,10 @@
     <div id="navBackdrop" class="nav-backdrop" hidden></div>
     @* لوحة الإدارة الجانبية: خارج الـ header وقائمة الموبايل عمدًا حتى
        لا يخفيها قفل القائمة (display:none يخفي حتى العناصر fixed). *@
+    @if (User.IsInRole("Admin"))
+    {
     <span id="adminSidePanel" style="display:contents">@await Component.InvokeAsync("AdminNav", new { panelOnly = true })</span>
+    }
     <main class="container main-content">
         @if (TempData["Error"] != null)
         {
