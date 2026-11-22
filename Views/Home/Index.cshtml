@@ -49,7 +49,7 @@
     </div>
 </section>
 
-@if (ViewBag.FeaturedListings != null && ((List<Listing>)ViewBag.FeaturedListings).Any())
+@if (User.Identity?.IsAuthenticated == true && ViewBag.FeaturedListings != null && ((List<Listing>)ViewBag.FeaturedListings).Any())
 {
     <section>
         <div class="section-head">
@@ -84,7 +84,7 @@
     </div>
 </section>
 
-@if (ViewBag.LatestSale != null && ((List<Listing>)ViewBag.LatestSale).Any())
+@if (User.Identity?.IsAuthenticated == true && ViewBag.LatestSale != null && ((List<Listing>)ViewBag.LatestSale).Any())
 {
     <section>
         <div class="section-head">
@@ -100,7 +100,7 @@
     </section>
 }
 
-@if (ViewBag.LatestRent != null && ((List<Listing>)ViewBag.LatestRent).Any())
+@if (User.Identity?.IsAuthenticated == true && ViewBag.LatestRent != null && ((List<Listing>)ViewBag.LatestRent).Any())
 {
     <section>
         <div class="section-head">
@@ -116,7 +116,7 @@
     </section>
 }
 
-@if (ViewBag.MostViewed != null && ((List<Listing>)ViewBag.MostViewed).Any())
+@if (User.Identity?.IsAuthenticated == true && ViewBag.MostViewed != null && ((List<Listing>)ViewBag.MostViewed).Any())
 {
     <section>
         <div class="section-head">
@@ -137,7 +137,7 @@
     </section>
 }
 
-@if (ViewBag.PopularAreas != null && ((List<AqarakOnline.Controllers.ChartPoint>)ViewBag.PopularAreas).Any())
+@if (User.Identity?.IsAuthenticated == true && ViewBag.PopularAreas != null && ((List<AqarakOnline.Controllers.ChartPoint>)ViewBag.PopularAreas).Any())
 {
     <section>
         <div class="section-head">

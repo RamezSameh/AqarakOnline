@@ -127,8 +127,8 @@
                 <p>@L.T("Tagline")</p>
                 @await Component.InvokeAsync("FooterStats")
             </div>
-            <div class="footer-col">
-                <p class="footer-heading">روابط سريعة</p>
+            <details class="footer-col">
+                <summary class="footer-heading">روابط سريعة</summary>
                 <p>📞 <a asp-controller="Home" asp-action="Contact">@L.T("ContactUs")</a></p>
                 <p>📖 <a asp-controller="Home" asp-action="SellGuide">@L.T("SellGuide")</a></p>
                 <p>💡 <a asp-controller="Home" asp-action="Tips">@L.T("Tips")</a></p>
@@ -137,24 +137,27 @@
                 <p>📜 <a asp-controller="Home" asp-action="Terms">@L.T("TermsOfUse")</a></p>
                 <p>🔒 <a asp-controller="Home" asp-action="Privacy">@L.T("PrivacyPolicy")</a></p>
                 <p>🧮 <a asp-controller="Home" asp-action="Calculator">@L.T("Calculator")</a></p>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
                 <p>🆕 <a asp-controller="Listings" asp-action="Index" asp-route-sort="newest">أحدث الإعلانات</a></p>
                 <p>👁️ <a asp-controller="Listings" asp-action="Index" asp-route-sort="viewsDesc">الأكثر مشاهدة</a></p>
-            </div>
-            <div class="footer-col">
-                <p class="footer-heading">مناطق شائعة</p>
+                }
+            </details>
+            <details class="footer-col">
+                <summary class="footer-heading">مناطق شائعة</summary>
                 <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="مدينة نصر">مدينة نصر</a></p>
                 <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="المعادي">المعادي</a></p>
                 <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="التجمع الخامس">التجمع الخامس</a></p>
                 <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="6 أكتوبر">6 أكتوبر</a></p>
                 <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="المهندسين">المهندسين</a></p>
-            </div>
-            <div class="footer-col">
-                <p class="footer-heading">تواصل معنا</p>
+            </details>
+            <details class="footer-col">
+                <summary class="footer-heading">تواصل معنا</summary>
                 <p>@L.T("Phone"): <a href="tel:@ContactOptions.Value.Phone">@ContactOptions.Value.Phone</a></p>
                 <p>@L.T("WhatsApp"): @ContactOptions.Value.WhatsApp</p>
                 <p>@L.T("Email"): @ContactOptions.Value.Email</p>
                 <p>💬 <a href="https://wa.me/@ContactOptions.Value.WhatsAppDigits" target="_blank" rel="noopener">واتساب</a> • 📘 <a href="https://www.facebook.com/sharer/sharer.php?u=@Uri.EscapeDataString($"{Context.Request.Scheme}://{Context.Request.Host}/")" target="_blank" rel="noopener">شارك الموقع على فيسبوك</a></p>
-            </div>
+            </details>
         </div>
         <p class="footer-copy">© 2026 @L.T("Brand") — جميع الحقوق محفوظة</p>
     </footer>

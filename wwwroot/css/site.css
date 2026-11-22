@@ -1142,12 +1142,11 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     body.page-details .main-content { padding-bottom: calc(172px + env(safe-area-inset-bottom)); }
     body.page-details .back-to-top { bottom: calc(166px + env(safe-area-inset-bottom)); }
     body.page-details .fab-call { display: none; }
-    /* (11) أقسام الفوتر أكورديون */
-    .footer-col .footer-heading { cursor: pointer; }
-    .footer-col .footer-heading::after { content: " ＋"; float: inline-end; font-weight: 800; }
-    .footer-col.open .footer-heading::after { content: " －"; }
-    .footer-col:nth-child(2) p:not(.footer-heading), .footer-col:nth-child(3) p:not(.footer-heading), .footer-col:nth-child(4) p:not(.footer-heading) { display: none; }
-    .footer-col.open p:not(.footer-heading) { display: block; }
+    /* (11) أقسام الفوتر أكورديون — <details> أصلي يشتغل من غير JS */
+    .footer-col .footer-heading { cursor: pointer; list-style: none; }
+    .footer-col .footer-heading::-webkit-details-marker { display: none; }
+    .footer-col:not([open]) .footer-heading::after { content: " ＋"; float: inline-end; font-weight: 800; }
+    .footer-col[open] .footer-heading::after { content: " －"; float: inline-end; font-weight: 800; }
     /* (12) بطاقة الدخول/التسجيل بملء الشاشة */
     .auth-card { width: 100vw; margin-inline: calc(50% - 50vw); border-radius: 0; border-inline: none; max-width: none; padding: 20px 16px; }
     /* (15) رسوم لوحة الأدمن: العنوان فوق والشريط بعرض كامل */
@@ -1208,6 +1207,10 @@ html, body { overflow-x: hidden; overflow-x: clip; }
 .account-notifications li:last-child { border-bottom: none; }
 .account-notifications li span { color: #94a3b8; font-size: 13px; }
 @media (max-width: 640px) { .stat-card .stat-number { font-size: 28px; } }
+
+/* Batch 36 — أقسام الفوتر <details>: على الديسكتوب المحتوى ظاهر دايمًا
+   (قاعدة المؤلف بتغلب إخفاء المتصفح للـ details المقفول). */
+@media (min-width: 641px) { .footer-col > p { display: block; } }
 
 /* Batch 35 — شريط المقارنة واللغة والهيدر المصغّر. */
 /* (2) زرار حسابي أيقونة بس على الموبايل */

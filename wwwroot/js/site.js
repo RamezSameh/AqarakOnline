@@ -1859,14 +1859,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     if (sidebar) addSheetSwipe(sidebar, function () { sidebar.classList.remove("open"); });
 
-    // Batch 33 (11) — أكورديون الفوتر في الموبايل.
-    document.querySelectorAll(".footer-heading").forEach(function (h) {
-        h.addEventListener("click", function () {
-            if (!window.matchMedia("(max-width: 640px)").matches) return;
-            var col = h.closest(".footer-col");
-            if (col) col.classList.toggle("open");
-        });
-    });
+    /* Batch 33 (11) — أكورديون الفوتر بقى <details> أصلي في _Layout، من غير JS. */
 
     // Batch 33 (3) — ورقة إجراءات الكارت في الموبايل.
     var cardSheet = document.getElementById("cardSheet");

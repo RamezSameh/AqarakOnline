@@ -192,6 +192,7 @@ public class LanguageController : Controller
     }
 }
 
+[Authorize]
 public class ListingsController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -4002,6 +4003,7 @@ public class ViewingsController : Controller
     }
 }
 
+[Authorize]
 public class FavoritesController : Controller
 {
     private readonly ApplicationDbContext _context;
