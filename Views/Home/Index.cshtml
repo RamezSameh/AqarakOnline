@@ -137,6 +137,25 @@
     </section>
 }
 
+@if (User.Identity?.IsAuthenticated == true && ViewBag.Collections != null && ((List<Collection>)ViewBag.Collections).Any())
+{
+    @foreach (var collection in (List<Collection>)ViewBag.Collections)
+    {
+        <section>
+            <div class="section-head">
+                <h2>🗂️ @collection.Title</h2>
+                <a class="btn btn-ghost" asp-controller="Home" asp-action="Collection" asp-route-id="@collection.Id">عرض الكل</a>
+            </div>
+            <div class="cards-slider">
+                @foreach (var item in collection.Items)
+                {
+                    @await Html.PartialAsync("_ListingCard", item.Listing)
+                }
+            </div>
+        </section>
+    }
+}
+
 @if (User.Identity?.IsAuthenticated == true && ViewBag.PopularAreas != null && ((List<AqarakOnline.Controllers.ChartPoint>)ViewBag.PopularAreas).Any())
 {
     <section>

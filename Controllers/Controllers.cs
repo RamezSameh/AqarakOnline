@@ -72,7 +72,90 @@ public class HomeController : Controller
                 .Select(f => f.ListingId)
                 .ToListAsync()).ToHashSet();
         }
+        // Batch 41 (5) — المجموعات المختارة: الفعّالة فقط، وبإعلانات معتمدة ومتاحة فقط.
+        var allCollections = await _context.Collections.Include(c => c.Items).ThenInclude(i => i.Listing).ThenInclude(l => l.Attachments)
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.CreatedAt)
+            .ToListAsync();
+        foreach (var c in allCollections)
+        {
+            c.Items = c.Items
+                .Where(i => i.Listing != null && i.Listing.IsAvailable && i.Listing.Approval == ListingApproval.Approved)
+                .OrderBy(i => i.SortOrder)
+                .ToList();
+        }
+        ViewBag.Collections = allCollections.Where(c => c.Items.Any()).ToList();
         return View(listings);
+    }
+
+    /// <summary>مؤشر الأسعار العلني (Batch 41 — تميّز 3): متوسط سعر المتر لكل منطقة واتجاهه.</summary>
+    public async Task<IActionResult> PriceIndex()
+    {
+        var rows = await _context.Listings
+            .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable && l.AreaSqm > 0)
+            .Select(l => new { l.Area, l.Price, l.AreaSqm, l.CreatedAt })
+            .ToListAsync();
+        var now = DateTime.UtcNow;
+        var areas = rows.GroupBy(r => r.Area)
+            .Select(g =>
+            {
+                var recent = g.Where(r => r.CreatedAt >= now.AddDays(-30)).ToList();
+                var previous = g.Where(r => r.CreatedAt < now.AddDays(-30) && r.CreatedAt >= now.AddDays(-60)).ToList();
+                decimal? trend = null;
+                if (recent.Any() && previous.Any())
+                {
+                    var recentAvg = recent.Average(r => r.Price / r.AreaSqm);
+                    var prevAvg = previous.Average(r => r.Price / r.AreaSqm);
+                    if (prevAvg > 0)
+                    {
+                        trend = (recentAvg - prevAvg) / prevAvg * 100;
+                    }
+                }
+                return new PriceIndexRow
+                {
+                    Area = g.Key,
+                    Count = g.Count(),
+                    AvgPricePerSqm = g.Average(r => r.Price / r.AreaSqm),
+                    AvgPrice = g.Average(r => r.Price),
+                    TrendPct = trend
+                };
+            })
+            .OrderByDescending(r => r.Count)
+            .ToList();
+        return View(areas);
+    }
+
+    /// <summary>المجموعات المختارة (Batch 41 — تميّز 5): كل المجموعات الفعّالة.</summary>
+    public async Task<IActionResult> Collections()
+    {
+        var collections = await _context.Collections.Include(c => c.Items).ThenInclude(i => i.Listing).ThenInclude(l => l.Attachments)
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.CreatedAt)
+            .ToListAsync();
+        foreach (var c in collections)
+        {
+            c.Items = c.Items
+                .Where(i => i.Listing != null && i.Listing.IsAvailable && i.Listing.Approval == ListingApproval.Approved)
+                .OrderBy(i => i.SortOrder)
+                .ToList();
+        }
+        return View(collections.Where(c => c.Items.Any()).ToList());
+    }
+
+    /// <summary>صفحة مجموعة واحدة بإعلاناتها.</summary>
+    public async Task<IActionResult> Collection(int id)
+    {
+        var collection = await _context.Collections.Include(c => c.Items).ThenInclude(i => i.Listing).ThenInclude(l => l.Attachments)
+            .FirstOrDefaultAsync(c => c.Id == id && c.IsActive);
+        if (collection == null)
+        {
+            return NotFound();
+        }
+        collection.Items = collection.Items
+            .Where(i => i.Listing != null && i.Listing.IsAvailable && i.Listing.Approval == ListingApproval.Approved)
+            .OrderBy(i => i.SortOrder)
+            .ToList();
+        return View(collection);
     }
 
     public IActionResult Error()
@@ -549,6 +632,18 @@ public class ListingsController : Controller
             .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable && l.Area == listing.Area && l.Id != listing.Id)
             .OrderBy(l => l.Price).Select(l => new { l.Id, l.Title, l.Price, l.AreaSqm }).Take(50).ToListAsync();
         ViewBag.SimilarPrices = areaPrices.OrderBy(l => Math.Abs(l.Price - listing.Price)).Take(5).ToList();
+        // Batch 41 (7) — مواعيد المعاينة المتاحة التي حددها صاحب الإعلان.
+        ViewBag.AvailableSlots = await _context.ViewingSlots
+            .Where(s => s.ListingId == listing.Id && !s.IsBooked && s.SlotDate >= DateTime.Now.Date)
+            .OrderBy(s => s.SlotDate).ThenBy(s => s.StartTime)
+            .ToListAsync();
+        // Batch 41 (2) — هل لي عرض سعر معلّق على هذا الإعلان؟
+        if (User.Identity?.IsAuthenticated == true && listing.OwnerId != CurrentUserId)
+        {
+            ViewBag.MyPendingOffer = await _context.ListingOffers
+                .Where(o => o.ListingId == listing.Id && o.BuyerId == CurrentUserId && o.Status == OfferStatus.Pending)
+                .OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync();
+        }
         return View(listing);
     }
 
@@ -1582,6 +1677,18 @@ public class ChartPoint
     public int Count { get; set; }
 }
 
+/// <summary>صف في مؤشر الأسعار العلني: متوسط سعر المتر واتجاهه في منطقة.</summary>
+public class PriceIndexRow
+{
+    public string Area { get; set; } = string.Empty;
+    public int Count { get; set; }
+    public decimal AvgPricePerSqm { get; set; }
+    public decimal AvgPrice { get; set; }
+
+    /// <summary>نسبة تغيّر متوسط سعر المتر (آخر 30 يومًا مقابل الـ 30 يومًا قبلها) — null إن تعذّر الحساب.</summary>
+    public decimal? TrendPct { get; set; }
+}
+
 [Authorize(Roles = "Admin")]
 public class AdminController : Controller
 {
@@ -1590,14 +1697,16 @@ public class AdminController : Controller
     private readonly IWebHostEnvironment _env;
     private readonly Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> _hub;
     private readonly LanguageService _language;
+    private readonly FacebookService _facebook;
 
-    public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment env, Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub, LanguageService language)
+    public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment env, Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub, LanguageService language, FacebookService facebook)
     {
         _context = context;
         _userManager = userManager;
         _env = env;
         _hub = hub;
         _language = language;
+        _facebook = facebook;
     }
 
     // دفع لحظي: أرقام الأدمن لمجموعة الأدمن، والجرس لكل المتصلين.
@@ -2846,6 +2955,15 @@ public class AdminController : Controller
         await _context.SaveChangesAsync();
         await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId, "موافقة", "تمت الموافقة على الإعلان.");
         await SavedSearchAlerts.NotifyMatchingAsync(_context, listing, _hub);
+        await PropertyRequestAlerts.NotifyMatchingAsync(_context, listing, _hub);
+        try
+        {
+            await _facebook.PostListingAsync(listing, $"{Request.Scheme}://{Request.Host}");
+        }
+        catch
+        {
+            // النشر على فيسبوك اختياري — فشله لا يكسر الموافقة.
+        }
         await NotifyAdminsAsync();
         await NotifyBellAsync();
         await _hub.Clients.All.SendAsync("listingsChanged");
@@ -3357,6 +3475,255 @@ public class AdminController : Controller
         TempData["Info"] = "تم حذف التنبيه نهائيًا.";
         return RedirectToAction(nameof(Notifications));
     }
+
+    // ===== Batch 41 — التميّز: طلبات عقار، عروض، مجموعات، واتساب، فيسبوك. =====
+
+    /// <summary>طلبات العقار (الأدمن): كل الطلبات مع بيانات الطالب (للأدمن فقط).</summary>
+    public async Task<IActionResult> PropertyRequests()
+    {
+        var requests = await _context.PropertyRequests.Include(r => r.User)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+        return View(requests);
+    }
+
+    /// <summary>مطابقة طلب: الإعلانات المعتمدة المتاحة المطابقة لمعايير الطلب.</summary>
+    public async Task<IActionResult> MatchPropertyRequest(int id)
+    {
+        var request = await _context.PropertyRequests.Include(r => r.User).FirstOrDefaultAsync(r => r.Id == id);
+        if (request == null)
+        {
+            return NotFound();
+        }
+        var listings = await _context.Listings.Include(l => l.Attachments)
+            .Where(l => l.IsAvailable && l.Approval == ListingApproval.Approved)
+            .Where(l => l.ListingType == request.ListingType)
+            .Where(l => !request.PropertyType.HasValue || l.PropertyType == request.PropertyType.Value)
+            .Where(l => string.IsNullOrWhiteSpace(request.Area) || l.Area.Contains(request.Area.Trim()))
+            .Where(l => !request.MinPrice.HasValue || l.Price >= request.MinPrice.Value)
+            .Where(l => !request.MaxPrice.HasValue || l.Price <= request.MaxPrice.Value)
+            .Where(l => !request.MinAreaSqm.HasValue || l.AreaSqm >= request.MinAreaSqm.Value)
+            .Where(l => !request.MinRooms.HasValue || (l.Rooms ?? 0) >= request.MinRooms.Value)
+            .OrderByDescending(l => l.CreatedAt)
+            .Take(20)
+            .ToListAsync();
+        ViewBag.Request = request;
+        return View(listings);
+    }
+
+    /// <summary>إبلاغ طالب العقار بإعلان مطابق (من الأدمن).</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> NotifyPropertyRequestMatch(int requestId, int listingId)
+    {
+        var request = await _context.PropertyRequests.FirstOrDefaultAsync(r => r.Id == requestId);
+        var listing = await _context.Listings.FirstOrDefaultAsync(l => l.Id == listingId);
+        if (request == null || listing == null)
+        {
+            return NotFound();
+        }
+        var url = $"/Listings/Details/{listing.Id}";
+        var exists = await _context.Notifications.AnyAsync(n => n.TargetUserId == request.UserId && n.Url == url);
+        if (!exists)
+        {
+            _context.Notifications.Add(new Notification
+            {
+                Title = "إعلان مطابق لطلبك (من الإدارة)",
+                Message = $"{listing.Title} — {listing.Area}، {listing.Price:N0} جنيه. طابق طلبك.",
+                TargetUserId = request.UserId,
+                Url = url,
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            await _context.SaveChangesAsync();
+            await NotifyBellAsync();
+        }
+        await WhatsAppAlerts.QueueAsync(_context, request.UserId,
+            $"إعلان مطابق لطلبك على عقارك أونلاين: {listing.Title} — {listing.Area}، {listing.Price:N0} جنيه.", url);
+        await _context.SaveChangesAsync();
+        request.Status = PropertyRequestStatus.Matched;
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تم إبلاغ الطالب بالإعلان المطابق.";
+        return RedirectToAction(nameof(MatchPropertyRequest), new { id = requestId });
+    }
+
+    /// <summary>كل عروض الأسعار (للأدمن): مع بيانات المشتري والمالك.</summary>
+    public async Task<IActionResult> Offers()
+    {
+        var offers = await _context.ListingOffers.Include(o => o.Listing).Include(o => o.Buyer)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
+        return View(offers);
+    }
+
+    /// <summary>المجموعات المختارة: قائمة + إنشاء.</summary>
+    public async Task<IActionResult> Collections()
+    {
+        var collections = await _context.Collections.Include(c => c.Items)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync();
+        return View(collections);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateCollection(string title, string? description)
+    {
+        title = (title ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(title) || title.Length > 100)
+        {
+            TempData["Error"] = "عنوان المجموعة مطلوب (بحد أقصى 100 حرف).";
+            return RedirectToAction(nameof(Collections));
+        }
+        _context.Collections.Add(new Collection
+        {
+            Title = title,
+            Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تم إنشاء المجموعة.";
+        return RedirectToAction(nameof(Collections));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleCollection(int id)
+    {
+        var collection = await _context.Collections.FindAsync(id);
+        if (collection == null)
+        {
+            return NotFound();
+        }
+        collection.IsActive = !collection.IsActive;
+        await _context.SaveChangesAsync();
+        TempData["Info"] = collection.IsActive ? "تم تفعيل المجموعة." : "تم إخفاء المجموعة من الرئيسية.";
+        return RedirectToAction(nameof(Collections));
+    }
+
+    /// <summary>إدارة مجموعة: إعلاناتها + إضافة إعلان برقم الإعلان.</summary>
+    public async Task<IActionResult> ManageCollection(int id)
+    {
+        var collection = await _context.Collections.Include(c => c.Items).ThenInclude(i => i.Listing)
+            .FirstOrDefaultAsync(c => c.Id == id);
+        if (collection == null)
+        {
+            return NotFound();
+        }
+        return View(collection);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddToCollection(int id, string adNumber)
+    {
+        var collection = await _context.Collections.FindAsync(id);
+        if (collection == null)
+        {
+            return NotFound();
+        }
+        adNumber = (adNumber ?? string.Empty).Trim();
+        var listing = await _context.Listings.FirstOrDefaultAsync(l => l.AdNumber == adNumber);
+        if (listing == null)
+        {
+            TempData["Error"] = "لا يوجد إعلان بهذا الرقم.";
+            return RedirectToAction(nameof(ManageCollection), new { id });
+        }
+        var exists = await _context.CollectionListings.AnyAsync(i => i.CollectionId == id && i.ListingId == listing.Id);
+        if (exists)
+        {
+            TempData["Error"] = "الإعلان موجود في المجموعة بالفعل.";
+            return RedirectToAction(nameof(ManageCollection), new { id });
+        }
+        _context.CollectionListings.Add(new CollectionListing
+        {
+            CollectionId = id,
+            ListingId = listing.Id,
+            SortOrder = await _context.CollectionListings.Where(i => i.CollectionId == id).CountAsync()
+        });
+        await _context.SaveChangesAsync();
+        TempData["Info"] = $"تمت إضافة «{listing.Title}» إلى المجموعة.";
+        return RedirectToAction(nameof(ManageCollection), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveFromCollection(int id, int itemId)
+    {
+        var item = await _context.CollectionListings.FirstOrDefaultAsync(i => i.Id == itemId && i.CollectionId == id);
+        if (item == null)
+        {
+            return NotFound();
+        }
+        _context.CollectionListings.Remove(item);
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تم حذف الإعلان من المجموعة.";
+        return RedirectToAction(nameof(ManageCollection), new { id });
+    }
+
+    /// <summary>قائمة انتظار واتساب: رسائل بانتظار الإرسال + رابط wa.me جاهز لكل رسالة.</summary>
+    public async Task<IActionResult> WhatsAppOutbox()
+    {
+        var items = await _context.WhatsAppOutbox.Include(w => w.User)
+            .OrderByDescending(w => w.CreatedAt)
+            .Take(100)
+            .ToListAsync();
+        return View(items);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkWhatsAppSent(int id)
+    {
+        var item = await _context.WhatsAppOutbox.FindAsync(id);
+        if (item == null)
+        {
+            return NotFound();
+        }
+        item.Status = WhatsAppStatus.Sent;
+        item.SentAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تم تعليم الرسالة كمُرسلة.";
+        return RedirectToAction(nameof(WhatsAppOutbox));
+    }
+
+    /// <summary>إعدادات النشر على فيسبوك: معرف الصفحة + توكن الصفحة + تفعيل النشر التلقائي.</summary>
+    public async Task<IActionResult> Facebook()
+    {
+        var settings = await _context.SiteSettings
+            .Where(s => s.Key.StartsWith("Facebook:"))
+            .ToDictionaryAsync(s => s.Key, s => s.Value);
+        ViewBag.PageId = settings.TryGetValue("Facebook:PageId", out var pageId) ? pageId : string.Empty;
+        ViewBag.PageAccessToken = settings.TryGetValue("Facebook:PageAccessToken", out var token) ? token : string.Empty;
+        ViewBag.AutoPost = settings.TryGetValue("Facebook:AutoPost", out var auto) && auto == "true";
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Facebook(string pageId, string pageAccessToken, bool autoPost)
+    {
+        await SaveSiteSettingAsync("Facebook:PageId", (pageId ?? string.Empty).Trim());
+        await SaveSiteSettingAsync("Facebook:PageAccessToken", (pageAccessToken ?? string.Empty).Trim());
+        await SaveSiteSettingAsync("Facebook:AutoPost", autoPost ? "true" : "false");
+        TempData["Info"] = "تم حفظ إعدادات فيسبوك.";
+        return RedirectToAction(nameof(Facebook));
+    }
+
+    private async Task SaveSiteSettingAsync(string key, string value)
+    {
+        var setting = await _context.SiteSettings.FindAsync(key);
+        if (setting == null)
+        {
+            _context.SiteSettings.Add(new SiteSetting { Key = key, Value = value });
+        }
+        else
+        {
+            setting.Value = value;
+        }
+        await _context.SaveChangesAsync();
+    }
 }
 
 public class UserNotificationRow
@@ -3656,6 +4023,111 @@ public static class SavedSearchAlerts
                 IsActive = true
             });
             created = true;
+            await WhatsAppAlerts.QueueAsync(context, userId,
+                $"إعلان جديد مطابق لبحثك على عقارك أونلاين: {listing.Title} — {listing.Area}، {listing.Price:N0} جنيه.", url);
+        }
+        if (created)
+        {
+            await context.SaveChangesAsync();
+            await hub.Clients.All.SendAsync("refreshBell");
+        }
+    }
+}
+
+/// <summary>تنبيهات واتساب: قيد في قائمة الانتظار يرسله الأدمن (wa.me) لحين ربط WhatsApp Business API.</summary>
+public static class WhatsAppAlerts
+{
+    public static async Task QueueAsync(ApplicationDbContext context, string userId, string message, string? url)
+    {
+        var user = await context.Users.FindAsync(userId);
+        if (user == null || !user.ReceiveWhatsAppAlerts || string.IsNullOrWhiteSpace(user.PhoneNumber))
+        {
+            return;
+        }
+        var exists = await context.WhatsAppOutbox.AnyAsync(w =>
+            w.UserId == userId && w.Status == WhatsAppStatus.Pending && w.Message == message);
+        if (exists)
+        {
+            return;
+        }
+        context.WhatsAppOutbox.Add(new WhatsAppOutbox
+        {
+            UserId = userId,
+            Phone = user.PhoneNumber,
+            Message = message,
+            Url = url,
+            Status = WhatsAppStatus.Pending,
+            CreatedAt = DateTime.UtcNow
+        });
+    }
+}
+
+/// <summary>مطابقة الإعلان المعتمد مع طلبات العقار المفتوحة وتنبيه أصحابها.</summary>
+public static class PropertyRequestAlerts
+{
+    public static bool Matches(PropertyRequest r, Listing l)
+    {
+        if (r.ListingType != l.ListingType)
+        {
+            return false;
+        }
+        if (r.PropertyType.HasValue && r.PropertyType.Value != l.PropertyType)
+        {
+            return false;
+        }
+        if (!string.IsNullOrWhiteSpace(r.Area) && !l.Area.Contains(r.Area.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+        if (r.MinPrice.HasValue && l.Price < r.MinPrice.Value)
+        {
+            return false;
+        }
+        if (r.MaxPrice.HasValue && l.Price > r.MaxPrice.Value)
+        {
+            return false;
+        }
+        if (r.MinAreaSqm.HasValue && l.AreaSqm < r.MinAreaSqm.Value)
+        {
+            return false;
+        }
+        if (r.MinRooms.HasValue && (l.Rooms ?? 0) < r.MinRooms.Value)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    public static async Task NotifyMatchingAsync(ApplicationDbContext context, Listing listing,
+        Microsoft.AspNetCore.SignalR.IHubContext<Services.RealtimeHub> hub)
+    {
+        var url = $"/Listings/Details/{listing.Id}";
+        var requests = await context.PropertyRequests
+            .Where(r => r.Status == PropertyRequestStatus.Open).ToListAsync();
+        var created = false;
+        foreach (var request in requests.Where(r => Matches(r, listing)))
+        {
+            if (request.UserId == listing.OwnerId)
+            {
+                continue;
+            }
+            var exists = await context.Notifications.AnyAsync(n => n.TargetUserId == request.UserId && n.Url == url);
+            if (exists)
+            {
+                continue;
+            }
+            context.Notifications.Add(new Notification
+            {
+                Title = "إعلان جديد مطابق لطلبك",
+                Message = $"{listing.Title} — {listing.Area}، {listing.Price:N0} جنيه. طابق طلبك ({request.Area}).",
+                TargetUserId = request.UserId,
+                Url = url,
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            created = true;
+            await WhatsAppAlerts.QueueAsync(context, request.UserId,
+                $"إعلان جديد مطابق لطلبك على عقارك أونلاين: {listing.Title} — {listing.Area}، {listing.Price:N0} جنيه.", url);
         }
         if (created)
         {
@@ -3922,7 +4394,7 @@ public class ViewingsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(int listingId, DateTime requestedAt, string? message, string? duration = null)
+    public async Task<IActionResult> Create(int listingId, DateTime? requestedAt, string? message, string? duration = null, int? slotId = null)
     {
         var listing = await _context.Listings.FirstOrDefaultAsync(l => l.Id == listingId);
         if (listing == null)
@@ -3933,7 +4405,19 @@ public class ViewingsController : Controller
         {
             return Forbid();
         }
-        if (requestedAt <= DateTime.Now)
+        // Batch 41 (7) — الحجز من ميعاد متاح حدده صاحب الإعلان.
+        ViewingSlot? slot = null;
+        if (slotId.HasValue)
+        {
+            slot = await _context.ViewingSlots.FirstOrDefaultAsync(s => s.Id == slotId.Value && s.ListingId == listingId && !s.IsBooked);
+            if (slot == null)
+            {
+                TempData["Error"] = "المياد ده مش متاح.";
+                return RedirectToAction("Details", "Listings", new { id = listingId });
+            }
+            requestedAt = slot.SlotDate.Date + slot.StartTime;
+        }
+        if (!requestedAt.HasValue || requestedAt.Value <= DateTime.Now)
         {
             TempData["Error"] = "ميعاد المعاينة لازم يكون في المستقبل.";
             return RedirectToAction("Details", "Listings", new { id = listingId });
@@ -3952,18 +4436,99 @@ public class ViewingsController : Controller
         {
             ListingId = listingId,
             RequesterId = CurrentUserId,
-            RequestedAt = requestedAt,
+            RequestedAt = requestedAt.Value,
             Status = ViewingStatus.Pending,
             Message = cleanMessage,
             CreatedAt = DateTime.UtcNow
         });
         await _context.SaveChangesAsync();
+        if (slot != null)
+        {
+            slot.IsBooked = true;
+            await _context.SaveChangesAsync();
+        }
         var requester = await _context.Users.FindAsync(CurrentUserId);
         var requesterName = (requester?.FullName ?? requester?.UserName ?? "مستخدم").Split(' ')[0];
         await NotifyAdminAsync("طلب معاينة جديد",
             $"{requesterName} طلب معاينة «{listing.Title}» يوم {requestedAt:dd/MM/yyyy HH:mm}.");
         TempData["Info"] = "تم إرسال طلب المعاينة — إدارة الموقع هتنسّق معاك الميعاد.";
         return RedirectToAction("Details", "Listings", new { id = listingId });
+    }
+
+    /// <summary>أوقات المعاينة المتاحة لإعلان (Batch 41 — تميّز 7): صاحب الإعلان أو الأدمن.</summary>
+    public async Task<IActionResult> Slots(int listingId)
+    {
+        var listing = await _context.Listings.FirstOrDefaultAsync(l => l.Id == listingId);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        if (listing.OwnerId != CurrentUserId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+        ViewBag.Listing = listing;
+        var slots = await _context.ViewingSlots
+            .Where(s => s.ListingId == listingId)
+            .OrderBy(s => s.SlotDate).ThenBy(s => s.StartTime)
+            .ToListAsync();
+        return View(slots);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddSlot(int listingId, DateTime slotDate, TimeSpan startTime, TimeSpan endTime)
+    {
+        var listing = await _context.Listings.FirstOrDefaultAsync(l => l.Id == listingId);
+        if (listing == null)
+        {
+            return NotFound();
+        }
+        if (listing.OwnerId != CurrentUserId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+        if (slotDate.Date < DateTime.Now.Date || endTime <= startTime)
+        {
+            TempData["Error"] = "تأكد من اليوم والوقت: اليوم لازم يكون اليوم أو بعده، ووقت النهاية بعد البداية.";
+            return RedirectToAction(nameof(Slots), new { listingId });
+        }
+        _context.ViewingSlots.Add(new ViewingSlot
+        {
+            ListingId = listingId,
+            SlotDate = slotDate.Date,
+            StartTime = startTime,
+            EndTime = endTime,
+            IsBooked = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تمت إضافة الميعاد المتاح.";
+        return RedirectToAction(nameof(Slots), new { listingId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteSlot(int id)
+    {
+        var slot = await _context.ViewingSlots.Include(s => s.Listing).FirstOrDefaultAsync(s => s.Id == id);
+        if (slot?.Listing == null)
+        {
+            return NotFound();
+        }
+        if (slot.Listing.OwnerId != CurrentUserId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+        if (slot.IsBooked)
+        {
+            TempData["Error"] = "الميعاد ده محجوز بالفعل — لا يمكن حذفه.";
+            return RedirectToAction(nameof(Slots), new { listingId = slot.ListingId });
+        }
+        _context.ViewingSlots.Remove(slot);
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تم حذف الميعاد.";
+        return RedirectToAction(nameof(Slots), new { listingId = slot.ListingId });
     }
 
     /// <summary>إلغاء المعاينة: الطالب نفسه أو الأدمن.</summary>
@@ -4249,5 +4814,304 @@ public class AdminNavViewComponent : ViewComponent
             UnreadContactMessages = await _context.ContactMessages.CountAsync(m => !m.IsRead)
         };
         return View(model);
+    }
+}
+
+/// <summary>طلبات عقار (Batch 41 — تميّز 1): المشتري ينشر طلبه، والأدمن يطابقه بالإعلانات.</summary>
+[Authorize]
+public class PropertyRequestsController : Controller
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IConfiguration _configuration;
+    private readonly IHubContext<RealtimeHub> _hub;
+
+    public PropertyRequestsController(ApplicationDbContext context, IConfiguration configuration, IHubContext<RealtimeHub> hub)
+    {
+        _context = context;
+        _configuration = configuration;
+        _hub = hub;
+    }
+
+    private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+
+    private async Task<string?> AdminUserIdAsync()
+    {
+        var adminEmail = _configuration["AdminEmail"];
+        if (string.IsNullOrWhiteSpace(adminEmail))
+        {
+            return null;
+        }
+        return await _context.Users.Where(u => u.Email == adminEmail).Select(u => u.Id).FirstOrDefaultAsync();
+    }
+
+    private async Task NotifyAdminAsync(string title, string message, string url)
+    {
+        var adminId = await AdminUserIdAsync();
+        if (adminId != null)
+        {
+            _context.Notifications.Add(new Notification
+            {
+                Title = title,
+                Message = message,
+                TargetUserId = adminId,
+                Url = url,
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            await _context.SaveChangesAsync();
+            await _hub.Clients.Group(RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
+            await _hub.Clients.All.SendAsync("refreshBell");
+        }
+    }
+
+    /// <summary>قائمة الطلبات المفتوحة — المعايير فقط، بدون أي بيانات عن الطالب.</summary>
+    public async Task<IActionResult> Index()
+    {
+        var requests = await _context.PropertyRequests
+            .Where(r => r.Status == PropertyRequestStatus.Open)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+        return View(requests);
+    }
+
+    [HttpGet]
+    public IActionResult Create()
+    {
+        return View(new PropertyRequest());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(PropertyRequest request)
+    {
+        request.UserId = CurrentUserId;
+        request.Status = PropertyRequestStatus.Open;
+        request.CreatedAt = DateTime.UtcNow;
+        if (request.MaxPrice.HasValue && request.MinPrice.HasValue && request.MaxPrice < request.MinPrice)
+        {
+            ModelState.AddModelError(nameof(request.MaxPrice), "الحد الأقصى للسعر لازم يكون أكبر من الحد الأدنى.");
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(request);
+        }
+        _context.PropertyRequests.Add(request);
+        await _context.SaveChangesAsync();
+        await NotifyAdminAsync("طلب عقار جديد",
+            $"طلب جديد: {(request.ListingType == ListingType.Sale ? "شراء" : "إيجار")} في {request.Area}" +
+            (request.MaxPrice.HasValue ? $" بحد أقصى {request.MaxPrice:N0} جنيه" : "") + ".", "/Admin/PropertyRequests");
+        TempData["Info"] = "تم نشر طلبك — إدارة الموقع هتطابقه بالإعلانات المناسبة وتبلغك.";
+        return RedirectToAction(nameof(MyRequests));
+    }
+
+    /// <summary>طلباتي — مع زر إغلاق لكل طلب مفتوح.</summary>
+    public async Task<IActionResult> MyRequests()
+    {
+        var requests = await _context.PropertyRequests
+            .Where(r => r.UserId == CurrentUserId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+        return View(requests);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Close(int id)
+    {
+        var request = await _context.PropertyRequests.FirstOrDefaultAsync(r => r.Id == id && r.UserId == CurrentUserId);
+        if (request == null)
+        {
+            return NotFound();
+        }
+        request.Status = PropertyRequestStatus.Closed;
+        await _context.SaveChangesAsync();
+        TempData["Info"] = "تم إغلاق الطلب.";
+        return RedirectToAction(nameof(MyRequests));
+    }
+}
+
+/// <summary>عروض الأسعار (Batch 41 — تميّز 2): كلها تمر عبر الأدمن، بلا تواصل مباشر.</summary>
+[Authorize]
+public class OffersController : Controller
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IConfiguration _configuration;
+    private readonly IHubContext<RealtimeHub> _hub;
+
+    public OffersController(ApplicationDbContext context, IConfiguration configuration, IHubContext<RealtimeHub> hub)
+    {
+        _context = context;
+        _configuration = configuration;
+        _hub = hub;
+    }
+
+    private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+
+    private async Task<string?> AdminUserIdAsync()
+    {
+        var adminEmail = _configuration["AdminEmail"];
+        if (string.IsNullOrWhiteSpace(adminEmail))
+        {
+            return null;
+        }
+        return await _context.Users.Where(u => u.Email == adminEmail).Select(u => u.Id).FirstOrDefaultAsync();
+    }
+
+    private async Task NotifyUserAsync(string userId, string title, string message, string url)
+    {
+        _context.Notifications.Add(new Notification
+        {
+            Title = title,
+            Message = message,
+            TargetUserId = userId,
+            Url = url,
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+        await _hub.Clients.All.SendAsync("refreshBell");
+    }
+
+    private async Task NotifyAdminAsync(string title, string message, string url)
+    {
+        var adminId = await AdminUserIdAsync();
+        if (adminId != null)
+        {
+            await NotifyUserAsync(adminId, title, message, url);
+            await _hub.Clients.Group(RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
+        }
+    }
+
+    /// <summary>تقديم عرض سعر على إعلان (ليس لصاحب الإعلان).</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(int listingId, decimal amount, string? message)
+    {
+        var listing = await _context.Listings.FirstOrDefaultAsync(l => l.Id == listingId);
+        if (listing == null || listing.Approval != ListingApproval.Approved || !listing.IsAvailable)
+        {
+            return NotFound();
+        }
+        if (listing.OwnerId == CurrentUserId)
+        {
+            return Forbid();
+        }
+        if (amount <= 0)
+        {
+            TempData["Error"] = "مبلغ العرض لازم يكون أكبر من صفر.";
+            return RedirectToAction("Details", "Listings", new { id = listingId });
+        }
+        var cleanMessage = string.IsNullOrWhiteSpace(message) ? null : message.Trim();
+        if (cleanMessage != null && cleanMessage.Length > 500)
+        {
+            cleanMessage = cleanMessage[..500];
+        }
+        _context.ListingOffers.Add(new ListingOffer
+        {
+            ListingId = listingId,
+            BuyerId = CurrentUserId,
+            Amount = amount,
+            Message = cleanMessage,
+            Status = OfferStatus.Pending,
+            CreatedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+        await NotifyAdminAsync("عرض سعر جديد",
+            $"عرض سعر {amount:N0} جنيه على «{listing.Title}» ({listing.AdNumber}).", "/Admin/Offers");
+        await NotifyUserAsync(listing.OwnerId, "وصل عرض سعر على إعلانك",
+            $"وصل عرض سعر {amount:N0} جنيه على «{listing.Title}». إدارة الموقع هتنسّق معاك — بدون تواصل مباشر مع المشتري.",
+            "/Offers/ReceivedOffers");
+        TempData["Info"] = "تم إرسال عرضك — إدارة الموقع هتوصله لصاحب الإعلان وتبلغك بالرد.";
+        return RedirectToAction("Details", "Listings", new { id = listingId });
+    }
+
+    /// <summary>عروضي (المشتري): كل عروضي وحالتها، مع قبول العرض المضاد إن وُجد.</summary>
+    public async Task<IActionResult> MyOffers()
+    {
+        var offers = await _context.ListingOffers.Include(o => o.Listing)
+            .Where(o => o.BuyerId == CurrentUserId)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
+        return View(offers);
+    }
+
+    /// <summary>العروض الواردة (المالك): المبلغ والرسالة فقط — بدون اسم المشتري أو رقمه.</summary>
+    public async Task<IActionResult> ReceivedOffers()
+    {
+        var myListingIds = await _context.Listings.Where(l => l.OwnerId == CurrentUserId).Select(l => l.Id).ToListAsync();
+        var offers = await _context.ListingOffers.Include(o => o.Listing)
+            .Where(o => myListingIds.Contains(o.ListingId))
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
+        return View(offers);
+    }
+
+    /// <summary>رد المالك على العرض: قبول / رفض / عرض مضاد بمبلغ.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Respond(int id, string decision, decimal? counterAmount = null)
+    {
+        var offer = await _context.ListingOffers.Include(o => o.Listing).FirstOrDefaultAsync(o => o.Id == id);
+        if (offer?.Listing == null || offer.Listing.OwnerId != CurrentUserId || offer.Status != OfferStatus.Pending)
+        {
+            return NotFound();
+        }
+        if (decision == "accept")
+        {
+            offer.Status = OfferStatus.Accepted;
+        }
+        else if (decision == "decline")
+        {
+            offer.Status = OfferStatus.Declined;
+        }
+        else if (decision == "counter")
+        {
+            if (!counterAmount.HasValue || counterAmount.Value <= 0)
+            {
+                TempData["Error"] = "حدد مبلغ العرض المضاد.";
+                return RedirectToAction(nameof(ReceivedOffers));
+            }
+            offer.Status = OfferStatus.Countered;
+            offer.CounterAmount = counterAmount.Value;
+        }
+        else
+        {
+            return BadRequest();
+        }
+        offer.RespondedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        var buyerMsg = offer.Status switch
+        {
+            OfferStatus.Accepted => $"صاحب الإعلان قبل عرضك {offer.Amount:N0} جنيه على «{offer.Listing.Title}». إدارة الموقع هتنسّق معاك الخطوة الجاية.",
+            OfferStatus.Declined => $"صاحب الإعلان رفض عرضك {offer.Amount:N0} جنيه على «{offer.Listing.Title}».",
+            _ => $"صاحب الإعلان اقترح سعرًا مضادًا {offer.CounterAmount:N0} جنيه بدل عرضك {offer.Amount:N0} جنيه على «{offer.Listing.Title}» — تقدر تقبله من عروضك."
+        };
+        await NotifyUserAsync(offer.BuyerId, "رد على عرض سعرك", buyerMsg, "/Offers/MyOffers");
+        await NotifyAdminAsync("رد مالك على عرض سعر",
+            $"رد على عرض {offer.Amount:N0} جنيه لـ «{offer.Listing.Title}»: {offer.Status}.", "/Admin/Offers");
+        TempData["Info"] = "تم إرسال ردك — إدارة الموقع هتبلغ المشتري.";
+        return RedirectToAction(nameof(ReceivedOffers));
+    }
+
+    /// <summary>قبول المشتري للعرض المضاد من المالك.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AcceptCounter(int id)
+    {
+        var offer = await _context.ListingOffers.Include(o => o.Listing).FirstOrDefaultAsync(o => o.Id == id);
+        if (offer?.Listing == null || offer.BuyerId != CurrentUserId || offer.Status != OfferStatus.Countered)
+        {
+            return NotFound();
+        }
+        offer.Status = OfferStatus.Accepted;
+        offer.RespondedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        await NotifyUserAsync(offer.Listing.OwnerId, "المشتري قبل العرض المضاد",
+            $"المشتري قبل سعرك المضاد {offer.CounterAmount:N0} جنيه على «{offer.Listing.Title}». إدارة الموقع هتنسّق معاكم.",
+            "/Offers/ReceivedOffers");
+        await NotifyAdminAsync("قبول عرض مضاد",
+            $"المشتري قبل السعر المضاد {offer.CounterAmount:N0} جنيه لـ «{offer.Listing.Title}».", "/Admin/Offers");
+        TempData["Info"] = "تم قبول العرض المضاد — إدارة الموقع هتنسّق معاكم.";
+        return RedirectToAction(nameof(MyOffers));
     }
 }

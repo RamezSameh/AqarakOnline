@@ -1,0 +1,29 @@
+@model List<PropertyRequest>
+<h1>طلباتي</h1>
+<p><a class="btn btn-primary" asp-action="Create">➕ طلب جديد</a></p>
+@if (!Model.Any())
+{
+    <p>لم تنشر أي طلب بعد.</p>
+}
+else
+{
+    <div class="saved-searches">
+        @foreach (var r in Model)
+        {
+            <article class="saved-search-card">
+                <h3>@(r.ListingType == ListingType.Sale ? "شراء" : "إيجار") في @r.Area</h3>
+                <p>النوع: @(r.PropertyType.HasValue ? L.PropertyTypeText(r.PropertyType.Value) : "أي نوع")</p>
+                <p>الميزانية: @(r.MinPrice.HasValue || r.MaxPrice.HasValue ? $"{r.MinPrice?.ToString("N0") ?? "…"} - {r.MaxPrice?.ToString("N0") ?? "…"} جنيه" : "غير محددة")</p>
+                <p>الحالة: @(r.Status == PropertyRequestStatus.Open ? "مفتوح" : r.Status == PropertyRequestStatus.Matched ? "تمت مطابقته بإعلان" : "مغلق")</p>
+                <p><small>نُشر في: @r.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</small></p>
+                @if (r.Status == PropertyRequestStatus.Open)
+                {
+                    <form asp-action="Close" method="post" class="inline-form">
+                        <input type="hidden" name="id" value="@r.Id" />
+                        <button type="submit" class="btn btn-ghost">إغلاق الطلب</button>
+                    </form>
+                }
+            </article>
+        }
+    </div>
+}

@@ -1,0 +1,34 @@
+@model List<PropertyRequest>
+<h1>📋 طلبات عقار</h1>
+<p>طلبات المشترين والمستأجرين — طابق كل طلب بالإعلانات المناسبة من زر «مطابقة».</p>
+@if (!Model.Any())
+{
+    <p>لا توجد طلبات.</p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr><th>الطالب</th><th>النوع</th><th>المنطقة</th><th>الميزانية</th><th>المساحة/الغرف</th><th>الحالة</th><th>التاريخ</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@r.User?.FullName<br /><small>@r.User?.PhoneNumber</small></td>
+                    <td>@(r.ListingType == ListingType.Sale ? "شراء" : "إيجار")<br /><small>@(r.PropertyType.HasValue ? L.PropertyTypeText(r.PropertyType.Value) : "أي نوع")</small></td>
+                    <td>@r.Area</td>
+                    <td>@(r.MinPrice.HasValue || r.MaxPrice.HasValue ? $"{r.MinPrice?.ToString("N0") ?? "…"} - {r.MaxPrice?.ToString("N0") ?? "…"} جنيه" : "—")</td>
+                    <td>@(r.MinAreaSqm.HasValue ? $"من {r.MinAreaSqm} م²" : "—")<br /><small>@(r.MinRooms.HasValue ? $"من {r.MinRooms} غرف" : "")</small></td>
+                    <td>@(r.Status == PropertyRequestStatus.Open ? "مفتوح" : r.Status == PropertyRequestStatus.Matched ? "تمت مطابقته" : "مغلق")</td>
+                    <td>@r.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                    <td><a class="btn btn-primary" asp-action="MatchPropertyRequest" asp-route-id="@r.Id">مطابقة</a></td>
+                </tr>
+                @if (!string.IsNullOrWhiteSpace(r.Notes))
+                {
+                    <tr><td colspan="8"><small>ملاحظات: @r.Notes</small></td></tr>
+                }
+            }
+        </tbody>
+    </table>
+}

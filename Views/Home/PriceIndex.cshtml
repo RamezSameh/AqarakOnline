@@ -1,0 +1,48 @@
+@model List<AqarakOnline.Controllers.PriceIndexRow>
+<h1>📊 مؤشر أسعار العقارات</h1>
+<p>متوسط سعر المتر لكل منطقة من الإعلانات المعتمدة والمتاحة على الموقع، واتجاه الأسعار (آخر 30 يومًا مقابل الـ 30 يومًا قبلها).</p>
+@if (!Model.Any())
+{
+    <p>لا توجد بيانات كافية بعد — المؤشر يظهر لما تكون فيه إعلانات معتمدة بمساحات مسجلة.</p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr><th>المنطقة</th><th>عدد الإعلانات</th><th>متوسط سعر المتر</th><th>متوسط السعر</th><th>الاتجاه (30 يومًا)</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td><strong>@row.Area</strong></td>
+                    <td>@row.Count</td>
+                    <td>@row.AvgPricePerSqm.ToString("N0") جنيه/م²</td>
+                    <td>@row.AvgPrice.ToString("N0") جنيه</td>
+                    <td>
+                        @if (row.TrendPct.HasValue)
+                        {
+                            if (row.TrendPct.Value > 0.5m)
+                            {
+                                <span>📈 +@row.TrendPct.Value.ToString("0.0")%</span>
+                            }
+                            else if (row.TrendPct.Value < -0.5m)
+                            {
+                                <span>📉 @row.TrendPct.Value.ToString("0.0")%</span>
+                            }
+                            else
+                            {
+                                <span>➖ مستقر</span>
+                            }
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p><small>الأسعار من إعلانات الموقع المعتمدة فقط، وقد تختلف عن السوق — استرشد بها ولا تعتمد عليها وحدها.</small></p>
+}

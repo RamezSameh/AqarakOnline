@@ -34,7 +34,21 @@
     <a class="btn btn-ghost quick-link" asp-controller="Favorites" asp-action="Index">♥ المفضلة</a>
     <a class="btn btn-ghost quick-link" asp-controller="SavedSearches" asp-action="Index">🔍 بحثي المحفوظ</a>
     <a class="btn btn-ghost quick-link" asp-controller="Notifications" asp-action="Index">🔔 التنبيهات</a>
+    <a class="btn btn-ghost quick-link" asp-controller="PropertyRequests" asp-action="Index">📋 طلبات عقار</a>
+    <a class="btn btn-ghost quick-link" asp-controller="PropertyRequests" asp-action="MyRequests">📝 طلباتي</a>
+    <a class="btn btn-ghost quick-link" asp-controller="Offers" asp-action="MyOffers">💰 عروضي</a>
+    <a class="btn btn-ghost quick-link" asp-controller="Offers" asp-action="ReceivedOffers">💰 العروض الواردة</a>
 </div>
+</section>
+<section class="account-card">
+<h2>💬 تنبيهات واتساب</h2>
+<p>لما ينزل إعلان جديد مطابق لبحثك المحفوظ أو طلبك، توصلك رسالة واتساب على رقمك المسجّل — بجانب جرس التنبيهات جوه الموقع.</p>
+<form asp-action="SetWhatsAppAlerts" method="post" class="form">
+    <label>
+        <input type="checkbox" name="receiveWhatsAppAlerts" value="true" checked="@Model.ReceiveWhatsAppAlerts" /> تفعيل تنبيهات واتساب
+    </label>
+    <button type="submit" class="btn btn-primary">حفظ</button>
+</form>
 </section>
 <section class="account-card">
 <h2>أحدث التنبيهات</h2>

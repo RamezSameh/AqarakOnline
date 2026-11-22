@@ -44,6 +44,7 @@ builder.Services.Configure<SmsSettings>(builder.Configuration.GetSection("Sms"))
 
 builder.Services.AddScoped<LanguageService>();
 builder.Services.AddScoped<TrustedAdvertiserService>();
+builder.Services.AddHttpClient<FacebookService>();
 builder.Services.AddHostedService<ViewingReminderService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
@@ -137,6 +138,7 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     context.Database.Migrate();
     SeedData.SeedListings(context);
+    SeedData.SeedCollections(context);
 
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     foreach (var role in new[] { "Admin", "User" })

@@ -62,6 +62,11 @@
                 <span class="nav-badge">@Model.UnreadContactMessages</span>
             }
         </a>
+        <a class="admin-feature @(currentAction == "PropertyRequests" ? "active" : "")" asp-controller="Admin" asp-action="PropertyRequests">📋 طلبات عقار</a>
+        <a class="admin-feature @(currentAction == "Offers" ? "active" : "")" asp-controller="Admin" asp-action="Offers">💰 عروض الأسعار</a>
+        <a class="admin-feature @(currentAction == "Collections" || currentAction == "ManageCollection" ? "active" : "")" asp-controller="Admin" asp-action="Collections">🗂️ المجموعات المختارة</a>
+        <a class="admin-feature @(currentAction == "WhatsAppOutbox" ? "active" : "")" asp-controller="Admin" asp-action="WhatsAppOutbox">💬 واتساب</a>
+        <a class="admin-feature @(currentAction == "Facebook" ? "active" : "")" asp-controller="Admin" asp-action="Facebook">📘 فيسبوك</a>
     </aside>
 </div>
 }

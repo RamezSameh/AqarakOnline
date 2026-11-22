@@ -38,6 +38,9 @@
                 <span class="nav-section">الإعلانات</span>
                 <a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">🏠 @L.T("Home")</a>
                 <a class="nav-link @(currentController == "Listings" && currentAction == "Index" ? "active" : "")" asp-controller="Listings" asp-action="Index">🏘️ @L.T("Listings")</a>
+                <a class="nav-link @(currentController == "Home" && currentAction == "PriceIndex" ? "active" : "")" asp-controller="Home" asp-action="PriceIndex">📊 مؤشر الأسعار</a>
+                <a class="nav-link @(currentController == "Home" && (currentAction == "Collections" || currentAction == "Collection") ? "active" : "")" asp-controller="Home" asp-action="Collections">🗂️ مجموعات مختارة</a>
+                <a class="nav-link @(currentController == "PropertyRequests" ? "active" : "")" asp-controller="PropertyRequests" asp-action="Index">📋 طلبات عقار</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <span class="nav-section">حسابي</span>
@@ -145,6 +148,7 @@
                 <p>📜 <a asp-controller="Home" asp-action="Terms">@L.T("TermsOfUse")</a></p>
                 <p>🔒 <a asp-controller="Home" asp-action="Privacy">@L.T("PrivacyPolicy")</a></p>
                 <p>🧮 <a asp-controller="Home" asp-action="Calculator">@L.T("Calculator")</a></p>
+                <p>📊 <a asp-controller="Home" asp-action="PriceIndex">مؤشر الأسعار</a></p>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                 <p>🆕 <a asp-controller="Listings" asp-action="Index" asp-route-sort="newest">أحدث الإعلانات</a></p>

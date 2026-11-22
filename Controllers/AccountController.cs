@@ -246,8 +246,10 @@ public class AccountController : Controller
     public async Task<IActionResult> MyAccount()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+        var currentUser = await _userManager.FindByIdAsync(userId);
         var model = new MyAccountViewModel
         {
+            ReceiveWhatsAppAlerts = currentUser?.ReceiveWhatsAppAlerts == true,
             MyListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == userId),
             ApprovedListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == userId && l.Approval == ListingApproval.Approved),
             PendingListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == userId && l.Approval == ListingApproval.Pending),
@@ -317,6 +319,24 @@ public class AccountController : Controller
         return RedirectToAction(nameof(Login));
     }
 
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetWhatsAppAlerts(bool receiveWhatsAppAlerts)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        user.ReceiveWhatsAppAlerts = receiveWhatsAppAlerts;
+        await _userManager.UpdateAsync(user);
+        TempData["Info"] = receiveWhatsAppAlerts
+            ? "تم تفعيل تنبيهات واتساب — هتوصلك رسالة لما ينزل إعلان مطابق لبحثك أو طلبك."
+            : "تم إيقاف تنبيهات واتساب.";
+        return RedirectToAction(nameof(MyAccount));
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
@@ -337,4 +357,7 @@ public class MyAccountViewModel
     public int UnreadNotificationsCount { get; set; }
     public DateTime? LastActivityAt { get; set; }
     public List<Notification> RecentNotifications { get; set; } = new();
+
+    /// <summary>تنبيهات واتساب مفعّلة؟ (Batch 41 — تميّز 4).</summary>
+    public bool ReceiveWhatsAppAlerts { get; set; }
 }

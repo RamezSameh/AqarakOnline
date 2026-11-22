@@ -1,0 +1,20 @@
+@model Collection
+<h1>🗂️ @Model.Title</h1>
+@if (!string.IsNullOrWhiteSpace(Model.Description))
+{
+    <p>@Model.Description</p>
+}
+<p><a class="btn btn-ghost" asp-action="Collections">← كل المجموعات</a></p>
+@if (!Model.Items.Any())
+{
+    <p>لا توجد إعلانات في هذه المجموعة حاليًا.</p>
+}
+else
+{
+    <div class="cards-grid">
+        @foreach (var item in Model.Items)
+        {
+            @await Html.PartialAsync("_ListingCard", item.Listing)
+        }
+    </div>
+}

@@ -1,0 +1,47 @@
+@model PropertyRequest
+<h1>➕ انشر طلب عقار</h1>
+<p>بتدوّر على عقار ومش لاقيه؟ انشر طلبك وإدارة الموقع هتطابقه بالإعلانات المناسبة وتبلغك لما ينزل حاجة مطابقة.</p>
+<form asp-action="Create" method="post" class="form">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <label>نوع الطلب *</label>
+    <div class="type-toggle">
+        <label class="type-option"><input type="radio" name="ListingType" value="Sale" checked="@(Model.ListingType == ListingType.Sale)" /> @L.T("ForSale")</label>
+        <label class="type-option"><input type="radio" name="ListingType" value="Rent" checked="@(Model.ListingType == ListingType.Rent)" /> @L.T("ForRent")</label>
+    </div>
+    <label>نوع العقار</label>
+    <select asp-for="PropertyType">
+        <option value="">أي نوع</option>
+        @foreach (var v in Enum.GetValues<PropertyType>())
+        {
+            <option value="@v">@L.PropertyTypeText(v)</option>
+        }
+    </select>
+    <label>المنطقة *</label>
+    <input asp-for="Area" placeholder="مثال: مدينة نصر" />
+    <span asp-validation-for="Area" class="text-danger"></span>
+    <div class="form-row">
+        <div>
+            <label>الحد الأدنى للسعر (جنيه)</label>
+            <input asp-for="MinPrice" type="number" min="0" />
+        </div>
+        <div>
+            <label>الحد الأقصى للسعر (جنيه)</label>
+            <input asp-for="MaxPrice" type="number" min="0" />
+            <span asp-validation-for="MaxPrice" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="form-row">
+        <div>
+            <label>أقل مساحة (م²)</label>
+            <input asp-for="MinAreaSqm" type="number" min="0" />
+        </div>
+        <div>
+            <label>أقل عدد غرف</label>
+            <input asp-for="MinRooms" type="number" min="0" />
+        </div>
+    </div>
+    <label>ملاحظات إضافية</label>
+    <textarea asp-for="Notes" rows="3" maxlength="500" placeholder="أي تفاصيل تساعد في المطابقة..."></textarea>
+    <button type="submit" class="btn btn-primary">نشر الطلب</button>
+    <a class="btn btn-ghost" asp-action="Index">إلغاء</a>
+</form>

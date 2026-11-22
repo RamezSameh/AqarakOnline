@@ -19,6 +19,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Listing>().Property(l => l.OriginalPrice).HasPrecision(18, 2);
         builder.Entity<SavedSearch>().Property(s => s.MinPrice).HasPrecision(18, 2);
         builder.Entity<SavedSearch>().Property(s => s.MaxPrice).HasPrecision(18, 2);
+        builder.Entity<PropertyRequest>().Property(s => s.MinPrice).HasPrecision(18, 2);
+        builder.Entity<PropertyRequest>().Property(s => s.MaxPrice).HasPrecision(18, 2);
+        builder.Entity<ListingOffer>().Property(o => o.Amount).HasPrecision(18, 2);
+        builder.Entity<ListingOffer>().Property(o => o.CounterAmount).HasPrecision(18, 2);
         // حذف مستخدم يحذف بحثه المحفوظ.
         builder.Entity<SavedSearch>()
             .HasOne(s => s.User).WithMany().HasForeignKey(s => s.UserId)
@@ -73,6 +77,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<SearchLog> SearchLogs => Set<SearchLog>();
     public DbSet<BlockedPhone> BlockedPhones => Set<BlockedPhone>();
     public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
+    public DbSet<PropertyRequest> PropertyRequests => Set<PropertyRequest>();
+    public DbSet<ListingOffer> ListingOffers => Set<ListingOffer>();
+    public DbSet<Collection> Collections => Set<Collection>();
+    public DbSet<CollectionListing> CollectionListings => Set<CollectionListing>();
+    public DbSet<ViewingSlot> ViewingSlots => Set<ViewingSlot>();
+    public DbSet<WhatsAppOutbox> WhatsAppOutbox => Set<WhatsAppOutbox>();
 }
 
 public static class SeedData
@@ -158,6 +168,23 @@ public static class SeedData
                 Approval = ListingApproval.Approved,
                 CreatedAt = seedDate
             });
+        context.SaveChanges();
+    }
+
+    /// <summary>
+    /// مجموعات مختارة افتراضية (فارغة — يملؤها الأدمن بالإعلانات من لوحة الإدارة).
+    /// تُنشأ مرة واحدة فقط عند أول تشغيل بعد الترقية.
+    /// </summary>
+    public static void SeedCollections(ApplicationDbContext context)
+    {
+        if (context.Collections.Any())
+        {
+            return;
+        }
+        context.Collections.AddRange(
+            new Collection { Title = "شقق للعرسان", Description = "شقق مناسبة للبداية: مساحات عملية وأسعار في المتناول.", IsActive = true, CreatedAt = DateTime.UtcNow },
+            new Collection { Title = "استثمار", Description = "عقارات بعائد استثماري جيد في مناطق واعدة.", IsActive = true, CreatedAt = DateTime.UtcNow },
+            new Collection { Title = "أقل من مليون", Description = "عقارات بسعر أقل من مليون جنيه.", IsActive = true, CreatedAt = DateTime.UtcNow });
         context.SaveChanges();
     }
 

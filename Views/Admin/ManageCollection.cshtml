@@ -1,0 +1,39 @@
+@model Collection
+<h1>🗂️ إدارة مجموعة: @Model.Title</h1>
+<p>@Model.Description</p>
+<p><a class="btn btn-ghost" asp-action="Collections">← كل المجموعات</a></p>
+<form asp-action="AddToCollection" method="post" class="form" style="max-width:520px">
+    <input type="hidden" name="id" value="@Model.Id" />
+    <label>أضف إعلانًا برقم الإعلان (مثال: AQ-0001)</label>
+    <input type="text" name="adNumber" maxlength="20" required placeholder="AQ-0001" />
+    <button type="submit" class="btn btn-primary">إضافة إلى المجموعة</button>
+</form>
+@if (!Model.Items.Any())
+{
+    <p>المجموعة فارغة — أضف إعلانات من النموذج أعلاه.</p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr><th>الإعلان</th><th>السعر</th><th>المنطقة</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@item.ListingId">@item.Listing?.Title</a><br /><small>@item.Listing?.AdNumber</small></td>
+                    <td>@item.Listing?.Price.ToString("N0") جنيه</td>
+                    <td>@item.Listing?.Area</td>
+                    <td>
+                        <form asp-action="RemoveFromCollection" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="itemId" value="@item.Id" />
+                            <button type="submit" class="btn btn-ghost">حذف</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

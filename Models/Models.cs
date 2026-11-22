@@ -29,6 +29,9 @@ public class ApplicationUser : IdentityUser
 
     public AccountStatus AccountStatus { get; set; } = AccountStatus.Pending;
 
+    /// <summary>يستقبل تنبيهات واتساب عند مطابقة بحثه المحفوظ أو طلبه لإعلان جديد؟</summary>
+    public bool ReceiveWhatsAppAlerts { get; set; }
+
     /// <summary>تاريخ إنشاء الحساب — يُستخدم في رسم التسجيلات الجديدة بالداشبورد.</summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
@@ -660,4 +663,174 @@ public class ContactMessage
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public bool IsRead { get; set; }
+}
+
+/// <summary>حالة طلب عقار: مفتوح حتى يغلقه صاحبه، أو مطابق (أُبلغ عنه بإعلان مناسب).</summary>
+public enum PropertyRequestStatus
+{
+    Open,
+    Matched,
+    Closed
+}
+
+/// <summary>
+/// طلب عقار من مشتري/مستأجر: نوع الإعلان والمنطقة والميزانية. الأدمن هو من
+/// يطابقه بالإعلانات المناسبة ويُبلغ الطالب — بيانات الطالب لا تظهر أبدًا
+/// لغير الأدمن (لا اسم ولا رقم) تماشيًا مع قاعدة «لا تواصل إلا عبر الأدمن».
+/// </summary>
+public class PropertyRequest
+{
+    public int Id { get; set; }
+
+    public string UserId { get; set; } = string.Empty;
+    public ApplicationUser? User { get; set; }
+
+    public ListingType ListingType { get; set; }
+
+    public PropertyType? PropertyType { get; set; }
+
+    [Required(ErrorMessage = "المنطقة مطلوبة")]
+    [MaxLength(200)]
+    public string Area { get; set; } = string.Empty;
+
+    public decimal? MinPrice { get; set; }
+    public decimal? MaxPrice { get; set; }
+    public int? MinAreaSqm { get; set; }
+    public int? MinRooms { get; set; }
+
+    [MaxLength(500)]
+    public string? Notes { get; set; }
+
+    public PropertyRequestStatus Status { get; set; } = PropertyRequestStatus.Open;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>حالة عرض السعر: بانتظار رد المالك، أو مقبول، أو مرفوض، أو قابله المالك بعرض مضاد.</summary>
+public enum OfferStatus
+{
+    Pending,
+    Accepted,
+    Declined,
+    Countered
+}
+
+/// <summary>
+/// عرض سعر على إعلان — يمر عبر الأدمن: المشتري يقدّم العرض، الأدمن يبلّغ
+/// المالك بالمبلغ فقط (بدون اسم أو رقم المشتري)، والمالك يقبل أو يرفض أو
+/// يقترح سعرًا مضادًا، والأدمن يبلّغ المشتري بالرد.
+/// </summary>
+public class ListingOffer
+{
+    public int Id { get; set; }
+
+    public int ListingId { get; set; }
+    public Listing? Listing { get; set; }
+
+    public string BuyerId { get; set; } = string.Empty;
+    public ApplicationUser? Buyer { get; set; }
+
+    [Range(1, 1000000000, ErrorMessage = "مبلغ العرض يجب أن يكون أكبر من صفر")]
+    public decimal Amount { get; set; }
+
+    [MaxLength(500)]
+    public string? Message { get; set; }
+
+    public OfferStatus Status { get; set; } = OfferStatus.Pending;
+
+    /// <summary>السعر المضاد الذي اقترحه المالك (إن وُجد).</summary>
+    public decimal? CounterAmount { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? RespondedAt { get; set; }
+}
+
+/// <summary>مجموعة مختارة من الأدمن (مثلاً: شقق للعرسان، استثمار، أقل من مليون).</summary>
+public class Collection
+{
+    public int Id { get; set; }
+
+    [Required(ErrorMessage = "عنوان المجموعة مطلوب")]
+    [MaxLength(100)]
+    public string Title { get; set; } = string.Empty;
+
+    [MaxLength(500)]
+    public string? Description { get; set; }
+
+    public bool IsActive { get; set; } = true;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public List<CollectionListing> Items { get; set; } = new();
+}
+
+/// <summary>إعلان داخل مجموعة مختارة (ترتيب اختياري).</summary>
+public class CollectionListing
+{
+    public int Id { get; set; }
+
+    public int CollectionId { get; set; }
+    public Collection? Collection { get; set; }
+
+    public int ListingId { get; set; }
+    public Listing? Listing { get; set; }
+
+    public int SortOrder { get; set; }
+}
+
+/// <summary>
+/// ميعاد معاينة متاح يحدده صاحب الإعلان: يوم + من/إلى. المشتري يختار منه
+/// بدل إدخال وقت حر. يُحجز (IsBooked) عند تأكيد طلب معاينة عليه.
+/// </summary>
+public class ViewingSlot
+{
+    public int Id { get; set; }
+
+    public int ListingId { get; set; }
+    public Listing? Listing { get; set; }
+
+    /// <summary>اليوم (التاريخ فقط).</summary>
+    public DateTime SlotDate { get; set; }
+
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan EndTime { get; set; }
+
+    public bool IsBooked { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>حالة رسالة واتساب في قائمة الانتظار: بانتظار الإرسال أو أُرسلت.</summary>
+public enum WhatsAppStatus
+{
+    Pending,
+    Sent
+}
+
+/// <summary>
+/// رسالة واتساب في قائمة الانتظار: تُنشأ عند مطابقة إعلان جديد لبحث محفوظ
+/// أو طلب عقار لمستخدم فعّل تنبيهات واتساب. الإرسال التلقائي يحتاج حساب
+/// WhatsApp Business API (مثل Twilio/UltraMsg)؛ حتى ذلك الحين يرسلها
+/// الأدمن يدويًا من لوحة الإدارة عبر رابط wa.me الجاهز بكل رسالة.
+/// </summary>
+public class WhatsAppOutbox
+{
+    public int Id { get; set; }
+
+    public string UserId { get; set; } = string.Empty;
+    public ApplicationUser? User { get; set; }
+
+    [MaxLength(20)]
+    public string Phone { get; set; } = string.Empty;
+
+    [MaxLength(1000)]
+    public string Message { get; set; } = string.Empty;
+
+    [MaxLength(500)]
+    public string? Url { get; set; }
+
+    public WhatsAppStatus Status { get; set; } = WhatsAppStatus.Pending;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? SentAt { get; set; }
 }

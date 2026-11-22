@@ -1,0 +1,55 @@
+@model List<ViewingSlot>
+@{
+    var listing = (Listing)ViewBag.Listing;
+}
+<h1>📅 أوقات المعاينة المتاحة — @listing.Title</h1>
+<p>حدّد الأيام والأوقات المتاحة للمعاينة — المشتري يختار منها بدل ما يطلب أي وقت. (@listing.AdNumber)</p>
+<p><a class="btn btn-ghost" asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">← صفحة الإعلان</a></p>
+<form asp-action="AddSlot" method="post" class="form" style="max-width:560px">
+    <input type="hidden" name="listingId" value="@listing.Id" />
+    <label>اليوم *</label>
+    <input type="date" name="slotDate" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+    <div class="form-row">
+        <div>
+            <label>من الساعة *</label>
+            <input type="time" name="startTime" required />
+        </div>
+        <div>
+            <label>إلى الساعة *</label>
+            <input type="time" name="endTime" required />
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">إضافة الميعاد</button>
+</form>
+@if (!Model.Any())
+{
+    <p>لم تحدّد أي مواعيد متاحة بعد — المشتري هيطلب أي وقت كالمعتاد.</p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr><th>اليوم</th><th>من</th><th>إلى</th><th>الحالة</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td>@s.SlotDate.ToString("dddd dd/MM/yyyy")</td>
+                    <td>@s.StartTime.ToString(@"hh\:mm")</td>
+                    <td>@s.EndTime.ToString(@"hh\:mm")</td>
+                    <td>@(s.IsBooked ? "محجوز" : "متاح")</td>
+                    <td>
+                        @if (!s.IsBooked)
+                        {
+                            <form asp-action="DeleteSlot" method="post" class="inline-form">
+                                <input type="hidden" name="id" value="@s.Id" />
+                                <button type="submit" class="btn btn-ghost">حذف</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

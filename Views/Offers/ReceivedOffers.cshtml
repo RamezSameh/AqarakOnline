@@ -1,0 +1,63 @@
+@model List<ListingOffer>
+<h1>💰 العروض الواردة على إعلاناتي</h1>
+<p>عروض أسعار وصلت على إعلاناتك — المبلغ والرسالة فقط، بدون أي بيانات عن المشتري. ردك بيوصله عن طريق إدارة الموقع.</p>
+@if (!Model.Any())
+{
+    <p>لا توجد عروض واردة حاليًا.</p>
+}
+else
+{
+    <div class="saved-searches">
+        @foreach (var o in Model)
+        {
+            <article class="saved-search-card">
+                <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@o.ListingId">@o.Listing?.Title</a></h3>
+                <p>سعر إعلانك: @o.Listing?.Price.ToString("N0") جنيه</p>
+                <p>العرض: <strong>@o.Amount.ToString("N0") جنيه</strong></p>
+                @if (!string.IsNullOrWhiteSpace(o.Message))
+                {
+                    <p>رسالة المشتري: @o.Message</p>
+                }
+                <p>الحالة:
+                    @if (o.Status == OfferStatus.Pending)
+                    {
+                        <strong>بانتظار ردك</strong>
+                    }
+                    else if (o.Status == OfferStatus.Accepted)
+                    {
+                        <strong>✅ قبلت العرض</strong>
+                    }
+                    else if (o.Status == OfferStatus.Declined)
+                    {
+                        <strong>❌ رفضت العرض</strong>
+                    }
+                    else
+                    {
+                        <strong>↩️ اقترحت @o.CounterAmount?.ToString("N0") جنيه</strong>
+                    }
+                </p>
+                @if (o.Status == OfferStatus.Pending)
+                {
+                    <form asp-action="Respond" method="post" class="inline-form">
+                        <input type="hidden" name="id" value="@o.Id" />
+                        <input type="hidden" name="decision" value="accept" />
+                        <button type="submit" class="btn btn-primary">قبول</button>
+                    </form>
+                    <form asp-action="Respond" method="post" class="inline-form">
+                        <input type="hidden" name="id" value="@o.Id" />
+                        <input type="hidden" name="decision" value="decline" />
+                        <button type="submit" class="btn btn-ghost">رفض</button>
+                    </form>
+                    <form asp-action="Respond" method="post" class="form" style="margin-top:8px">
+                        <input type="hidden" name="id" value="@o.Id" />
+                        <input type="hidden" name="decision" value="counter" />
+                        <label>أو اقترح سعرًا مضادًا (جنيه)</label>
+                        <input type="number" name="counterAmount" min="1" required />
+                        <button type="submit" class="btn btn-primary">إرسال السعر المضاد</button>
+                    </form>
+                }
+                <p><small>وصل في: @o.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</small></p>
+            </article>
+        }
+    </div>
+}

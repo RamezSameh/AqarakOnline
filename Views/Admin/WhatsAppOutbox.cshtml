@@ -1,0 +1,39 @@
+@model List<WhatsAppOutbox>
+<h1>💬 قائمة انتظار واتساب</h1>
+<p>رسائل تنبيه لمستخدمين فعّلوا تنبيهات واتساب. الإرسال التلقائي يحتاج حساب WhatsApp Business API (مثل Twilio أو UltraMsg) — حتى ذلك الحين اضغط «إرسال واتساب» فيفتح واتساب بالرسالة جاهزة، ثم علّمها كمُرسلة.</p>
+@if (!Model.Any())
+{
+    <p>لا توجد رسائل في القائمة.</p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr><th>المستخدم</th><th>الرقم</th><th>الرسالة</th><th>الحالة</th><th>التاريخ</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var w in Model)
+            {
+                var waLink = $"https://wa.me/{System.Text.RegularExpressions.Regex.Replace(w.Phone ?? "", @"[^\d]", "")}?text={Uri.EscapeDataString(w.Message)}";
+                <tr>
+                    <td>@w.User?.FullName</td>
+                    <td dir="ltr">@w.Phone</td>
+                    <td>@w.Message<br />@if (!string.IsNullOrWhiteSpace(w.Url))
+                    {<small><a href="@w.Url">@w.Url</a></small>}</td>
+                    <td>@(w.Status == WhatsAppStatus.Pending ? "بانتظار الإرسال" : $"أُرسلت {w.SentAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")}")</td>
+                    <td>@w.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        @if (w.Status == WhatsAppStatus.Pending)
+                        {
+                            <a class="btn btn-primary" href="@waLink" target="_blank" rel="noopener">📲 إرسال واتساب</a>
+                            <form asp-action="MarkWhatsAppSent" method="post" class="inline-form">
+                                <input type="hidden" name="id" value="@w.Id" />
+                                <button type="submit" class="btn btn-ghost">تعليم كمُرسلة</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

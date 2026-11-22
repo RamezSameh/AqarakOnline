@@ -1,0 +1,29 @@
+@model List<Collection>
+<h1>🗂️ مجموعات مختارة</h1>
+<p>قوائم مختارة من إدارة الموقع — عقارات مختارة بعناية حسب الغرض أو الميزانية.</p>
+@if (!Model.Any())
+{
+    <p>لا توجد مجموعات حاليًا.</p>
+}
+else
+{
+    @foreach (var c in Model)
+    {
+        <section>
+            <div class="section-head">
+                <h2>@c.Title</h2>
+                <a class="btn btn-ghost" asp-action="Collection" asp-route-id="@c.Id">عرض الكل (@c.Items.Count)</a>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(c.Description))
+            {
+                <p>@c.Description</p>
+            }
+            <div class="cards-slider">
+                @foreach (var item in c.Items)
+                {
+                    @await Html.PartialAsync("_ListingCard", item.Listing)
+                }
+            </div>
+        </section>
+    }
+}

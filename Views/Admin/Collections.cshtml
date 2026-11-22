@@ -1,0 +1,40 @@
+@model List<Collection>
+<h1>🗂️ المجموعات المختارة</h1>
+<p>قوائم مختارة تظهر في الرئيسية — أضف إليها الإعلانات المناسبة من زر «إدارة».</p>
+<form asp-action="CreateCollection" method="post" class="form" style="max-width:520px">
+    <label>عنوان مجموعة جديدة *</label>
+    <input type="text" name="title" maxlength="100" required placeholder="مثال: شقق للعرسان" />
+    <label>وصف مختصر</label>
+    <input type="text" name="description" maxlength="500" />
+    <button type="submit" class="btn btn-primary">إنشاء المجموعة</button>
+</form>
+@if (!Model.Any())
+{
+    <p>لا توجد مجموعات بعد.</p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr><th>المجموعة</th><th>الوصف</th><th>عدد الإعلانات</th><th>الحالة</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td><strong>@c.Title</strong></td>
+                    <td>@c.Description</td>
+                    <td>@c.Items.Count</td>
+                    <td>@(c.IsActive ? "فعّالة" : "مخفية")</td>
+                    <td>
+                        <a class="btn btn-primary" asp-action="ManageCollection" asp-route-id="@c.Id">إدارة</a>
+                        <form asp-action="ToggleCollection" method="post" class="inline-form">
+                            <input type="hidden" name="id" value="@c.Id" />
+                            <button type="submit" class="btn btn-ghost">@(c.IsActive ? "إخفاء" : "تفعيل")</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

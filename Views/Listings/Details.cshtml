@@ -322,10 +322,34 @@ else
         <a class="btn btn-ghost" href="tel:@ContactOptions.Value.Phone">📞 @L.T("CallUs")</a>
         <a class="btn btn-ghost report-btn" asp-action="Report" asp-route-id="@Model.Id">🚩 @L.T("ReportListing")</a>
     }
+    @* Batch 41 (2) — عرض سعر عبر الأدمن (ليس لصاحب الإعلان). *@
+    @if (User.Identity?.IsAuthenticated == true && Model.OwnerId != User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value && Model.IsAvailable)
+    {
+        @if (ViewBag.MyPendingOffer is ListingOffer pendingOffer)
+        {
+            <p class="alert-info">💰 عرضك @pendingOffer.Amount.ToString("N0") جنيه بانتظار رد صاحب الإعلان — <a asp-controller="Offers" asp-action="MyOffers">عروضي</a>.</p>
+        }
+        else
+        {
+            <details class="viewing-details">
+                <summary>💰 قدّم عرض سعر</summary>
+                <form asp-controller="Offers" asp-action="Create" method="post" class="form">
+                    <input type="hidden" name="listingId" value="@Model.Id" />
+                    <p><small>عرضك بيوصل لصاحب الإعلان عن طريق إدارة الموقع — بدون تواصل مباشر.</small></p>
+                    <label>مبلغ العرض (جنيه) *</label>
+                    <input type="number" name="amount" min="1" required placeholder="@Model.Price.ToString("N0")" />
+                    <label>رسالة (اختياري)</label>
+                    <textarea name="message" rows="2" maxlength="500"></textarea>
+                    <button type="submit" class="btn btn-primary">إرسال العرض</button>
+                </form>
+            </details>
+        }
+    }
     @if (User.Identity?.IsAuthenticated == true && (Model.OwnerId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value || User.IsInRole("Admin")))
     {
         <a class="btn btn-ghost" asp-action="Edit" asp-route-id="@Model.Id">@L.T("Edit")</a>
         <a class="btn btn-ghost" asp-action="Delete" asp-route-id="@Model.Id">@L.T("Delete")</a>
+        <a class="btn btn-ghost" asp-controller="Viewings" asp-action="Slots" asp-route-listingId="@Model.Id">📅 أوقات المعاينة</a>
     }
 </div>
 
@@ -352,17 +376,31 @@ else
         <p><small>المعاينة بتتنسق عن طريق إدارة الموقع — لا يوجد تواصل مباشر مع المعلن.</small></p>
         <form asp-controller="Viewings" asp-action="Create" method="post" class="form">
             <input type="hidden" name="listingId" value="@Model.Id" />
-            <label>1 — @L.T("ViewingDate")</label>
-            <input type="datetime-local" id="requestedAtInput" name="requestedAt" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" required />
-            <div class="time-chips">
-                <button type="button" class="btn btn-ghost time-chip" data-time="10:00">صباحًا</button>
-                <button type="button" class="btn btn-ghost time-chip" data-time="18:00">مساءً</button>
-            </div>
-            <div class="day-chips">
-                <button type="button" class="btn btn-ghost day-chip" data-days="0">اليوم</button>
-                <button type="button" class="btn btn-ghost day-chip" data-days="1">بكره</button>
-                <button type="button" class="btn btn-ghost day-chip" data-days="2">بعد بكره</button>
-            </div>
+            @if (ViewBag.AvailableSlots is List<ViewingSlot> slots && slots.Any())
+            {
+                @* Batch 41 (7) — مواعيد متاحة حددها صاحب الإعلان: اختيار منها بدل وقت حر. *@
+                <label>1 — اختر من المواعيد المتاحة</label>
+                <div class="time-chips">
+                    @foreach (var slot in slots)
+                    {
+                        <label class="btn btn-ghost time-chip"><input type="radio" name="slotId" value="@slot.Id" required /> @slot.SlotDate.ToString("dd/MM/yyyy") • @slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm")</label>
+                    }
+                </div>
+            }
+            else
+            {
+                <label>1 — @L.T("ViewingDate")</label>
+                <input type="datetime-local" id="requestedAtInput" name="requestedAt" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" required />
+                <div class="time-chips">
+                    <button type="button" class="btn btn-ghost time-chip" data-time="10:00">صباحًا</button>
+                    <button type="button" class="btn btn-ghost time-chip" data-time="18:00">مساءً</button>
+                </div>
+                <div class="day-chips">
+                    <button type="button" class="btn btn-ghost day-chip" data-days="0">اليوم</button>
+                    <button type="button" class="btn btn-ghost day-chip" data-days="1">بكره</button>
+                    <button type="button" class="btn btn-ghost day-chip" data-days="2">بعد بكره</button>
+                </div>
+            }
             <label>المدة المتوقعة</label>
             <select name="duration">
                 <option value="">—</option>

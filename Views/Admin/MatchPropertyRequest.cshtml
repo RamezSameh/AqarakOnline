@@ -1,0 +1,32 @@
+@model List<Listing>
+@{
+    var request = (PropertyRequest)ViewBag.Request;
+}
+<h1>🔍 مطابقة طلب عقار</h1>
+<p><strong>@(request.ListingType == ListingType.Sale ? "شراء" : "إيجار") في @request.Area</strong> — الطالب: @request.User?.FullName (@request.User?.PhoneNumber)</p>
+<p>الميزانية: @(request.MinPrice.HasValue || request.MaxPrice.HasValue ? $"{request.MinPrice?.ToString("N0") ?? "…"} - {request.MaxPrice?.ToString("N0") ?? "…"} جنيه" : "غير محددة") • المساحة: @(request.MinAreaSqm.HasValue ? $"من {request.MinAreaSqm} م²" : "—") • الغرف: @(request.MinRooms.HasValue ? $"من {request.MinRooms}" : "—")</p>
+<p><a class="btn btn-ghost" asp-action="PropertyRequests">← كل الطلبات</a></p>
+@if (!Model.Any())
+{
+    <p>لا توجد إعلانات معتمدة متاحة مطابقة لمعايير هذا الطلب حاليًا.</p>
+}
+else
+{
+    <div class="cards-grid">
+        @foreach (var listing in Model)
+        {
+            <article class="listing-card">
+                <div class="listing-body">
+                    <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></h3>
+                    <p class="listing-price">@listing.Price.ToString("N0") جنيه • @listing.AreaSqm م²</p>
+                    <p>@listing.Area • @listing.AdNumber</p>
+                    <form asp-action="NotifyPropertyRequestMatch" method="post" class="inline-form">
+                        <input type="hidden" name="requestId" value="@request.Id" />
+                        <input type="hidden" name="listingId" value="@listing.Id" />
+                        <button type="submit" class="btn btn-primary">📩 إبلاغ الطالب بهذا الإعلان</button>
+                    </form>
+                </div>
+            </article>
+        }
+    </div>
+}

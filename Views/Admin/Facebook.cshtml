@@ -1,0 +1,19 @@
+@{
+    var pageId = (string)ViewBag.PageId;
+    var token = (string)ViewBag.PageAccessToken;
+    var autoPost = (bool)ViewBag.AutoPost;
+}
+<h1>📘 النشر على فيسبوك</h1>
+<p>عند الموافقة على إعلان، يُنشر تلقائيًا على صفحة فيسبوك الموقع — إن كان النشر مفعّلًا والبيانات صحيحة.</p>
+<p><small>منين تجيب البيانات؟ من Meta Developers: أنشئ تطبيقًا، اربط صفحة فيسبوك الموقع، وخذ <strong>Page Access Token</strong> طويل الأمد للصفحة + <strong>Page ID</strong> من إعدادات الصفحة. الرابط في المنشور بيستخدم عنوان الموقع الحالي — لازم يكون عندك دومين ثابت عشان الرابط يشتغل للي يضغط عليه.</small></p>
+<form asp-action="Facebook" method="post" class="form" style="max-width:560px">
+    <label>معرف الصفحة (Page ID)</label>
+    <input type="text" name="pageId" value="@pageId" maxlength="100" placeholder="مثال: 123456789012345" />
+    <label>توكن الصفحة (Page Access Token)</label>
+    <input type="password" name="pageAccessToken" value="@token" maxlength="500" autocomplete="off" />
+    <label>
+        <input type="checkbox" name="autoPost" value="true" checked="@autoPost" /> تفعيل النشر التلقائي عند الموافقة على إعلان
+    </label>
+    <button type="submit" class="btn btn-primary">حفظ الإعدادات</button>
+</form>
+<p><small>الحالة الحالية: @(autoPost ? "النشر التلقائي مفعّل" : "النشر التلقائي متوقف")@(string.IsNullOrWhiteSpace(pageId) || string.IsNullOrWhiteSpace(token) ? " — البيانات ناقصة، لن يُنشر شيء." : "")</small></p>

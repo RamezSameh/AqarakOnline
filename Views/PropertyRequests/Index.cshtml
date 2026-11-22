@@ -1,0 +1,29 @@
+@model List<PropertyRequest>
+<h1>📋 طلبات عقار</h1>
+<p>طلبات من مشترين ومستأجرين بيدوّروا على عقار — لو عندك إعلان مطابق لأي طلب، قدّمه وهيوصلك المشتري عن طريق إدارة الموقع.</p>
+<p><a class="btn btn-primary" asp-action="Create">➕ انشر طلب عقار</a>
+<a class="btn btn-ghost" asp-action="MyRequests">طلباتي</a></p>
+@if (!Model.Any())
+{
+    <p>لا توجد طلبات مفتوحة حاليًا.</p>
+}
+else
+{
+    <div class="saved-searches">
+        @foreach (var r in Model)
+        {
+            <article class="saved-search-card">
+                <h3>@(r.ListingType == ListingType.Sale ? "شراء" : "إيجار") في @r.Area</h3>
+                <p>النوع: @(r.PropertyType.HasValue ? L.PropertyTypeText(r.PropertyType.Value) : "أي نوع")</p>
+                <p>الميزانية: @(r.MinPrice.HasValue || r.MaxPrice.HasValue ? $"{r.MinPrice?.ToString("N0") ?? "…"} - {r.MaxPrice?.ToString("N0") ?? "…"} جنيه" : "غير محددة")</p>
+                <p>المساحة: @(r.MinAreaSqm.HasValue ? $"من {r.MinAreaSqm} م²" : "—") • الغرف: @(r.MinRooms.HasValue ? $"من {r.MinRooms}" : "—")</p>
+                @if (!string.IsNullOrWhiteSpace(r.Notes))
+                {
+                    <p>@r.Notes</p>
+                }
+                <p><small>نُشر في: @r.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</small></p>
+            </article>
+        }
+    </div>
+    <p><small>بيانات أصحاب الطلبات لا تظهر هنا — التواصل كله عن طريق إدارة الموقع.</small></p>
+}

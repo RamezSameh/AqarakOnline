@@ -1,0 +1,29 @@
+@model List<ListingOffer>
+<h1>💰 عروض الأسعار</h1>
+<p>كل عروض الأسعار على الإعلانات — أنت الوسيط بين المشتري والمالك.</p>
+@if (!Model.Any())
+{
+    <p>لا توجد عروض.</p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr><th>الإعلان</th><th>المشتري</th><th>العرض</th><th>السعر المضاد</th><th>الحالة</th><th>التاريخ</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var o in Model)
+            {
+                <tr>
+                    <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@o.ListingId">@o.Listing?.Title</a><br /><small>@o.Listing?.AdNumber • سعر الإعلان: @o.Listing?.Price.ToString("N0") جنيه</small></td>
+                    <td>@o.Buyer?.FullName<br /><small>@o.Buyer?.PhoneNumber</small></td>
+                    <td><strong>@o.Amount.ToString("N0") جنيه</strong>@if (!string.IsNullOrWhiteSpace(o.Message))
+                    {<br /><small>@o.Message</small>}</td>
+                    <td>@(o.CounterAmount.HasValue ? o.CounterAmount.Value.ToString("N0") + " جنيه" : "—")</td>
+                    <td>@(o.Status == OfferStatus.Pending ? "بانتظار الرد" : o.Status == OfferStatus.Accepted ? "مقبول" : o.Status == OfferStatus.Declined ? "مرفوض" : "عرض مضاد")</td>
+                    <td>@o.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
