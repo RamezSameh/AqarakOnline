@@ -90,6 +90,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 /* شارة المميز، شريط المقارنة، جدول المقارنة، ورسوم لوحة الأدمن. */
 .badge-featured { background: #f59e0b; color: #111827; }
 .compare-bar { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 50; display: flex; gap: 10px; align-items: center; padding: 10px 16px; border: 1px solid #334155; border-radius: 999px; background: #1e293b; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+.compare-bar[hidden] { display: none; }
 .compare-toggle.is-selected { border-color: #f59e0b; color: #fbbf24; }
 .compare-table { overflow-x: auto; display: block; }
 .compare-photo { display: block; width: 140px; height: 90px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
@@ -183,11 +184,11 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 .notification-item p { margin: 0 0 8px; }
 /* شاشات متوسطة وصغيرة: الـ navbar يتحول لقائمة قابلة للطي. */
 @media (max-width: 860px) {
-    .nav-toggle { display: inline-block; order: 2; min-width: 44px; min-height: 44px; font-size: 20px; }
-    .header-inner { gap: 10px; flex-wrap: wrap; min-height: 56px; padding: 8px 0; }
-    .brand { flex: 1; order: 1; }
+    .nav-toggle { display: inline-block; order: 2; min-width: 40px; min-height: 40px; font-size: 18px; }
+    .header-inner { gap: 8px; flex-wrap: wrap; min-height: 48px; padding: 6px 0; }
+    .brand { flex: 1; order: 1; font-size: 19px; }
     .header-actions { order: 2; margin-inline-start: 0; gap: 8px; }
-    .header-actions .bell-btn, .header-actions .lang-switch { min-height: 44px; }
+    .header-actions .bell-btn, .header-actions .user-menu-btn, .header-actions .btn { min-height: 36px; padding: 6px 10px; }
     .main-nav { display: none; width: 100%; flex-direction: column; align-items: stretch; order: 4; border: 1px solid #334155; border-radius: 12px; background: #111827; padding: 12px; margin-top: 8px; max-height: 70vh; overflow-y: auto; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); }
     .main-nav.open { display: flex; }
     .desktop-only { display: none; }
@@ -278,7 +279,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 .features-picker { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 8px; }
 .features-picker label { display: inline-flex; align-items: center; gap: 6px; }
 
-.back-to-top { position: fixed; bottom: 16px; left: 16px; z-index: 60; width: 44px; height: 44px; border-radius: 50%; border: 1px solid #334155; background: #1e293b; color: #f8fafc; font-size: 20px; line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+.back-to-top { position: fixed; bottom: 16px; inset-inline-end: 16px; z-index: 60; width: 44px; height: 44px; border-radius: 50%; border: 1px solid #334155; background: #1e293b; color: #f8fafc; font-size: 20px; line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
 .back-to-top.visible { display: flex; }
 [data-theme="light"] .back-to-top { background: #fff; color: #0f172a; border-color: #cbd5e1; }
 
@@ -742,7 +743,6 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 .details-quick-summary { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 12px 0 20px; padding: 14px 16px; background: #1e293b; border: 1px solid #334155; border-radius: 12px; font-weight: 700; }
 [data-theme="light"] .details-quick-summary { background: #fff; border-color: #e2e8f0; }
 .gallery-autoplay { position: absolute; bottom: 12px; inset-inline-end: 12px; z-index: 5; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(0,0,0,.55); color: #fff; font-size: 16px; cursor: pointer; }
-.fab-share { position: fixed; bottom: 76px; inset-inline-start: 16px; width: 56px; height: 56px; border-radius: 50%; border: none; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 22px; cursor: pointer; z-index: 60; box-shadow: 0 6px 20px rgba(0,0,0,.45); }
 .tab-photos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 .tab-photo { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 8px; }
 .calc-bar { display: flex; height: 18px; border-radius: 999px; overflow: hidden; margin-top: 10px; }
@@ -1117,7 +1117,7 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     .back-to-top { bottom: calc(72px + env(safe-area-inset-bottom)); }
     .fab-call { bottom: calc(72px + env(safe-area-inset-bottom)); }
     /* (2) شريط النتائج ثابت تحت الهيدر أثناء التمرير */
-    .results-bar { position: sticky; top: 112px; z-index: 40; }
+    .results-bar { position: sticky; top: 96px; z-index: 40; }
     /* (10) مقبض سلايدر أكبر للمس */
     .filter-group input[type="range"] { -webkit-appearance: none; appearance: none; height: 10px; border-radius: 999px; background: #334155; }
     .filter-group input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 30px; height: 30px; border-radius: 50%; background: #6366f1; border: 3px solid #fff; cursor: pointer; }
@@ -1140,9 +1140,8 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     .sticky-contact .sticky-price { display: block; flex: 1 1 100%; text-align: center; font-size: 17px; font-weight: 800; color: #c7d2fe; }
     [data-theme="light"] .sticky-contact .sticky-price { color: #4338ca; }
     body.page-details .main-content { padding-bottom: calc(172px + env(safe-area-inset-bottom)); }
-    body.page-details .back-to-top { bottom: calc(244px + env(safe-area-inset-bottom)); }
+    body.page-details .back-to-top { bottom: calc(166px + env(safe-area-inset-bottom)); }
     body.page-details .fab-call { display: none; }
-    .fab-share { bottom: calc(180px + env(safe-area-inset-bottom)); }
     /* (11) أقسام الفوتر أكورديون */
     .footer-col .footer-heading { cursor: pointer; }
     .footer-col .footer-heading::after { content: " ＋"; float: inline-end; font-weight: 800; }
@@ -1167,7 +1166,7 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     .form input:not([type="checkbox"]):not([type="radio"]), .form select, .form textarea { padding: 8px 10px; }
     .card-photo-actions .btn { padding: 4px 8px; font-size: 14px; }
     .filter-fab { padding: 10px 16px; font-size: 15px; }
-    .header-actions .bell-btn, .header-actions .lang-switch { min-height: 40px; }
+    .header-actions .bell-btn, .header-actions .user-menu-btn { min-height: 36px; }
     .cards-grid { gap: 12px; }
     .results-bar { font-size: 14px; padding: 8px 12px; }
 }
@@ -1209,3 +1208,7 @@ html, body { overflow-x: hidden; overflow-x: clip; }
 .account-notifications li:last-child { border-bottom: none; }
 .account-notifications li span { color: #94a3b8; font-size: 13px; }
 @media (max-width: 640px) { .stat-card .stat-number { font-size: 28px; } }
+
+/* Batch 35 — شريط المقارنة واللغة والهيدر المصغّر. */
+/* (2) زرار حسابي أيقونة بس على الموبايل */
+@media (max-width: 860px) { .user-menu-label { display: none; } }

@@ -199,10 +199,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         pollingStarted = true;
         setInterval(function () {
+            if (document.hidden) { return; }
             refreshBell();
             refreshAdminNav();
             checkListingsChanged();
-        }, 30000);
+        }, 60000);
     }
 
     if (window.signalR) {
@@ -266,7 +267,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function checkListingsChanged() {
         var grid = document.querySelector(".cards-grid");
-        if (!grid) {
+        if (!grid || !grid.querySelector("[data-listing-id]")) {
             return;
         }
         fetch(window.location.href)

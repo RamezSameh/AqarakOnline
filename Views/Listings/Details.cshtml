@@ -246,8 +246,6 @@ else
 <section class="details-section">
     <h2>@L.T("Details")</h2>
     <p>@Model.Description</p>
-    <span id="listingDescriptionText" hidden>@Model.Description</span>
-    <button type="button" class="btn btn-ghost" id="copyDescriptionBtn">نسخ الوصف 📋</button>
 </section>
 @if (Model.FeaturesList.Any())
 {
@@ -426,8 +424,6 @@ else
     </div>
 }
 
-
-<button type="button" class="fab-share share-copy" data-url="@pageUrl" title="@L.T("Share")">🔗</button>
 
 <nav class="details-nav">
     @if (ViewBag.PreviousListing != null)

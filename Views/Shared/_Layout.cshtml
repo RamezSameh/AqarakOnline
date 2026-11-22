@@ -66,6 +66,8 @@
                     <a class="btn btn-ghost nav-auth" asp-controller="Account" asp-action="Login">🔑 @L.T("Login")</a>
                     <a class="btn btn-primary nav-auth" asp-controller="Account" asp-action="Register">📝 @L.T("Register")</a>
                 }
+                <span class="nav-section">اللغة</span>
+                <a class="nav-link" asp-controller="Language" asp-action="Set" asp-route-lang="@(L.IsArabic ? "en" : "ar")" asp-route-returnUrl="@Context.Request.Path">🌐 @(L.IsArabic ? "English" : "العربية")</a>
             </nav>
             <div class="header-actions">
                 <form class="header-search" asp-controller="Listings" asp-action="Index" method="get">
@@ -74,12 +76,11 @@
                 <button type="button" id="mobileSearchBtn" class="btn btn-ghost header-search-btn" aria-label="بحث">🔍</button>
                 <button type="button" id="themeToggle" class="btn btn-ghost" title="الوضع الفاتح / الداكن">☀️</button>
                 @await Component.InvokeAsync("NotificationBell")
-                <a class="lang-switch" asp-controller="Language" asp-action="Set" asp-route-lang="@(L.IsArabic ? "en" : "ar")" asp-route-returnUrl="@Context.Request.Path">@(L.IsArabic ? "English" : "العربية")</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     @* قائمة الحساب المنسدلة — مكان رابط البروفايل القديم. *@
                     <div class="user-menu">
-                        <button type="button" class="nav-link user-menu-btn" id="userMenuBtn">👤 @L.T("MyAccount") ▾</button>
+                        <button type="button" class="nav-link user-menu-btn" id="userMenuBtn">👤 <span class="user-menu-label">@L.T("MyAccount")</span> ▾</button>
                         <div class="user-menu-dropdown" id="userMenuDropdown" hidden>
                             <span class="user-menu-name">👤 @displayName</span>
                             <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">📋 @L.T("MyListings")</a>
@@ -209,6 +210,6 @@
         <a class="sheet-action" id="cardSheetCall" href="tel:@ContactOptions.Value.Phone">📞 <span>اتصال</span></a>
         <button type="button" class="sheet-action" id="cardSheetClose">✕ <span>إغلاق</span></button>
     </div>
-    <script src="~/js/site.js" defer></script>
+    <script src="~/js/site.js" asp-append-version="true" defer></script>
 </body>
 </html>
