@@ -150,6 +150,7 @@ public class LanguageService
         ["AirConditioning"] = ("تكييف", "Air conditioning"),
         ["Security"] = ("أمن", "Security"),
         ["Amenities"] = ("مزايا", "Amenities"),
+        ["OtherAmenities"] = ("مزايا أخرى", "Other amenities"),
         ["AcceptsInstallments"] = ("يقبل التقسيط", "Accepts installments"),
         ["InstallmentsOnly"] = ("يقبل التقسيط فقط", "Installments only"),
         ["PreviewListing"] = ("معاينة الإعلان", "Preview listing"),

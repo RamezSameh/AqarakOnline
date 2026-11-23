@@ -73,16 +73,6 @@
     <input asp-for="DetailedAddress" />
     <span asp-validation-for="DetailedAddress" class="field-error"></span>
 
-    <label>@L.T("Features")</label>
-    <div class="features-picker">
-        @foreach (var feature in AqarakOnline.Models.ListingFeatures.All)
-        {
-            <label><input type="checkbox" name="selectedFeatures" value="@feature" checked="@(Model.FeaturesList.Contains(feature))" /> @feature</label>
-        }
-    </div>
-    <label>@L.T("CustomFeature")</label>
-    <input type="text" name="customFeatures" value="@string.Join("، ", Model.FeaturesList.Except(AqarakOnline.Models.ListingFeatures.All))" placeholder="اكتب ميزة مش موجودة في الاختيارات (افصل بين الميزات بفاصلة)" />
-
     <label>@L.T("AdditionalDetails")</label>
     <textarea asp-for="Description" rows="4" placeholder="اكتب وصفًا واضحًا للعقار..."></textarea>
     <small id="descCounter" class="char-counter"></small>
@@ -163,6 +153,17 @@
     <label class="toggle-label"><input asp-for="HasBalcony" type="checkbox" /><span class="toggle-slider"></span> @L.T("Balcony")</label>
     <label class="toggle-label"><input asp-for="HasAirConditioning" type="checkbox" /><span class="toggle-slider"></span> @L.T("AirConditioning")</label>
     <label class="toggle-label"><input asp-for="HasSecurity" type="checkbox" /><span class="toggle-slider"></span> @L.T("Security")</label>
+
+    <label>@L.T("OtherAmenities")</label>
+    <div class="features-picker">
+        @foreach (var feature in AqarakOnline.Models.ListingFeatures.All)
+        {
+            <label><input type="checkbox" name="selectedFeatures" value="@feature" checked="@(Model.FeaturesList.Contains(feature))" /> @feature</label>
+        }
+    </div>
+    <label>@L.T("CustomFeature")</label>
+    <input type="text" name="customFeatures" value="@string.Join("، ", Model.FeaturesList.Except(AqarakOnline.Models.ListingFeatures.All))" placeholder="اكتب ميزة مش موجودة في الاختيارات (افصل بين الميزات بفاصلة)" />
+
     <label><input asp-for="AcceptsInstallments" type="checkbox" /> @L.T("AcceptsInstallments")</label>
     <label><input asp-for="IsPriceNegotiable" type="checkbox" /> @L.T("Negotiable")</label>
     <label class="urgent-option"><input asp-for="IsUrgent" type="checkbox" /> 🔥 @L.T("Urgent")</label>
