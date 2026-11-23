@@ -1373,3 +1373,10 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
     .main-nav .inline-form.mobile-only { margin-top: auto; border-top: 1px solid #334155; }
 }
 [data-theme="light"] .main-nav .inline-form.mobile-only { border-top-color: #e2e8f0; }
+
+/* Batch 93 — «أضف إعلان» لسه باين في الدرج رغم كلاس desktop-only: قاعدة الدرج
+   `.main-nav .nav-cta { display: flex; }` (كلاسين) بتغلب `.desktop-only` (كلاس واحد) —
+   نفس فخ الـ specificity بتاع B88. قاعدة أقوى هنا بتخفيه على الموبايل بس. */
+@media (max-width: 860px) {
+    .main-nav .nav-cta.desktop-only { display: none; }
+}
