@@ -5,14 +5,23 @@ using AqarakOnline.Data;
 using AqarakOnline.Models;
 using AqarakOnline.Services;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.Server.IIS;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Batch 64 — الفيديو يُقبل بأي حجم: رفع حدود الطلب من 30/128 ميجا
+// الافتراضية إلى 2 جيجا (Kestrel + IIS + نموذج الفورم)، عشان فيديو
+// كبير يترفع ويتضغط عند الحفظ بدل ما يترفض.
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = null);
+builder.Services.Configure<IISServerOptions>(options => options.MaxRequestBodySize = null);
+builder.Services.Configure<FormOptions>(options => options.MultipartBodyLengthLimit = 2L * 1024 * 1024 * 1024);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

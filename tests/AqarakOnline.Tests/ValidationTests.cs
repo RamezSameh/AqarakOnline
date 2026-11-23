@@ -81,10 +81,11 @@ public class AttachmentValidationTests
     }
 
     [Fact]
-    public void OversizedVideo_IsRejected()
+    public void LargeVideo_IsAccepted()
     {
-        var big = FakeFile("vid.mp4", "video/mp4", AttachmentStorage.MaxVideoBytes + 1);
-        Assert.NotNull(AttachmentStorage.ValidateVideo(big));
+        // الفيديو يُقبل بأي حجم ويُضغط عند الحفظ — لا حد أقصى.
+        var big = FakeFile("vid.mp4", "video/mp4", 500L * 1024 * 1024);
+        Assert.Null(AttachmentStorage.ValidateVideo(big));
     }
 
     [Fact]

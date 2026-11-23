@@ -9,24 +9,24 @@ namespace AqarakOnline.Services;
 
 /// <summary>
 /// حفظ وحذف ملفات مرفقات الإعلانات على القرص (wwwroot/uploads).
-/// القواعد: حتى 5 صور للإعلان، وفيديو واحد حتى 25 ميجا عند الرفع.
+/// القواعد: حتى 5 صور للإعلان، وفيديو واحد (mp4/webm/mov) بأي حجم.
 /// الصور تُضغط تلقائيًا عند الحفظ: تصغير لأقصى 1600px + تحويل WebP بجودة 80
 /// + تصحيح اتجاه صور الموبايل، فالملف المحفوظ أصغر بكتير من الأصل والصفحة تفتح أسرع.
-/// الفيديو يُقبل بأي صيغة شائعة ويُضغط تلقائيًا عند الحفظ: تحويل MP4 (H.264)
-/// بأقصى عرض 1280px وجودة CRF 28، فالملف المحفوظ أصغر بكتير من الأصل.
-/// الضغط يحتاج ffmpeg مثبّت على الجهاز (PATH)؛ لو مش موجود أو فشل التحويل،
-/// الفيديو يُحفظ زي ما هو من غير ما يفشل الرفع.
+/// الفيديو يُضغط تلقائيًا عند الحفظ: تحويل MP4 (H.264) بأقصى عرض 1280px
+/// وجودة CRF 28، فالملف المحفوظ أصغر بكتير من الأصل ويناسب التخزين والرفع.
+/// الفيديو يُحفظ عبر ملفات مؤقتة (ستريمنج) مش في الذاكرة، عشان الفيديوهات
+/// الكبيرة متستهلكش الرام. الضغط يحتاج ffmpeg مثبّت على الجهاز (PATH)؛
+/// لو مش موجود أو فشل التحويل، الفيديو يُحفظ زي ما هو من غير ما يفشل الرفع.
 /// </summary>
 public static class AttachmentStorage
 {
     public const int MaxPhotosPerListing = 5;
-    public const long MaxVideoBytes = 25L * 1024 * 1024; // 25 ميجا
     public const long MaxPhotoBytes = 10L * 1024 * 1024; // 10 ميجا للصورة الواحدة عند الرفع
     public const int MaxPhotoDimension = 1600; // أقصى عرض/ارتفاع للصورة المحفوظة
     public const int PhotoQuality = 80; // جودة WebP
 
     private static readonly string[] PhotoExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
-    private static readonly string[] VideoExtensions = { ".mp4", ".webm", ".mov", ".avi", ".mkv", ".3gp", ".m4v", ".wmv", ".flv", ".mpg", ".mpeg" };
+    private static readonly string[] VideoExtensions = { ".mp4", ".webm", ".mov" };
 
     public static string? ValidatePhoto(IFormFile file)
     {
@@ -56,10 +56,7 @@ public static class AttachmentStorage
         {
             return "ملف الفيديو فارغ.";
         }
-        if (file.Length > MaxVideoBytes)
-        {
-            return "حجم الفيديو لا يتعدى 25 ميجا.";
-        }
+        // لا حد أقصى لحجم الفيديو — يُقبل بأي حجم ويُضغط عند الحفظ.
         if (!file.ContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
         {
             return "ملف الفيديو يجب أن يكون فيديو.";
@@ -67,7 +64,7 @@ public static class AttachmentStorage
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (!VideoExtensions.Contains(ext))
         {
-            return "صيغة الفيديو غير مدعومة. الصيغ المقبولة: mp4، webm، mov، avi، mkv، 3gp، m4v، wmv، flv، mpg، mpeg.";
+            return "صيغة الفيديو غير مدعومة. الصيغ المقبولة: mp4، webm، mov.";
         }
         return null;
     }
@@ -75,28 +72,17 @@ public static class AttachmentStorage
     public static async Task<ListingAttachment> SaveAsync(
         IFormFile file, AttachmentKind kind, int listingId, string webRootPath, int order)
     {
+        if (kind == AttachmentKind.Video)
+        {
+            return await SaveVideoAsync(file, listingId, webRootPath, order);
+        }
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         var contentType = file.ContentType;
-        byte[] bytes;
-        if (kind == AttachmentKind.Photo)
-        {
-            // ضغط الصورة قبل الحفظ؛ الفيديو يُحفظ زي ما هو.
-            var compressed = await CompressPhotoAsync(file);
-            bytes = compressed.Bytes;
-            contentType = compressed.ContentType;
-            ext = compressed.Extension;
-        }
-        else
-        {
-            await using var source = new MemoryStream();
-            await file.CopyToAsync(source);
-            var original = source.ToArray();
-            // ضغط الفيديو قبل الحفظ؛ لو الضغط مش متاح أو فشل، يُحفظ الأصل زي ما هو.
-            var compressed = await CompressVideoAsync(original, ext, contentType);
-            bytes = compressed.Bytes;
-            contentType = compressed.ContentType;
-            ext = compressed.Extension;
-        }
+        // ضغط الصورة قبل الحفظ.
+        var compressedPhoto = await CompressPhotoAsync(file);
+        var bytes = compressedPhoto.Bytes;
+        contentType = compressedPhoto.ContentType;
+        ext = compressedPhoto.Extension;
 
         var fileName = Guid.NewGuid().ToString("N") + ext;
         var folder = Path.Combine(webRootPath, "uploads", "listings", listingId.ToString());
@@ -169,23 +155,63 @@ public static class AttachmentStorage
     }
 
     /// <summary>
-    /// ضغط فيديو عبر ffmpeg: تحويل MP4 (H.264) بأقصى عرض 1280px وجودة CRF 28
-    /// + صوت AAC + faststart (يشتغل أثناء التحميل في المتصفح).
-    /// لو ffmpeg مش مثبّت أو التحويل فشل أو خلّص بوقت طويل، يرجع الأصل زي ما هو
-    /// بدل ما يفشل الرفع كله. ولو الناتج طلع أكبر من الأصل، يُحفظ الأصل.
+    /// حفظ فيديو بأي حجم: الرفع يُنسخ كملف مؤقت (ستريمنج، من غير تحميل الملف
+    /// كله في الذاكرة)، ثم يُضغط عبر ffmpeg، ثم يُنقل الناتج (أو الأصل لو
+    /// الضغط فشل) لمجلد الإعلان. حجم الملف المحفوظ يُقاس من القرص.
     /// </summary>
-    private static async Task<(byte[] Bytes, string ContentType, string Extension)> CompressVideoAsync(byte[] inputBytes, string inputExt, string inputContentType)
+    private static async Task<ListingAttachment> SaveVideoAsync(
+        IFormFile file, int listingId, string webRootPath, int order)
     {
-        var original = (inputBytes, inputContentType, inputExt);
-        string? inputPath = null;
-        string? outputPath = null;
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        var contentType = file.ContentType;
+        var tempInput = Path.Combine(Path.GetTempPath(), $"aqarak-in-{Guid.NewGuid():N}{ext}");
         try
         {
-            var tag = Guid.NewGuid().ToString("N");
-            inputPath = Path.Combine(Path.GetTempPath(), $"aqarak-in-{tag}{inputExt}");
-            outputPath = Path.Combine(Path.GetTempPath(), $"aqarak-out-{tag}.mp4");
-            await File.WriteAllBytesAsync(inputPath, inputBytes);
+            await using (var tempStream = File.Create(tempInput))
+            {
+                await file.CopyToAsync(tempStream);
+            }
+            var compressedPath = await CompressVideoFileAsync(tempInput);
+            var isCompressed = compressedPath != null;
+            var fileName = Guid.NewGuid().ToString("N") + (isCompressed ? ".mp4" : ext);
+            var folder = Path.Combine(webRootPath, "uploads", "listings", listingId.ToString());
+            Directory.CreateDirectory(folder);
+            var fullPath = Path.Combine(folder, fileName);
+            MoveFile(isCompressed ? compressedPath! : tempInput, fullPath);
+            if (isCompressed)
+            {
+                contentType = "video/mp4";
+            }
+            return new ListingAttachment
+            {
+                ListingId = listingId,
+                Kind = AttachmentKind.Video,
+                FilePath = $"uploads/listings/{listingId}/{fileName}",
+                ThumbPath = null,
+                ContentType = contentType,
+                OriginalFileName = Path.GetFileName(file.FileName),
+                SizeBytes = new FileInfo(fullPath).Length,
+                Order = order
+            };
+        }
+        finally
+        {
+            DeleteQuiet(tempInput);
+        }
+    }
 
+    /// <summary>
+    /// ضغط فيديو عبر ffmpeg: تحويل MP4 (H.264) بأقصى عرض 1280px وجودة CRF 28
+    /// + صوت AAC + faststart (يشتغل أثناء التحميل في المتصفح).
+    /// يرجع مسار ملف مؤقت مضغوط، أو null لو ffmpeg مش مثبّت أو التحويل فشل
+    /// أو تجاوز 20 دقيقة أو الناتج طلع أكبر من الأصل — والمتصل يحفظ الأصل.
+    /// </summary>
+    private static async Task<string?> CompressVideoFileAsync(string inputPath)
+    {
+        var outputPath = Path.Combine(Path.GetTempPath(), $"aqarak-out-{Guid.NewGuid():N}.mp4");
+        try
+        {
+            var inputSize = new FileInfo(inputPath).Length;
             var start = new ProcessStartInfo
             {
                 FileName = "ffmpeg",
@@ -215,36 +241,57 @@ public static class AttachmentStorage
             using var process = Process.Start(start);
             if (process == null)
             {
-                return original;
+                return null;
             }
             var stderrTask = process.StandardError.ReadToEndAsync();
-            var finished = await Task.Run(() => process.WaitForExit(120000));
+            var finished = await Task.Run(() => process.WaitForExit(1200000));
             if (!finished)
             {
                 try { process.Kill(entireProcessTree: true); } catch { }
-                return original;
+                DeleteQuiet(outputPath);
+                return null;
             }
             await stderrTask;
             if (process.ExitCode != 0 || !File.Exists(outputPath))
             {
-                return original;
+                DeleteQuiet(outputPath);
+                return null;
             }
-            var outputBytes = await File.ReadAllBytesAsync(outputPath);
-            if (outputBytes.Length == 0 || outputBytes.Length >= inputBytes.Length)
+            var outputSize = new FileInfo(outputPath).Length;
+            if (outputSize == 0 || outputSize >= inputSize)
             {
-                return original;
+                DeleteQuiet(outputPath);
+                return null;
             }
-            return (outputBytes, "video/mp4", ".mp4");
+            return outputPath;
         }
         catch
         {
-            return original;
+            DeleteQuiet(outputPath);
+            return null;
         }
-        finally
+    }
+
+    /// <summary>
+    /// نقل ملف؛ النقل المباشر يفشل بين أقراص مختلفة (مثلاً Temp على C
+    /// والمشروع على E) فالبديل نسخ ثم حذف المصدر.
+    /// </summary>
+    private static void MoveFile(string source, string destination)
+    {
+        try
         {
-            try { if (inputPath != null) File.Delete(inputPath); } catch { }
-            try { if (outputPath != null) File.Delete(outputPath); } catch { }
+            File.Move(source, destination);
         }
+        catch (IOException)
+        {
+            File.Copy(source, destination, overwrite: true);
+            File.Delete(source);
+        }
+    }
+
+    private static void DeleteQuiet(string path)
+    {
+        try { if (File.Exists(path)) File.Delete(path); } catch { }
     }
 
     public static void DeleteFile(string webRootPath, string relativePath)
