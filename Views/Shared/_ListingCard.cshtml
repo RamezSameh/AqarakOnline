@@ -82,15 +82,6 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
         <div class="listing-meta">
             <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
             <span class="badge badge-pt-@Model.PropertyType">@typeIcon @L.PropertyTypeText(Model.PropertyType)</span>
-            <span class="badge">@(Model.AdvertiserType == AdvertiserType.Owner ? "👤 " : "💼 ")@L.AdvertiserTypeText(Model.AdvertiserType)</span>
-            @if (Model.Furnishing == FurnishingLevel.Full)
-            {
-                <span class="badge badge-furnishing-full">🛋️ @L.FurnishingText(Model.Furnishing)</span>
-            }
-            else if (Model.Furnishing == FurnishingLevel.Partial)
-            {
-                <span class="badge badge-furnishing-partial">🛋️ @L.FurnishingText(Model.Furnishing)</span>
-            }
             @if (Model.IsEffectivelyFeatured)
             {
                 <span class="badge badge-featured">⭐ @L.T("Featured")</span>
@@ -112,27 +103,21 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
                 <span class="badge badge-new @newBadgeClass">🆕 @L.T("New")</span>
             }
             <span class="ad-number">@L.T("AdNumber"): @Model.AdNumber</span>
-            <span class="listing-views">👁 @Model.ViewCount</span>
         </div>
-        <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a></h3>
-        <p class="listing-area">📍 @Model.Area</p>
-        <p class="listing-area">📐 @L.T("AreaSqm"): @Model.AreaSqm</p>
+        <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id" title="@Model.Title">@Model.Title</a></h3>
+        <p class="listing-area">📍 @Model.Area • 📐 @Model.AreaSqm م²</p>
         @if (facts.Any())
         {
             <p class="listing-facts">@string.Join(" • ", facts.Take(3))</p>
-            @if (facts.Count > 3)
-            {
-                <p class="listing-facts">@string.Join(" • ", facts.Skip(3))</p>
-            }
         }
-        <p class="listing-price">@L.PriceText(Model.Price, Model.ListingType)</p>
-        <p class="listing-published">📅 @(Model.UpdatedAt.HasValue && Model.UpdatedAt > Model.CreatedAt ? "آخر تحديث " + L.RelativeTime(Model.UpdatedAt.Value) : L.RelativeTime(Model.CreatedAt))</p>
-        <p class="listing-views">@L.T("Views"): @Model.ViewCount • @L.RelativeTime(Model.CreatedAt)</p>
+        <p class="listing-published">📅 @(Model.UpdatedAt.HasValue && Model.UpdatedAt > Model.CreatedAt ? "آخر تحديث " + L.RelativeTime(Model.UpdatedAt.Value) : L.RelativeTime(Model.CreatedAt)) • 👁 @Model.ViewCount</p>
         @if (Model.Approval != ListingApproval.Approved)
         {
             <p class="listing-status">@L.T("ApprovalStatus"): @L.ApprovalText(Model.Approval)</p>
         }
-        <div class="actions">
+        <div class="card-foot">
+            <p class="listing-price">@L.PriceText(Model.Price, Model.ListingType)</p>
+            <div class="actions">
             <a class="btn btn-primary view-details-full" asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@L.T("ViewDetails")</a>
             @if (Model.IsAvailable && Model.Approval == ListingApproval.Approved && !isOwner)
             {
@@ -152,6 +137,7 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
             }
             <button type="button" class="btn btn-ghost share-copy" data-url="@($"{Context.Request.Scheme}://{Context.Request.Host}/Listings/Details/{Model.Id}")" title="@L.T("Share")">↗ @L.T("Share")</button>
             <a class="btn btn-ghost" href="https://t.me/share/url?url=@Uri.EscapeDataString($"{Context.Request.Scheme}://{Context.Request.Host}/Listings/Details/{Model.Id}")&text=@Uri.EscapeDataString(Model.Title)" target="_blank" rel="noopener" title="تيليجرام">✈️</a>
+            </div>
         </div>
     </div>
 </article>

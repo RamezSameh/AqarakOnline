@@ -1388,3 +1388,14 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
 @media (min-width: 861px) {
     .main-nav .inline-form.mobile-only { display: none; }
 }
+
+/* Batch 95 — شكل الكارت 2 (عمودي مضغوط): صورة 16:9 بدل 4:3، العنوان سطر واحد بقص،
+   المواصفات سطر واحد بقص، السعر والأزرار في صف واحد (.card-foot)، وpadding أقل. */
+.listing-photo { aspect-ratio: 16 / 9; }
+.listing-card h3 { margin: 8px 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.listing-facts { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.listing-body { padding: 14px; }
+.card-foot { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.card-foot .listing-price { margin: 0; flex: 1 1 auto; min-width: 0; }
+.card-foot .actions { margin-top: 0; flex: 0 0 auto; }
+.card-foot .view-details-full { flex: 0 0 auto; }
