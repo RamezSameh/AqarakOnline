@@ -2018,30 +2018,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Batch 33 (4) — سحب ورقة للأسفل يغلقها (الفلاتر + ورقة الكارت).
-    function addSheetSwipe(sheet, closeFn) {
-        if (!sheet) return;
-        var handle = sheet.querySelector(".sheet-handle");
-        if (!handle) return;
-        var startY = 0, dy = 0, dragging = false;
-        handle.addEventListener("touchstart", function (e) {
-            if (e.touches.length !== 1) return;
-            dragging = true; startY = e.touches[0].clientY; dy = 0;
-            sheet.style.transition = "none";
-        }, { passive: true });
-        handle.addEventListener("touchmove", function (e) {
-            if (!dragging) return;
-            dy = e.touches[0].clientY - startY;
-            if (dy > 0) sheet.style.transform = "translateY(" + dy + "px)";
-        }, { passive: true });
-        handle.addEventListener("touchend", function () {
-            if (!dragging) return;
-            dragging = false;
-            sheet.style.transition = "";
-            sheet.style.transform = "";
-            if (dy > 90) closeFn();
-        });
-    }
     // Batch 83 — سحب ورقة الفلاتر لأسفل يغلقها من أي مكان فيها وهي في أولها (زي ورق التطبيقات):
     // لو الفلاتر متمررة لتحت، السحب يكمّل سكرول عادي؛ ولو في أولها، السحب لتحت يقفل الورقة.
     if (sidebar) {
@@ -2088,10 +2064,12 @@ document.addEventListener("DOMContentLoaded", function () {
         if (det && detailsLink) det.href = detailsLink.href;
         cardSheet.classList.add("open");
         if (cardSheetBackdrop) cardSheetBackdrop.classList.add("open");
+        document.body.style.overflow = "hidden";
     }
     function closeCardSheet() {
         if (cardSheet) cardSheet.classList.remove("open");
         if (cardSheetBackdrop) cardSheetBackdrop.classList.remove("open");
+        document.body.style.overflow = "";
         currentCard = null;
     }
     document.addEventListener("click", function (e) {
@@ -2123,7 +2101,30 @@ document.addEventListener("DOMContentLoaded", function () {
             fallbackCopy(url, done);
         }
     });
-    if (cardSheet) addSheetSwipe(cardSheet, closeCardSheet);
+    // Batch 103 — سحب ورقة الكارت لأسفل يغلقها من أي مكان فيها وهي في أولها (زي ورقة الفلاتر B83):
+    // لو الورقة متمررة لتحت، السحب يكمّل سكرول عادي؛ ولو في أولها، السحب لتحت يقفلها.
+    // (قبل كده السحب كان من المقبض بس — addSheetSwipe، اتشالت — والورقة نفسها ماكانتش بتسكرول أصلًا.)
+    if (cardSheet) {
+        var cardDragY = 0, cardDragDy = 0, cardDragging = false;
+        cardSheet.addEventListener("touchstart", function (e) {
+            if (e.touches.length !== 1) return;
+            if (cardSheet.scrollTop > 0) return;
+            cardDragging = true; cardDragY = e.touches[0].clientY; cardDragDy = 0;
+            cardSheet.style.transition = "none";
+        }, { passive: true });
+        cardSheet.addEventListener("touchmove", function (e) {
+            if (!cardDragging) return;
+            cardDragDy = e.touches[0].clientY - cardDragY;
+            if (cardDragDy > 0) cardSheet.style.transform = "translateY(" + cardDragDy + "px)";
+        }, { passive: true });
+        cardSheet.addEventListener("touchend", function () {
+            if (!cardDragging) return;
+            cardDragging = false;
+            cardSheet.style.transition = "";
+            cardSheet.style.transform = "";
+            if (cardDragDy > 90) closeCardSheet();
+        });
+    }
 });
 
 // Batch 101 — أسهم جانبية لسلايدرات الكروت على الشاشة الكبيرة (بدل السحب بالماوس اللي اتلغى).

@@ -1129,7 +1129,7 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     /* (3) زر ⋮ على الكارت + الورقة السفلية */
     .card-menu-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(15, 23, 42, .75); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; backdrop-filter: blur(4px); }
     .sheet-backdrop.open { display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, .55); z-index: 220; }
-    .card-sheet.open { display: block; position: fixed; bottom: 0; inset-inline: 0; z-index: 230; background: #1e293b; border-radius: 16px 16px 0 0; padding: 8px 16px calc(20px + env(safe-area-inset-bottom)); box-shadow: 0 -8px 32px rgba(0,0,0,.5); }
+    .card-sheet.open { display: block; position: fixed; bottom: 0; inset-inline: 0; z-index: 230; background: #1e293b; border-radius: 16px 16px 0 0; padding: 8px 16px calc(20px + env(safe-area-inset-bottom)); box-shadow: 0 -8px 32px rgba(0,0,0,.5); max-height: 82vh; overflow-y: auto; overscroll-behavior: contain; }
     [data-theme="light"] .card-sheet.open { background: #f8fafc; }
     .card-sheet .sheet-handle { display: block; width: 48px; height: 6px; border-radius: 999px; background: #64748b; margin: 4px auto 8px; touch-action: none; cursor: grab; }
     .card-sheet h3 { font-size: 16px; margin: 4px 0 8px; }
