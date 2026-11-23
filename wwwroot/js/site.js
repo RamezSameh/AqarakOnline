@@ -1025,11 +1025,11 @@ document.addEventListener("DOMContentLoaded", function () {
             var existing = document.querySelector("#existingPhotos img");
             if (existing) { photoUrl = existing.getAttribute("src") || ""; }
         }
-        var html = '<article class="listing-card revealed"><div class="availability-bar available">متاح</div>';
+        var html = '<article class="listing-card revealed"><div class="card-photo-wrap"><span class="card-avail-chip available">متاح</span>';
         html += photoUrl
             ? '<img class="listing-photo" src="' + escapeHtml(photoUrl) + '" alt="" />'
             : '<div class="listing-photo placeholder">لا توجد صورة</div>';
-        html += '<div class="listing-body"><h3>' + escapeHtml(val("Title") || "عنوان الإعلان") + '</h3>';
+        html += '</div><div class="listing-body"><h3>' + escapeHtml(val("Title") || "عنوان الإعلان") + '</h3>';
         html += '<p class="listing-area">' + escapeHtml(selectedText("Area") || val("Area")) + '</p>';
         html += '<p class="listing-area">المساحة: ' + escapeHtml(val("AreaSqm")) + ' م²</p>';
         if (facts.length) { html += '<p class="listing-facts">' + facts.map(escapeHtml).join(" • ") + '</p>'; }

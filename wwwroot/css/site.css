@@ -52,9 +52,6 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 .listing-card { border: 1px solid #334155; border-radius: 10px; overflow: hidden; background: #1e293b; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; }
 .listing-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0, 0, 0, .45); }
 .listing-facts { color: #cbd5e1; font-size: 14px; margin: 6px 0; }
-.availability-bar { padding: 8px 16px; font-weight: 700; text-align: center; }
-.availability-bar.available { background: #065f46; color: #fff; }
-.availability-bar.closed { background: #7f1d1d; color: #fff; }
 .about { margin: 32px 0; }
 .why-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
 .why-card { border: 1px solid #334155; border-radius: 10px; padding: 16px; background: #1e293b; }
@@ -624,8 +621,6 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 /* 4 — سعر الكارت بخلفية شريطية */
 .listing-price { background: linear-gradient(90deg, rgba(99, 102, 241, .22), rgba(99, 102, 241, 0)); border-radius: 8px; padding: 6px 10px; }
 [data-theme="light"] .listing-price { background: linear-gradient(90deg, rgba(99, 102, 241, .14), rgba(99, 102, 241, 0)); }
-/* 7 — شريط متاح/غير متاح أرفع وأوضح */
-.availability-bar { font-size: 15px; font-weight: 800; padding: 10px 16px; letter-spacing: .5px; }
 /* 8 — فيديو التفاصيل أكبر */
 .detail-video { width: 100%; max-height: 640px; background: #000; border-radius: 12px; }
 /* 9 — شريط جانبي ثابت في التفاصيل على الديسكتوب */
@@ -904,7 +899,6 @@ main h1 { font-weight: 800; }
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
     .listing-card { opacity: 1; transform: none; transition: none; }
     .listing-card.revealed:hover { transform: none; }
-    .availability-bar.available { animation: none; }
     .nav-create-primary { animation: none; }
 }
 .listing-card.availability-available { border-inline-start: 3px solid #22c55e; }
@@ -919,8 +913,6 @@ main h1 { font-weight: 800; }
 .details-facts p { display: flex; justify-content: space-between; gap: 12px; border: none; border-bottom: 1px solid #334155; border-radius: 0; background: transparent; padding: 10px 4px; }
 .details-facts p strong { color: #94a3b8; }
 .details-facts p.details-price { background: rgba(99, 102, 241, .15); border-radius: 10px; padding: 12px 16px; border-bottom: none; }
-.availability-bar.available { animation: availPulse 2s ease-in-out infinite; }
-@keyframes availPulse { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
 .urgent-option { background: rgba(239, 68, 68, .12); border: 1px solid #ef4444; border-radius: 8px; padding: 8px 12px; }
 .password-strength { height: 8px; background: #334155; border-radius: 999px; overflow: hidden; margin-top: 6px; }
 .password-strength-bar { height: 100%; width: 0; transition: width .3s ease, background .3s ease; }
@@ -1416,3 +1408,8 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
 .card-foot .listing-price { font-size: 20px; overflow: hidden; text-overflow: ellipsis; }
 .card-foot .actions { flex-wrap: nowrap; gap: 8px; }
 .card-foot .actions .btn { padding: 7px 10px; font-size: 13px; }
+
+/* Batch 98 — شريط «متاح» العريض اتشال من الكارت (كان ~43px عالفاضي)؛
+   الحالة بقت شارة صغيرة على الصورة (تحت على الطرف) من غير ما تاخد أي ارتفاع. */
+.card-avail-chip { position: absolute; bottom: 10px; inset-inline-start: 10px; z-index: 3; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #fff; background: #065f46; }
+.card-avail-chip.closed { background: #7f1d1d; }
