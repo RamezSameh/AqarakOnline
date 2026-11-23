@@ -147,9 +147,9 @@
                 <p>📜 <a asp-controller="Home" asp-action="Terms">@L.T("TermsOfUse")</a></p>
                 <p>🔒 <a asp-controller="Home" asp-action="Privacy">@L.T("PrivacyPolicy")</a></p>
                 <p>🧮 <a asp-controller="Home" asp-action="Calculator">@L.T("Calculator")</a></p>
-                <p>📊 <a asp-controller="Home" asp-action="PriceIndex">مؤشر الأسعار</a></p>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
+                <p>📊 <a asp-controller="Home" asp-action="PriceIndex">مؤشر الأسعار</a></p>
                 <p>🆕 <a asp-controller="Listings" asp-action="Index" asp-route-sort="newest">أحدث الإعلانات</a></p>
                 <p>👁️ <a asp-controller="Listings" asp-action="Index" asp-route-sort="viewsDesc">الأكثر مشاهدة</a></p>
                 }

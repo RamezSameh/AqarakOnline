@@ -110,6 +110,7 @@ public class HomeController : Controller
     }
 
     /// <summary>مؤشر الأسعار العلني (Batch 41 — تميّز 3): متوسط سعر المتر لكل منطقة واتجاهه.</summary>
+    [Authorize]
     [OutputCache(PolicyName = "Static300")]
     public async Task<IActionResult> PriceIndex()
     {
