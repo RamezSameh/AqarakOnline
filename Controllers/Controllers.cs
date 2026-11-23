@@ -709,6 +709,12 @@ public class ListingsController : Controller
             .Where(l => l.Approval == ListingApproval.Approved && l.IsAvailable && l.Area == area && l.AreaSqm > 0)
             .Select(l => l.Price / l.AreaSqm).ToListAsync();
         ViewBag.AreaAvgPricePerSqm = areaSqmPrices.Any() ? areaSqmPrices.Average() : (decimal?)null;
+        // Batch 91 — اسم باراميتر الراوت «area» بيتصادم مع مفتاح الـ Area المحجوز في MVC:
+        // محرك الفيو بيشوف RouteData["area"] = اسم المنطقة ويدوّر على الفيو تحت
+        // /Areas/«اسم المنطقة»/Views/... بس، وعمره ما بيوصل لـ /Views/Listings/Index.cshtml
+        // (ده اللي كان بيرمي 500 رغم إن اسم الفيو «Index» صح). بنشيل القيمة من الـ RouteData
+        // قبل ما ننادي Index فالفيو يتلاقى بالمسار العادي. الـ area نفسه متخزّن خلاص في ViewBag.
+        RouteData.Values.Remove("area");
         return await Index(search: null, listingType: null, propertyType: null,
             minPrice: null, maxPrice: null, onlyAvailable: false,
             minArea: null, maxArea: null, sort: null, page: 1,
