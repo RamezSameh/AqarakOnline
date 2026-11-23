@@ -1267,3 +1267,10 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     .account-card .cards-grid { width: auto; margin-inline: 0; }
     .account-card .cards-grid .listing-card { border-radius: 10px; }
 }
+
+/* Batch 67 — كروت الإعلانات على الموبايل لازقة في طرف الشاشة وفي بعض:
+   إلغاء الـ full-bleed عن شبكة الكروت (عرض عادي + استدارة 10px) وزيادة الفجوة. */
+@media (max-width: 640px) {
+    .cards-grid { width: auto; margin-inline: 0; gap: 16px; }
+    .cards-grid .listing-card { border-radius: 10px; }
+}
