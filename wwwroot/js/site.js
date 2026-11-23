@@ -5,8 +5,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // كانت المشكلة: القائمة بتتفتح بزرار ☰ بس مفيش طريقة واضحة
     // لقفلها غير دوسة تانية على نفس الزرار (من غير أي علامة قفل)،
     // على عكس نافذة الجرس واللوحة الجانبية اللي ليهم ✕ وخلفية وEscape.
-    // فبقى للقائمة نفس مسارات القفل: ✕ على الزرار، ضغطة خارج الـ header،
+    // فبقى للقائمة نفس مسارات القفل: ✕ جوّه القايمة، ضغطة خارج الـ header،
     // زر Escape، أو دوسة على أي رابط جواها.
+    // الزرار نفسه بيفضل ☰ على طول: لما كان بيقلب ✕ والقايمة مفتوحة
+    // كان بيبان ✕ تانية برّه القايمة (على طرف الهيدر) جنب ✕ القايمة.
     var navToggle = document.getElementById("navToggle");
     var mainNav = document.getElementById("mainNav");
     var navBackdrop = document.getElementById("navBackdrop");
@@ -18,7 +20,6 @@ document.addEventListener("DOMContentLoaded", function () {
         mainNav.classList.toggle("open", open);
         if (navToggle) {
             navToggle.setAttribute("aria-expanded", open ? "true" : "false");
-            navToggle.textContent = open ? "✕" : "☰";
         }
         if (navBackdrop) { navBackdrop.hidden = !open; }
         document.body.style.overflow = open ? "hidden" : "";
