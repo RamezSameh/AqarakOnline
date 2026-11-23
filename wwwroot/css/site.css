@@ -1332,8 +1332,16 @@ html, body { overflow-x: hidden; overflow-x: clip; }
 [data-theme="light"] .audit-item::before { border-color: #f1f5f9; }
 [data-theme="light"] .audit-item p { color: #475569; }
 [data-theme="light"] .account-notifications li { border-bottom-color: #e2e8f0; }
-/* الهيرو: الصورة البديلة (كل 8 ثواني) كانت بتغطي العنوان بطبقة غامقة والنص غامق. */
-[data-theme="light"] .hero::before { background-image: linear-gradient(rgba(255,255,255,.55), rgba(255,255,255,.75)), url("/images/hero-2.jpg"); }
+/* الهيرو: الخلفية البديلة (كل 8 ثواني) صورة غامقة، فالنص الغامق كان بيختفي عليها —
+   الحل مش تفتيح الصورة (كانت هتبهت)، لكن قلب النص لأبيض وهي ظاهرة، بنفس سرعة تلاشي الصورة. */
+.hero h1, .hero-tagline, .hero-stats { transition: color 1.5s ease; }
+.hero .btn-ghost { transition: background .15s ease, box-shadow .15s ease, color 1.5s ease, border-color 1.5s ease; }
+[data-theme="light"] .hero.hero-alt h1 { color: #fff; }
+[data-theme="light"] .hero.hero-alt .hero-tagline, [data-theme="light"] .hero.hero-alt .hero-stats { color: #e2e8f0; }
+[data-theme="light"] .hero.hero-alt .btn-ghost { color: #fff; border-color: rgba(255,255,255,.65); }
+[data-theme="light"] .hero.hero-alt .btn-ghost:hover { background: rgba(255,255,255,.15); color: #fff; }
+/* زرار «تصفح الإعلانات» (وكذلك زرار البحث): النيلي كان بيضيع وسط الصورة الغامقة، فحلقة بيضاء تحدده. */
+.hero.hero-alt .btn-primary { box-shadow: 0 0 0 2px rgba(255,255,255,.9), 0 4px 14px rgba(0,0,0,.45); }
 /* نصوص باهتة (رمادي فاتح / موف فاتح) على أبيض — بقت بدرجة أغمق مقروءة. */
 [data-theme="light"] .validation-summary, [data-theme="light"] .field-error, [data-theme="light"] .alert-error { color: #dc2626; }
 [data-theme="light"] .price-formatted, [data-theme="light"] .my-listings-counts, [data-theme="light"] .calc-legend-loan, [data-theme="light"] .compare-bar #compareCount, [data-theme="light"] #liveResultsCount { color: #4338ca; }
