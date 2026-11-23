@@ -249,7 +249,10 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 
 /* الوضع الفاتح: نفس المكونات بألوان فاتحة. */
 [data-theme="light"] body { background: #f1f5f9; color: #0f172a; }
-[data-theme="light"] a { color: #4338ca; }
+/* Batch 88 — الروابط اللي هي أزرار (<a class="btn">) كانت بتاخد لون الروابط في الوضع الفاتح:
+   [data-theme="light"] a بتفوق على .btn-primary لأنها أعلى Specificity (class+عنصر > class)،
+   فالنص كان بيبقى نيلي غامق على خلفية نيلي غامقة. الاستثناء ده يخلي لون الزرار الأبيض يفضل. */
+[data-theme="light"] a:not(.btn):not(.nav-cta) { color: #4338ca; }
 [data-theme="light"] .site-header { background: rgba(255, 255, 255, 0.97); border-bottom-color: #cbd5e1; }
 [data-theme="light"] .brand { color: #0f172a; }
 [data-theme="light"] .nav-link { color: #334155; }
