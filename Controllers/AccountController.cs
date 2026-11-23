@@ -372,6 +372,13 @@ public class AccountController : Controller
         var model = new MyAccountViewModel
         {
             ReceiveWhatsAppAlerts = currentUser?.ReceiveWhatsAppAlerts == true,
+            FullName = currentUser?.FullName,
+            PhoneNumber = currentUser?.PhoneNumber,
+            Email = currentUser?.Email,
+            Address = currentUser?.Address,
+            AccountStatus = currentUser?.AccountStatus ?? AccountStatus.Pending,
+            IsAdmin = currentUser != null && await _userManager.IsInRoleAsync(currentUser, "Admin"),
+            MemberSince = currentUser?.CreatedAt ?? DateTime.UtcNow,
             MyListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == userId),
             ApprovedListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == userId && l.Approval == ListingApproval.Approved),
             PendingListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == userId && l.Approval == ListingApproval.Pending),
@@ -485,4 +492,13 @@ public class MyAccountViewModel
 
     /// <summary>تنبيهات واتساب مفعّلة؟ (Batch 41 — تميّز 4).</summary>
     public bool ReceiveWhatsAppAlerts { get; set; }
+
+    /// <summary>تفاصيل الحساب (Batch 108).</summary>
+    public string? FullName { get; set; }
+    public string? PhoneNumber { get; set; }
+    public string? Email { get; set; }
+    public string? Address { get; set; }
+    public AccountStatus AccountStatus { get; set; }
+    public bool IsAdmin { get; set; }
+    public DateTime MemberSince { get; set; }
 }

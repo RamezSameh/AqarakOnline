@@ -1,6 +1,18 @@
 @model AqarakOnline.Controllers.MyAccountViewModel
 <h1>@L.T("MyAccount")</h1>
 <section class="account-card">
+<h2>تفاصيل الحساب</h2>
+<div class="details-facts">
+    <p><strong>الاسم الكامل</strong> @(Model.FullName ?? "-")</p>
+    <p><strong>رقم الهاتف</strong> @(Model.PhoneNumber ?? "-")</p>
+    <p><strong>البريد الإلكتروني</strong> @(Model.Email ?? "-")</p>
+    <p><strong>العنوان</strong> @(Model.Address ?? "-")</p>
+    <p><strong>نوع الحساب</strong> @(Model.IsAdmin ? "أدمن" : "مستخدم")</p>
+    <p><strong>حالة الحساب</strong> @(Model.AccountStatus switch { AccountStatus.Pending => "قيد المراجعة", AccountStatus.Active => "نشط", AccountStatus.Suspended => "موقوف مؤقتًا", AccountStatus.Blocked => "محظور", _ => "-" })</p>
+    <p><strong>عضو منذ</strong> @L.RelativeTime(Model.MemberSince)</p>
+</div>
+</section>
+<section class="account-card">
 <h2>نظرة عامة</h2>
 <div class="cards-grid">
     <a class="listing-card stat-card" asp-controller="Listings" asp-action="MyListings"><div class="listing-body"><h3>📋 إعلاناتي</h3><p class="stat-number">@Model.MyListingsCount</p><p>مقبول: @Model.ApprovedListingsCount | معلّق: @Model.PendingListingsCount</p></div></a>
