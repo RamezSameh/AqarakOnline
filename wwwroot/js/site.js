@@ -63,8 +63,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         if (open) {
             bellDropdown.removeAttribute("hidden");
-            document.body.style.overflow = "hidden";
             setNavOpen(false);
+            document.body.style.overflow = "hidden";
         } else {
             bellDropdown.setAttribute("hidden", "");
             document.body.style.overflow = "";
@@ -183,10 +183,10 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         side.classList.toggle("open", open);
-        document.body.style.overflow = open ? "hidden" : "";
         if (open) {
             setNavOpen(false);
         }
+        document.body.style.overflow = open ? "hidden" : "";
         // Batch 45 — حدّث كل أزرار فتح الإدارة (زرار الدرج + زرار الهيدر في الموبايل).
         document.querySelectorAll(".admin-side-toggle").forEach(function (b) {
             b.setAttribute("aria-expanded", open ? "true" : "false");
