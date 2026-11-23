@@ -2111,3 +2111,34 @@ document.addEventListener("DOMContentLoaded", function () {
     sheetAction("cardSheetCopy", function (card) { var b = card.querySelector(".actions .share-copy"); if (b) b.click(); });
     if (cardSheet) addSheetSwipe(cardSheet, closeCardSheet);
 });
+
+// Batch 100 — سحب سلايدرات الكروت بالماوس على الشاشة الكبيرة (التاتش بيسحب أصلًا).
+// الكليك اللي بييجي بعد السحب بيتكتم مرة واحدة عشان الكارت ميفتحش التفاصيل بالغلط.
+document.querySelectorAll(".cards-slider").forEach(function (slider) {
+    var startX = 0, startScroll = 0, dragging = false, moved = false;
+    slider.addEventListener("pointerdown", function (e) {
+        if (e.pointerType !== "mouse" || e.button !== 0) return;
+        dragging = true; moved = false;
+        startX = e.clientX; startScroll = slider.scrollLeft;
+        slider.classList.add("dragging");
+        try { slider.setPointerCapture(e.pointerId); } catch (err) { /* تجاهل */ }
+    });
+    slider.addEventListener("pointermove", function (e) {
+        if (!dragging) return;
+        var dx = e.clientX - startX;
+        if (Math.abs(dx) > 5) moved = true;
+        if (moved) slider.scrollLeft = startScroll - dx;
+    });
+    function endDrag() {
+        if (!dragging) return;
+        dragging = false;
+        slider.classList.remove("dragging");
+        if (!moved) return;
+        var suppress = function (ev) { ev.preventDefault(); ev.stopPropagation(); };
+        slider.addEventListener("click", suppress, true);
+        setTimeout(function () { slider.removeEventListener("click", suppress, true); }, 100);
+    }
+    slider.addEventListener("pointerup", endDrag);
+    slider.addEventListener("pointercancel", endDrag);
+    slider.addEventListener("pointerleave", endDrag);
+});

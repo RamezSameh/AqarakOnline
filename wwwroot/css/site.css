@@ -1424,3 +1424,16 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
 @media (max-width: 640px) {
     .cards-slider .ranked-item { flex-basis: 280px; }
 }
+
+/* Batch 100 — (1) السعر كان بيتقص في كروت السلايدر على الشاشة الكبيرة: الكارت 260px
+   (الداخلي 232px) والسعر «2,500 جنيه شهريًا» + «تواصل معنا» + ↗ = ~306px، فالـ ellipsis
+   بتاع Batch 97 كان بيقص السعر. في السلايدر بس: السعر 18px، وزرار التواصل أيقونة 💬
+   بس (النص مخفي)، وأيقونة المشاركة مخفية (المشاركة في ورقة ⋮ وصفحة التفاصيل) — فالسعر
+   يظهر كامل في سطر واحد. كروت الشبكة (صفحة الإعلانات) زي ما هي.
+   (2) سحب السلايدرات بالماوس على الشاشة الكبيرة: الكود في site.js (Batch 100). */
+.cards-slider .card-foot .listing-price { font-size: 18px; }
+.cards-slider .card-foot .contact-label { display: none; }
+.cards-slider .card-foot .share-copy { display: none; }
+.cards-slider { cursor: grab; }
+.cards-slider.dragging { cursor: grabbing; scroll-snap-type: none; }
+.cards-slider.dragging, .cards-slider.dragging * { cursor: grabbing !important; }

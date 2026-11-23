@@ -112,7 +112,7 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
             <div class="actions">
             @if (Model.IsAvailable && Model.Approval == ListingApproval.Approved && !isOwner)
             {
-                <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id">@L.T("ContactUs")</a>
+                <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id"><span aria-hidden="true">💬</span> <span class="contact-label">@L.T("ContactUs")</span></a>
             }
             @if (isOwner)
             {
