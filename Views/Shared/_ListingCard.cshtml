@@ -63,12 +63,12 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
                 <form asp-controller="Favorites" asp-action="Toggle" method="post" class="inline-form">
                     <input type="hidden" name="listingId" value="@Model.Id" />
                     <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
-                    <button type="submit" class="btn btn-ghost favorite-btn @(isFavorite ? "is-favorite" : "")" title="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")" aria-label="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")">🔖</button>
+                    <button type="submit" class="btn btn-ghost favorite-btn @(isFavorite ? "is-favorite" : "")" title="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")" aria-label="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")">❤️</button>
                 </form>
             }
             else
             {
-                <button type="button" class="btn btn-ghost favorite-btn guest-favorite" data-id="@Model.Id" title="إضافة إلى المفضلة">🔖</button>
+                <button type="button" class="btn btn-ghost favorite-btn guest-favorite" data-id="@Model.Id" title="إضافة إلى المفضلة">❤️</button>
             }
             <button type="button" class="btn btn-ghost card-menu-btn" data-id="@Model.Id" title="خيارات" aria-label="خيارات">⋮</button>
         </div>

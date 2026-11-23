@@ -162,7 +162,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 .password-toggle { white-space: nowrap; }
 /* زر المفضلة: القلب الممتلئ يميز العقار المحفوظ. */
 .favorite-btn { font-size: 18px; line-height: 1; }
-.favorite-btn.is-favorite { color: #f59e0b; border-color: #f59e0b; }
+.favorite-btn.is-favorite { color: #ef4444; border-color: #ef4444; }
 /* أيقونة الإشعارات وقائمتها. */
 .bell-wrap { position: relative; }
 .bell-btn { position: relative; padding: 8px 12px; border: 1px solid #475569; border-radius: 6px; background: transparent; color: #f1f5f9; font: inherit; cursor: pointer; }
@@ -361,7 +361,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 .card-photo-wrap { position: relative; }
 .card-photo-actions { position: absolute; top: 10px; inset-inline-end: 10px; display: flex; gap: 8px; z-index: 2; }
 .card-photo-actions .btn { background: rgba(15, 23, 42, .75); border-color: transparent; min-height: 0; padding: 6px 10px; backdrop-filter: blur(4px); }
-.card-photo-actions .favorite-btn.is-favorite { color: #f59e0b; }
+.card-photo-actions .favorite-btn.is-favorite { color: #ef4444; }
 
 /* (4) حالات فارغة أجمل */
 .empty-state { text-align: center; padding: 48px 20px; }
@@ -1403,7 +1403,7 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
    ذهبية + «في المفضلة» لو الإعلان متضاف أصلًا، و«إضافة إلى المفضلة» لو مش متضاف.
    وزر 🔖 على الكارت نفسه بقى يعمل pop صغير لما يتضاف (إحساس تفاعلي).
    (إصلاح تابع لـ B101: refreshGuestFavoriteButtons كان بيرجّع ♥/♡ للزوار عند تحميل الصفحة.) */
-.sheet-action.is-favorite { color: #f59e0b; }
+.sheet-action.is-favorite { color: #ef4444; }
 .card-photo-actions .favorite-btn { transition: transform .15s ease; }
 .card-photo-actions .favorite-btn.is-favorite { transform: scale(1.15); }
 
@@ -1443,3 +1443,10 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
 [data-theme="light"] .form-group-hint { color: #64748b; }
 .form-subgroup-title { font-size: 14px; color: #94a3b8; margin: 12px 0 6px; }
 [data-theme="light"] .form-subgroup-title { color: #64748b; }
+
+/* Batch 106 — أيقونة المفضلة بقت ❤️ قلب أحمر (اختياره) بدل 🔖 في كل مكان: الكارت،
+   صفحة التفاصيل، ورقة الكارت، وأيقونات قسم «المفضلة» في القائمة والشريط السفلي.
+   القلب الأحمر لونه ثابت كإيموجي، فالقلب اللي مش متضاف يبان رمادي باهت
+   (grayscale + opacity) عشان حالة المفضلة تبان على الكارت اللي فيه الأيقونة بس —
+   واللون الذهبي للحالة المتضافة بقى أحمر (#ef4444). */
+.favorite-btn:not(.is-favorite) { filter: grayscale(1); opacity: .6; }

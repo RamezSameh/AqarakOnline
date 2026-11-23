@@ -41,7 +41,7 @@
                 {
                     <div class="drawer-only">
                         <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">📋 @L.T("MyListings")</a>
-                        <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>
+                        <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">❤️ @L.T("Favorites")</a>
                         <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">🔔 @L.T("SavedSearches")</a>
                         <a class="nav-link @(currentController == "Viewings" ? "active" : "")" asp-controller="Viewings" asp-action="Index">📅 @L.T("Viewings")</a>
                         <a class="nav-link @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">👤 @L.T("MyAccount")</a>
@@ -55,7 +55,7 @@
                 }
                 else
                 {
-                    <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>
+                    <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">❤️ @L.T("Favorites")</a>
                     <a class="btn btn-ghost nav-auth" asp-controller="Account" asp-action="Login">🔑 @L.T("Login")</a>
                     <a class="btn btn-primary nav-auth" asp-controller="Account" asp-action="Register">📝 @L.T("Register")</a>
                 }
@@ -87,7 +87,7 @@
                         <div class="user-menu-dropdown" id="userMenuDropdown" hidden>
                             <span class="user-menu-name">👤 @displayName</span>
                             <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">📋 @L.T("MyListings")</a>
-                            <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>
+                            <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">❤️ @L.T("Favorites")</a>
                             <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">🔔 @L.T("SavedSearches")</a>
                             <a class="nav-link @(currentController == "Viewings" ? "active" : "")" asp-controller="Viewings" asp-action="Index">📅 @L.T("Viewings")</a>
                             <a class="nav-link user-menu-myaccount @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">👤 @L.T("MyAccount")</a>
@@ -170,7 +170,7 @@
         <a asp-controller="Home" asp-action="Index" class="@(currentController == "Home" ? "active" : "")"><span class="nav-ico">🏠</span><span>الرئيسية</span></a>
         <a asp-controller="Listings" asp-action="Index" asp-route-openFilters="true" class="@(currentController == "Listings" && (currentAction == "Index" || currentAction == "Area") ? "active" : "")"><span class="nav-ico">🔍</span><span>بحث</span></a>
         <a asp-controller="Listings" asp-action="Create" class="create-link @(currentController == "Listings" && currentAction == "Create" ? "active" : "")"><span class="nav-ico">+</span><span>أضف إعلان</span></a>
-        <a asp-controller="Favorites" asp-action="Index" class="@(currentController == "Favorites" ? "active" : "")"><span class="nav-ico">♥</span><span>المفضلة</span></a>
+        <a asp-controller="Favorites" asp-action="Index" class="@(currentController == "Favorites" ? "active" : "")"><span class="nav-ico">❤️</span><span>المفضلة</span></a>
         <a asp-controller="Account" asp-action="MyAccount" class="@(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")"><span class="nav-ico">👤</span><span>حسابي</span></a>
     </nav>
     @if (currentController == "Admin")
@@ -209,7 +209,7 @@
     <div id="cardSheet" class="card-sheet" role="dialog" aria-label="خيارات الإعلان">
         <div class="sheet-handle"></div>
         <h3 id="cardSheetTitle"></h3>
-        <button type="button" class="sheet-action" id="cardSheetFav">🔖 <span>المفضلة</span></button>
+        <button type="button" class="sheet-action" id="cardSheetFav">❤️ <span>المفضلة</span></button>
         <button type="button" class="sheet-action" id="cardSheetCompare">⚖️ <span>مقارنة</span></button>
         <button type="button" class="sheet-action" id="cardSheetCopy">🔗 <span>نسخ الرابط</span></button>
         <a class="sheet-action" id="cardSheetWhats" target="_blank" rel="noopener">💬 <span>مشاركة واتساب</span></a>

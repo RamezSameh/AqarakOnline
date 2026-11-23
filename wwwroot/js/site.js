@@ -944,9 +944,9 @@ document.addEventListener("DOMContentLoaded", function () {
             btn.classList.toggle("is-favorite", on);
             btn.setAttribute("title", on ? "إزالة من المفضلة" : "إضافة إلى المفضلة");
             if (btn.classList.contains("guest-fav-details")) {
-                btn.textContent = on ? "🔖 في المفضلة" : "🔖 إضافة إلى المفضلة";
+                btn.textContent = on ? "❤️ في المفضلة" : "❤️ إضافة إلى المفضلة";
             } else {
-                btn.textContent = "🔖";
+                btn.textContent = "❤️";
             }
         });
     }
