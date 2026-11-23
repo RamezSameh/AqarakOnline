@@ -1111,6 +1111,9 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     /* (4) مقبض سحب ورقة الفلاتر */
     .search-sidebar .sheet-handle { display: block; width: 48px; height: 6px; border-radius: 999px; background: #64748b; margin: 2px auto 10px; touch-action: none; cursor: grab; }
 }
+/* Batch 58 — شريط التنقل السفلي للموبايل بس: مخفي افتراضيًا،
+   قاعدة الـ 860px هي اللي بتظهره؛ من غيرها كان بيبان كصف عادي بعد الفوتر على الديسكتوب. */
+.mobile-bottom-nav { display: none; }
 @media (max-width: 860px) {
     /* (1) شريط التنقل السفلي */
     body { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
