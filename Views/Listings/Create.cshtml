@@ -84,12 +84,6 @@
     <input asp-for="DetailedAddress" />
     <span asp-validation-for="DetailedAddress" class="field-error"></span>
 
-    <label>@L.T("AdditionalDetails")</label>
-    <textarea asp-for="Description" rows="4" placeholder="اكتب وصفًا واضحًا للعقار..."></textarea>
-    <small id="descCounter" class="char-counter"></small>
-    <small id="descWordCounter" class="char-counter"></small>
-    <span asp-validation-for="Description" class="field-error"></span>
-
     </details>
 
     <div class="step-nav">
@@ -205,6 +199,12 @@
     {
         <label><input asp-for="IsAvailable" type="checkbox" /> @L.T("Available")</label>
     }
+
+    <label>@L.T("AdditionalDetails")</label>
+    <textarea asp-for="Description" rows="4" placeholder="اكتب وصفًا واضحًا للعقار..."></textarea>
+    <small id="descCounter" class="char-counter"></small>
+    <small id="descWordCounter" class="char-counter"></small>
+    <span asp-validation-for="Description" class="field-error"></span>
 
     </details>
 
