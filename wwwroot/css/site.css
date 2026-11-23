@@ -1286,3 +1286,63 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     .cards-grid { width: auto; margin-inline: 0; gap: 16px; }
     .cards-grid .listing-card { border-radius: 10px; }
 }
+
+/* Batch 85 — تظبيط الوضع الفاتح: عناصر كانت بتفضل غامقة أو نصها فاتح على خلفية بيضاء
+   (الوضع الفاتح هو الافتراضي بالنهار 6ص–6م، فالعيوب دي كانت ظاهرة لمعظم المستخدمين). */
+/* الهيدر: زرار القايمة والجرس كانوا أبيض على أبيض. */
+[data-theme="light"] .nav-toggle { color: #0f172a; }
+[data-theme="light"] .bell-btn { color: #0f172a; border-color: #cbd5e1; }
+[data-theme="light"] .bell-badge { border-color: #fff; }
+/* نافذة الإشعارات وصفحة الإشعارات: كانت صندوق كحلي غامق وسط صفحة فاتحة. */
+[data-theme="light"] .bell-modal { background: #fff; border-color: #e2e8f0; }
+[data-theme="light"] .bell-head, [data-theme="light"] .bell-item { border-bottom-color: #e2e8f0; }
+[data-theme="light"] .bell-foot { border-top-color: #e2e8f0; }
+[data-theme="light"] .bell-close, [data-theme="light"] .modal-close { color: #64748b; }
+[data-theme="light"] .bell-close:hover, [data-theme="light"] .modal-close:hover { color: #0f172a; background: #e2e8f0; }
+[data-theme="light"] .bell-unread, [data-theme="light"] .bell-empty, [data-theme="light"] .bell-item small, [data-theme="light"] .notification-item small { color: #64748b; }
+[data-theme="light"] .notification-item { background: #fff; border-color: #e2e8f0; }
+/* لوحة الإدارة: نص أبيض على خلفية بيضاء + هوفر غامق. */
+[data-theme="light"] .admin-nav-btn { color: #334155; }
+[data-theme="light"] .admin-nav-btn:hover { color: #0f172a; background: #e2e8f0; }
+[data-theme="light"] .admin-side-head { border-bottom-color: #e2e8f0; }
+[data-theme="light"] .admin-feature { color: #334155; }
+[data-theme="light"] .admin-feature:hover { background: #f1f5f9; color: #0f172a; }
+[data-theme="light"] .admin-feature.active { color: #4338ca; }
+/* أسطح غامقة بقت فاتحة: شريط التحديث الحي + تبويبات لوحة الأدمن + تبويبات التفاصيل. */
+[data-theme="light"] .live-banner { background: #eef2ff; }
+[data-theme="light"] .dash-tab-btn { background: #fff; border-color: #cbd5e1; color: #334155; }
+[data-theme="light"] .details-tab-btn { color: #64748b; }
+[data-theme="light"] .details-tab-btn.active { color: #4338ca; }
+[data-theme="light"] .details-tab-buttons { border-bottom-color: #e2e8f0; }
+/* قائمة المستخدم المنسدلة: حدّها الغامق بقى فاتح. */
+[data-theme="light"] .user-menu-dropdown { border-color: #e2e8f0; }
+[data-theme="light"] .user-menu-name { border-bottom-color: #e2e8f0; }
+/* هوفر كان بيبيّض النص على خلفية فاتحة. */
+[data-theme="light"] .profile-link:hover { color: #0f172a; border-color: #94a3b8; }
+[data-theme="light"] .lang-switch:hover { color: #0f172a; border-color: #94a3b8; }
+/* عناصر تحكم غامقة: أزرار + و -، مفتاح التبديل، شريط التقدم، قوة الباسورد. */
+[data-theme="light"] .stepper-btn { background: #fff; border-color: #cbd5e1; color: #0f172a; }
+[data-theme="light"] .toggle-slider { background: #cbd5e1; }
+[data-theme="light"] .steps-progress, [data-theme="light"] .password-strength { background: #e2e8f0; }
+/* حدود غامقة على أسطح فاتحة. */
+[data-theme="light"] .filter-chip, [data-theme="light"] .filters-box .filter-form > label:not(.sort-label) { border-color: #cbd5e1; }
+[data-theme="light"] .type-option, [data-theme="light"] .report-reason, [data-theme="light"] .tab-chip, [data-theme="light"] .form-section { border-color: #cbd5e1; }
+[data-theme="light"] .filter-sheet-close { color: #0f172a; border-color: #cbd5e1; }
+[data-theme="light"] .audit-timeline { border-inline-start-color: #cbd5e1; }
+[data-theme="light"] .audit-item::before { border-color: #f1f5f9; }
+[data-theme="light"] .audit-item p { color: #475569; }
+[data-theme="light"] .account-notifications li { border-bottom-color: #e2e8f0; }
+/* الهيرو: الصورة البديلة (كل 8 ثواني) كانت بتغطي العنوان بطبقة غامقة والنص غامق. */
+[data-theme="light"] .hero::before { background-image: linear-gradient(rgba(255,255,255,.55), rgba(255,255,255,.75)), url("/images/hero-2.jpg"); }
+/* نصوص باهتة (رمادي فاتح / موف فاتح) على أبيض — بقت بدرجة أغمق مقروءة. */
+[data-theme="light"] .validation-summary, [data-theme="light"] .field-error, [data-theme="light"] .alert-error { color: #dc2626; }
+[data-theme="light"] .price-formatted, [data-theme="light"] .my-listings-counts, [data-theme="light"] .calc-legend-loan, [data-theme="light"] .compare-bar #compareCount, [data-theme="light"] #liveResultsCount { color: #4338ca; }
+[data-theme="light"] .empty-results { color: #64748b; }
+[data-theme="light"] .calculator small, [data-theme="light"] .upload-progress span, [data-theme="light"] .empty-state-hint, [data-theme="light"] .my-listing-strip, [data-theme="light"] .listing-published, [data-theme="light"] .char-counter, [data-theme="light"] .account-menu-chev, [data-theme="light"] .footer-copy, [data-theme="light"] .input-unit span, [data-theme="light"] .details-facts p strong, [data-theme="light"] .account-notifications li span { color: #64748b; }
+/* تحميل وهمي (skeleton) وشريط التمرير كانوا غامقين. */
+[data-theme="light"] .skeleton-card { background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); }
+[data-theme="light"]::-webkit-scrollbar-track, [data-theme="light"] ::-webkit-scrollbar-track { background: #f1f5f9; }
+html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
+@media (max-width: 860px) {
+    [data-theme="light"] .filter-group input[type="range"] { background: #e2e8f0; }
+}
