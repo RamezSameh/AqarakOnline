@@ -449,9 +449,13 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 [data-theme="light"] .area-chips .btn:nth-child(5n+5) { border-color: #6d28d9; color: #6d28d9; }
 
 /* (7) الفلاتر في شريط جانبي على الشاشات الكبيرة */
+/* Batch 92 — الشريط كان sticky من غير سقف ارتفاع ولا سكرول خاص: الفورم أطول من الشاشة
+   فالنص اللي تحت (ومنهم زرار «فلترة») كان بيضيع تحت، والسكرول بتاعه مرتبط بصفحة الإعلانات.
+   وكمان top:76px كان بيدخّل الشريط تحت الهيدر الديسكتوب (~110px). دلوقتي: top تحت الهيدر،
+   وارتفاعه مقفول على الشاشة، وسكروله مستقل عن سكرول الإعلانات. */
 @media (min-width: 1025px) {
     .search-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 20px; align-items: start; }
-    .search-sidebar { position: sticky; top: 76px; }
+    .search-sidebar { position: sticky; top: 120px; max-height: calc(100vh - 140px); overflow-y: auto; overscroll-behavior: contain; }
     .search-sidebar .filters-box { margin-top: 0; }
 }
 
