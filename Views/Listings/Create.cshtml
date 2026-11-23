@@ -108,8 +108,8 @@
 
     <div class="form-row">
         <div>
-    <label>@L.T("Price")</label>
-    <input asp-for="Price" type="number" min="0" step="any" placeholder="مثال: 1500000" inputmode="decimal" />
+    <label id="priceLabel" data-sale-label="@L.T("Price")" data-rent-label="@L.T("MonthlyRentPrice")">@L.T("Price")</label>
+    <input asp-for="Price" type="number" min="0" step="any" placeholder="مثال: 1500000" inputmode="decimal" data-sale-placeholder="مثال: 1500000" data-rent-placeholder="مثال: 5000" />
     <span asp-validation-for="Price" class="field-error"></span>
     <small id="suggestedPriceHint"></small>
     <small id="priceFormatted" class="price-formatted"></small>

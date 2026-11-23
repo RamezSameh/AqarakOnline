@@ -1389,11 +1389,16 @@ document.addEventListener("DOMContentLoaded", function () {
     // وسبب البيع يظهر مع «للبيع» بس؛ بتتحدث مع تغيير النوع ومع نسخ إعلان قديم.
     var rentFields = document.getElementById("rentFields");
     var saleFields = document.getElementById("saleFields");
+    var priceLabel = document.getElementById("priceLabel");
+    var priceInput = document.getElementById("Price");
     function toggleListingTypeFields() {
         var checked = form ? form.querySelector("input[name='ListingType']:checked") : null;
         var isRent = checked && checked.value === "Rent";
         if (rentFields) { rentFields.hidden = !isRent; }
         if (saleFields) { saleFields.hidden = !!isRent; }
+        // Batch 118 — لابل السعر بيتغير مع النوع: للإيجار «سعر الإيجار الشهري».
+        if (priceLabel) { priceLabel.textContent = isRent ? (priceLabel.getAttribute("data-rent-label") || priceLabel.textContent) : (priceLabel.getAttribute("data-sale-label") || priceLabel.textContent); }
+        if (priceInput) { priceInput.placeholder = isRent ? (priceInput.getAttribute("data-rent-placeholder") || "") : (priceInput.getAttribute("data-sale-placeholder") || ""); }
     }
     if (form && (rentFields || saleFields)) {
         form.addEventListener("change", function (e) {

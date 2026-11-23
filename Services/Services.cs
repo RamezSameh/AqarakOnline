@@ -65,6 +65,7 @@ public class LanguageService
         ["Available"] = ("متاح", "Available"),
         ["NotAvailable"] = ("غير متاح", "Not available"),
         ["Price"] = ("السعر المبدئي", "Starting price"),
+        ["MonthlyRentPrice"] = ("سعر الإيجار الشهري", "Monthly rent price"),
         ["PerMonth"] = ("شهريًا", "per month"),
         ["Currency"] = ("جنيه", "EGP"),
         ["Area"] = ("المنطقة", "Area"),
