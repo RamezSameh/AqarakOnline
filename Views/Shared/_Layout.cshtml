@@ -168,7 +168,7 @@
     @* Batch 33 (1) — شريط تنقل سفلي في الموبايل. *@
     <nav class="mobile-bottom-nav" aria-label="التنقل السريع">
         <a asp-controller="Home" asp-action="Index" class="@(currentController == "Home" ? "active" : "")"><span class="nav-ico">🏠</span><span>الرئيسية</span></a>
-        <a asp-controller="Listings" asp-action="Index" class="@(currentController == "Listings" && (currentAction == "Index" || currentAction == "Area") ? "active" : "")"><span class="nav-ico">🔍</span><span>بحث</span></a>
+        <a asp-controller="Listings" asp-action="Index" asp-route-openFilters="true" class="@(currentController == "Listings" && (currentAction == "Index" || currentAction == "Area") ? "active" : "")"><span class="nav-ico">🔍</span><span>بحث</span></a>
         <a asp-controller="Listings" asp-action="Create" class="create-link @(currentController == "Listings" && currentAction == "Create" ? "active" : "")"><span class="nav-ico">+</span><span>أضف إعلان</span></a>
         <a asp-controller="Favorites" asp-action="Index" class="@(currentController == "Favorites" ? "active" : "")"><span class="nav-ico">♥</span><span>المفضلة</span></a>
         <a asp-controller="Account" asp-action="MyAccount" class="@(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")"><span class="nav-ico">👤</span><span>حسابي</span></a>

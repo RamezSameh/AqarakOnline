@@ -1960,6 +1960,16 @@ document.addEventListener("DOMContentLoaded", function () {
         filterClose.addEventListener("click", function () { setFilterOpen(false); });
     }
 
+    // Batch 81 — زر «بحث» في الشريط السفلي يفتح الإعلانات وورقة الفلاتر مفتوحة على خانة البحث.
+    if (sidebar) {
+        var openFilters = new URLSearchParams(window.location.search).get("openFilters");
+        if (openFilters === "true") {
+            setFilterOpen(true);
+            var searchInput = document.getElementById("searchInput");
+            if (searchInput) { searchInput.focus(); }
+        }
+    }
+
     // Batch 33 (4) — سحب ورقة للأسفل يغلقها (الفلاتر + ورقة الكارت).
     function addSheetSwipe(sheet, closeFn) {
         if (!sheet) return;
