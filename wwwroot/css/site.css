@@ -1254,3 +1254,10 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     .listing-published, .listing-views { margin: 2px 0; }
     .cards-slider .listing-card { flex-basis: 280px; }
 }
+
+/* Batch 57 — كروت إحصائيات «حسابي» متتمددش لطرف الشاشة على الموبايل:
+   قاعدة الـ full-bleed بتاعة شبكة الإعلانات (100vw) كانت بتسري عليها هي كمان. */
+@media (max-width: 640px) {
+    .account-card .cards-grid { width: auto; margin-inline: 0; }
+    .account-card .cards-grid .listing-card { border-radius: 10px; }
+}
