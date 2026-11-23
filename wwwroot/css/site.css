@@ -1399,3 +1399,11 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
 .card-foot .listing-price { margin: 0; flex: 1 1 auto; min-width: 0; }
 .card-foot .actions { margin-top: 0; flex: 0 0 auto; }
 .card-foot .view-details-full { flex: 0 0 auto; }
+
+/* Batch 96 — إصلاح صف السعر والأزرار في الكارت المضغوط: الصف كان بيفيض برّه الكارت
+   والزرار بيتقص من الطرف، والسعر بيتكسر على سطرين — لأن .card-foot من غير wrap
+   والأزرار flex-shrink:0. دلوقتي الصف بيلف بدل ما يفيض، والسعر سطر واحد، والأزرار أصغر.
+   وشارة «جديد» اتشالت من الكارت (سطر «منذ ساعة» بيقول نفس المعلومة). */
+.card-foot { flex-wrap: wrap; }
+.card-foot .listing-price { white-space: nowrap; }
+.card-foot .actions .btn { padding: 8px 12px; font-size: 14px; }

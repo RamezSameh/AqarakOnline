@@ -32,8 +32,6 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
         PropertyType.Villa => "🏰",
         _ => ""
     };
-    var newAge = DateTime.UtcNow - Model.CreatedAt;
-    var newBadgeClass = newAge.TotalHours < 6 ? "badge-new-fresh" : "badge-new-old";
 }
 <article class="listing-card@(Model.IsEffectivelyFeatured ? " featured-card" : "")@(Model.IsUrgent ? " urgent-card" : "")@(Model.IsAvailable ? " availability-available" : " availability-unavailable")" data-listing-id="@Model.Id" data-listing-type="@Model.ListingType">
     <div class="listing-type-strip listing-type-@Model.ListingType"></div>
@@ -97,10 +95,6 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
             @if (await TrustedAdvertiser.IsTrustedAsync(Model.OwnerId))
             {
                 <span class="badge badge-trusted">✓ @L.T("TrustedAdvertiser")</span>
-            }
-            @if (Model.CreatedAt >= DateTime.UtcNow.AddDays(-1))
-            {
-                <span class="badge badge-new @newBadgeClass">🆕 @L.T("New")</span>
             }
             <span class="ad-number">@L.T("AdNumber"): @Model.AdNumber</span>
         </div>
