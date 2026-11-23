@@ -1080,16 +1080,17 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
     [dir="ltr"] .main-nav { transform: translateX(-105%); }
     .main-nav.open { display: flex; transform: translateX(0); visibility: visible; }
     .drawer-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: linear-gradient(135deg, #7f1d1d, #991b1b); color: #fff; }
-    .drawer-head .brand-icon { background: rgba(255,255,255,.2); width: 34px; height: 34px; font-size: 18px; }
+    .drawer-head .brand-icon { background: rgba(255,255,255,.2); width: 32px; height: 32px; font-size: 17px; }
     .drawer-head-text { display: flex; flex-direction: column; min-width: 0; }
-    .drawer-head-text strong { font-size: 18px; }
-    .drawer-head-text small { font-size: 12px; opacity: .85; }
-    .drawer-close { margin-inline-start: auto; background: transparent; border: none; color: #fff; font-size: 18px; width: 36px; height: 36px; cursor: pointer; flex: 0 0 auto; }
+    .drawer-head-text strong { font-size: 17px; }
+    .drawer-head-text small { font-size: 11px; opacity: .85; }
+    .drawer-close { margin-inline-start: auto; background: transparent; border: none; color: #fff; font-size: 17px; width: 36px; height: 36px; cursor: pointer; flex: 0 0 auto; }
     .drawer-only { display: contents; }
-    .main-nav .nav-section { padding: 10px 16px 2px; padding-inline-start: 42px; font-size: 13px; }
-    .main-nav .nav-link, .main-nav .nav-cta, .main-nav .admin-nav-btn { text-align: start; justify-content: flex-start; padding: 10px 16px; font-size: 15px; }
+    .main-nav .nav-section { padding: 10px 16px 2px; padding-inline-start: 42px; font-size: 12px; }
+    .main-nav .nav-link, .main-nav .nav-cta, .main-nav .admin-nav-btn, .main-nav .nav-auth { text-align: start; justify-content: flex-start; padding: 10px 16px; font-size: 14px; }
     .main-nav .nav-cta { margin: 6px 16px 2px; justify-content: center; }
     .panel-account { border-top: 1px solid #334155; padding: 10px 16px 0; }
+    .main-nav .panel-account .btn { font-size: 14px; }
 }
 [data-theme="light"] .main-nav { background: #f8fafc; }
 
