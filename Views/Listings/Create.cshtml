@@ -159,8 +159,10 @@
             <option value="@level" selected="@(Model.Finishing == level)">@L.FinishingText(level)</option>
         }
     </select>
+    <div id="saleFields">
     <label>@L.T("SaleReason")</label>
     <input asp-for="SaleReason" maxlength="200" placeholder="اختياري — للبيع فقط" />
+    </div>
 
     <label>@L.T("Amenities")</label>
     <label class="toggle-label"><input asp-for="HasParking" type="checkbox" /><span class="toggle-slider"></span> @L.T("Parking")</label>
@@ -175,6 +177,7 @@
     <label><input asp-for="IsPriceNegotiable" type="checkbox" /> @L.T("Negotiable")</label>
     <label class="urgent-option"><input asp-for="IsUrgent" type="checkbox" /> 🔥 @L.T("Urgent")</label>
 
+    <div id="rentFields">
     <label>@L.T("RentPeriod")</label>
     <select asp-for="RentPeriod">
         <option value="">—</option>
@@ -184,6 +187,7 @@
 
     <label>@L.T("DepositMonths")</label>
     <input asp-for="DepositMonths" type="number" min="0" max="24" step="1" inputmode="numeric" />
+    </div>
 
     <label>@L.T("Meters")</label>
     <label><input asp-for="HasElectricityMeter" type="checkbox" /> @L.T("ElectricityMeter")</label>

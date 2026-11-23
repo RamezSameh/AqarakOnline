@@ -910,7 +910,7 @@ public class ListingsController : Controller
         listing.IsPriceNegotiable = model.IsPriceNegotiable;
         listing.IsUrgent = model.IsUrgent;
         listing.RentPeriod = model.ListingType == ListingType.Rent ? model.RentPeriod : null;
-        listing.DepositMonths = model.DepositMonths;
+        listing.DepositMonths = model.ListingType == ListingType.Rent ? model.DepositMonths : null;
         listing.HasElectricityMeter = model.HasElectricityMeter;
         listing.HasGasMeter = model.HasGasMeter;
         listing.HasWaterMeter = model.HasWaterMeter;

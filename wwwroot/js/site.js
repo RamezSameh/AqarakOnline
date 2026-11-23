@@ -1244,6 +1244,22 @@ document.addEventListener("DOMContentLoaded", function () {
         form.addEventListener("change", renderReview);
         renderReview();
     }
+    // Batch 49 — حقول الإيجار (المدة والتأمين) تظهر مع «للإيجار» بس،
+    // وسبب البيع يظهر مع «للبيع» بس؛ بتتحدث مع تغيير النوع ومع نسخ إعلان قديم.
+    var rentFields = document.getElementById("rentFields");
+    var saleFields = document.getElementById("saleFields");
+    function toggleListingTypeFields() {
+        var checked = form ? form.querySelector("input[name='ListingType']:checked") : null;
+        var isRent = checked && checked.value === "Rent";
+        if (rentFields) { rentFields.hidden = !isRent; }
+        if (saleFields) { saleFields.hidden = !!isRent; }
+    }
+    if (form && (rentFields || saleFields)) {
+        form.addEventListener("change", function (e) {
+            if (e.target && e.target.name === "ListingType") { toggleListingTypeFields(); }
+        });
+        toggleListingTypeFields();
+    }
     // 20 — السعر بتنسيق آلاف تلقائي (قراءة فقط تحت الحقل).
     var priceInput = document.getElementById("Price");
     var priceFormatted = document.getElementById("priceFormatted");
