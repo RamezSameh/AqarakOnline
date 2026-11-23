@@ -20,6 +20,25 @@
     </div>
 </section>
 
+@* Batch 121 — مميزات الحساب للضيوف بس: اللي يعمل حساب يقدر يتابع إعلاناته ويعدّل عليها ويتابع الجديد والإشعارات ويراجع حسابه وإحصائياته. *@
+@if (User.Identity?.IsAuthenticated != true)
+{
+<section class="about">
+    <h2>@L.T("AccountBenefitsTitle")</h2>
+    <div class="why-grid">
+        <div class="why-card"><h3>📋 @L.T("AccountBenefitsTrack")</h3></div>
+        <div class="why-card"><h3>✏️ @L.T("AccountBenefitsEdit")</h3></div>
+        <div class="why-card"><h3>🔔 @L.T("AccountBenefitsUpdates")</h3></div>
+        <div class="why-card"><h3>👤 @L.T("AccountBenefitsReview")</h3></div>
+        <div class="why-card"><h3>📊 @L.T("AccountBenefitsStats")</h3></div>
+    </div>
+    <div class="hero-actions" style="margin-top: 16px;">
+        <a class="btn btn-primary" asp-controller="Account" asp-action="Register">@L.T("Register")</a>
+        <a class="btn btn-ghost" asp-controller="Account" asp-action="Login">@L.T("Login")</a>
+    </div>
+</section>
+}
+
 <section class="home-stats">
     <div class="stat"><strong class="count-up">@ViewBag.AvailableListingsCount</strong><span>@L.T("StatsAvailableListings")</span></div>
     <div class="stat"><strong class="count-up">@ViewBag.AreasCount</strong><span>@L.T("StatsAreas")</span></div>
