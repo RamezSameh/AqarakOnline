@@ -534,6 +534,7 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 .form-steps { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 .form-step-item { border: 1px solid #334155; border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 700; color: #cbd5e1; background: #1e293b; }
 .form-step { font-size: 20px; margin: 24px 0 8px; border-bottom: 1px solid #334155; padding-bottom: 6px; }
+.form-step-details, .form-step { scroll-margin-top: 110px; }
 .step-num { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: #6366f1; color: #fff; align-items: center; justify-content: center; font-size: 15px; margin-inline-end: 8px; }
 [data-theme="light"] .form-step-item { background: #fff; border-color: #e2e8f0; color: #475569; }
 [data-theme="light"] .form-step { border-bottom-color: #e2e8f0; }

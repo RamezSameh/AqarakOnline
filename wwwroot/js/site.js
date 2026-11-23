@@ -1720,12 +1720,17 @@ document.addEventListener("DOMContentLoaded", function () {
         var wizardIndex = 0;
         var wizardBar = document.getElementById("stepsProgressBar");
         var wizardPills = document.querySelectorAll(".form-step-item");
-        function showWizardStep(i) {
+        function showWizardStep(i, scroll) {
             wizardIndex = Math.max(0, Math.min(i, wizardSteps.length - 1));
             wizardSteps.forEach(function (d, j) { d.open = (j === wizardIndex); });
             if (wizardBar) { wizardBar.style.width = ((wizardIndex + 1) / wizardSteps.length * 100) + "%"; }
             wizardPills.forEach(function (p, j) { p.classList.toggle("active", j === wizardIndex); });
-            listingForm.scrollIntoView({ behavior: "smooth", block: "start" });
+            // التمرير لبداية الخطوة المطلوبة نفسها، مش لأول النموذج؛
+            // وعند التحميل الأول مفيش تمرير خالص عشان الصفحة متنطش.
+            if (scroll !== false) {
+                var targetStep = wizardSteps[wizardIndex];
+                if (targetStep) { targetStep.scrollIntoView({ behavior: "smooth", block: "start" }); }
+            }
         }
         function validateWizardStep(i) {
             var fields = wizardSteps[i].querySelectorAll("[data-val-required]");
@@ -1741,7 +1746,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (wizardSteps.length > 1 && window.matchMedia("(max-width: 899px)").matches) {
             // المعالج للموبايل بس — على الديسكتوب الخطوات الأربع ظاهرة في عمودين.
             window.__wizardActive = true;
-            showWizardStep(0);
+            showWizardStep(0, false);
             listingForm.querySelectorAll(".step-next, .step-prev").forEach(function (btn) {
                 btn.addEventListener("click", function () {
                     var idx = { "step-1": 0, "step-2": 1, "step-3": 2, "step-4": 3 }[btn.getAttribute("data-target")];
