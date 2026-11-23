@@ -642,27 +642,32 @@ document.addEventListener("DOMContentLoaded", function () {
         compareCount.textContent = ids.length + " / 3";
         compareLink.href = "/Listings/Compare?ids=" + ids.join(",");
     }
-    document.addEventListener("click", function (event) {
-        var btn = event.target.closest(".compare-toggle");
-        if (!btn) {
-            return;
-        }
-        var id = parseInt(btn.getAttribute("data-id"), 10);
+    function toggleCompare(id) {
         var ids = readCompare();
         var at = ids.indexOf(id);
         if (at !== -1) {
             ids.splice(at, 1);
         } else if (ids.length >= 3) {
-            var original = btn.textContent;
-            btn.textContent = btn.getAttribute("data-max");
-            setTimeout(function () { btn.textContent = original; }, 2000);
-            return;
+            return "max";
         } else {
             ids.push(id);
             if (compareBar) { compareBar.hidden = false; }
         }
         localStorage.setItem(compareKey, JSON.stringify(ids));
         renderCompare();
+        return at !== -1 ? "removed" : "added";
+    }
+    document.addEventListener("click", function (event) {
+        var btn = event.target.closest(".compare-toggle");
+        if (!btn) {
+            return;
+        }
+        var id = parseInt(btn.getAttribute("data-id"), 10);
+        if (toggleCompare(id) === "max") {
+            var original = btn.textContent;
+            btn.textContent = btn.getAttribute("data-max");
+            setTimeout(function () { btn.textContent = original; }, 2000);
+        }
     });
     if (compareClear) {
         compareClear.addEventListener("click", function () {
@@ -1025,11 +1030,11 @@ document.addEventListener("DOMContentLoaded", function () {
             var existing = document.querySelector("#existingPhotos img");
             if (existing) { photoUrl = existing.getAttribute("src") || ""; }
         }
-        var html = '<article class="listing-card revealed"><div class="card-photo-wrap"><span class="card-avail-chip available">متاح</span>';
+        var html = '<article class="listing-card revealed"><div class="card-photo-wrap">';
         html += photoUrl
             ? '<img class="listing-photo" src="' + escapeHtml(photoUrl) + '" alt="" />'
             : '<div class="listing-photo placeholder">لا توجد صورة</div>';
-        html += '</div><div class="listing-body"><h3>' + escapeHtml(val("Title") || "عنوان الإعلان") + '</h3>';
+        html += '</div><div class="availability-bar available">● متاح</div><div class="listing-body"><h3>' + escapeHtml(val("Title") || "عنوان الإعلان") + '</h3>';
         html += '<p class="listing-area">' + escapeHtml(selectedText("Area") || val("Area")) + '</p>';
         html += '<p class="listing-area">المساحة: ' + escapeHtml(val("AreaSqm")) + ' م²</p>';
         if (facts.length) { html += '<p class="listing-facts">' + facts.map(escapeHtml).join(" • ") + '</p>'; }
@@ -2107,38 +2112,87 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
     sheetAction("cardSheetFav", function (card) { var b = card.querySelector(".favorite-btn"); if (b) b.click(); });
-    sheetAction("cardSheetCompare", function (card) { var b = card.querySelector(".compare-toggle"); if (b) b.click(); });
-    sheetAction("cardSheetCopy", function (card) { var b = card.querySelector(".actions .share-copy"); if (b) b.click(); });
+    sheetAction("cardSheetCompare", function (card) { var id = parseInt(card.getAttribute("data-listing-id"), 10); if (toggleCompare(id) === "max" && window.showToast) { window.showToast("أقصى عدد للمقارنة 3 إعلانات"); } });
+    sheetAction("cardSheetCopy", function (card) {
+        var link = card.querySelector(".listing-body h3 a");
+        var url = link ? link.href : location.href;
+        var done = function () { if (window.showToast) { window.showToast("تم النسخ ✓"); } };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(done).catch(function () { fallbackCopy(url, done); });
+        } else {
+            fallbackCopy(url, done);
+        }
+    });
     if (cardSheet) addSheetSwipe(cardSheet, closeCardSheet);
 });
 
-// Batch 100 — سحب سلايدرات الكروت بالماوس على الشاشة الكبيرة (التاتش بيسحب أصلًا).
-// الكليك اللي بييجي بعد السحب بيتكتم مرة واحدة عشان الكارت ميفتحش التفاصيل بالغلط.
+// Batch 101 — أسهم جانبية لسلايدرات الكروت على الشاشة الكبيرة (بدل السحب بالماوس اللي اتلغى).
+// الزرارين بيظهروا على الديسكتوب بس، وبيختفوا لو السلايدر مش بيفيض، وبيتعطلوا عند الطرفين.
+// التمرير بصفحة كاملة مع snap، والاتجاه بيتحسب من dir عشان الـ RTL.
 document.querySelectorAll(".cards-slider").forEach(function (slider) {
-    var startX = 0, startScroll = 0, dragging = false, moved = false;
-    slider.addEventListener("pointerdown", function (e) {
-        if (e.pointerType !== "mouse" || e.button !== 0) return;
-        dragging = true; moved = false;
-        startX = e.clientX; startScroll = slider.scrollLeft;
-        slider.classList.add("dragging");
-        try { slider.setPointerCapture(e.pointerId); } catch (err) { /* تجاهل */ }
-    });
-    slider.addEventListener("pointermove", function (e) {
-        if (!dragging) return;
-        var dx = e.clientX - startX;
-        if (Math.abs(dx) > 5) moved = true;
-        if (moved) slider.scrollLeft = startScroll - dx;
-    });
-    function endDrag() {
-        if (!dragging) return;
-        dragging = false;
-        slider.classList.remove("dragging");
-        if (!moved) return;
-        var suppress = function (ev) { ev.preventDefault(); ev.stopPropagation(); };
-        slider.addEventListener("click", suppress, true);
-        setTimeout(function () { slider.removeEventListener("click", suppress, true); }, 100);
+    var wrap = document.createElement("div");
+    wrap.className = "slider-wrap";
+    slider.parentNode.insertBefore(wrap, slider);
+    wrap.appendChild(slider);
+    var isRtl = document.documentElement.dir === "rtl";
+    var prev = document.createElement("button");
+    prev.type = "button";
+    prev.className = "slider-arrow prev";
+    prev.setAttribute("aria-label", "السابق");
+    prev.textContent = isRtl ? "›" : "‹";
+    var next = document.createElement("button");
+    next.type = "button";
+    next.className = "slider-arrow next";
+    next.setAttribute("aria-label", "التالي");
+    next.textContent = isRtl ? "‹" : "›";
+    wrap.appendChild(prev);
+    wrap.appendChild(next);
+    var dir = isRtl ? -1 : 1;
+    function scrollPos() {
+        var max = slider.scrollWidth - slider.clientWidth;
+        if (max <= 0) return 0;
+        var pos = slider.scrollLeft;
+        if (isRtl) { pos = pos <= 0 ? -pos : max - pos; }
+        return Math.max(0, Math.min(max, pos));
     }
-    slider.addEventListener("pointerup", endDrag);
-    slider.addEventListener("pointercancel", endDrag);
-    slider.addEventListener("pointerleave", endDrag);
+    function updateArrows() {
+        var max = slider.scrollWidth - slider.clientWidth;
+        wrap.classList.toggle("has-overflow", max > 4);
+        var pos = scrollPos();
+        prev.disabled = pos <= 1;
+        next.disabled = pos >= max - 1;
+    }
+    prev.addEventListener("click", function () { slider.scrollBy({ left: -dir * slider.clientWidth, behavior: "smooth" }); });
+    next.addEventListener("click", function () { slider.scrollBy({ left: dir * slider.clientWidth, behavior: "smooth" }); });
+    slider.addEventListener("scroll", updateArrows, { passive: true });
+    window.addEventListener("resize", updateArrows);
+    if (window.MutationObserver) {
+        new MutationObserver(updateArrows).observe(slider, { childList: true });
+    }
+    updateArrows();
+});
+
+// Batch 101 — زر المفضلة من غير إعادة تحميل: الضغط على القلب كان بيعمل POST كامل
+// فالصفحة بتتحدث وبترجع لأولها. دلوقتي الطلب بيتبعت بـ fetch والزرار بيتحدث مكانه،
+// ولو الطلب فشل بيرجع للسلوك القديم (POST عادي).
+document.addEventListener("submit", function (e) {
+    var form = e.target;
+    var btn = form.querySelector(".favorite-btn");
+    if (!btn || btn.classList.contains("guest-favorite")) return;
+    e.preventDefault();
+    var wasFav = btn.classList.contains("is-favorite");
+    fetch(form.action, { method: "POST", body: new FormData(form) })
+        .then(function (res) {
+            if (!res.ok) throw new Error("toggle failed");
+            btn.classList.toggle("is-favorite", !wasFav);
+            var added = btn.getAttribute("data-added");
+            var add = btn.getAttribute("data-add");
+            if (!wasFav && added) { btn.textContent = added; }
+            else if (wasFav && add) { btn.textContent = add; }
+            var title = !wasFav ? "إزالة من المفضلة" : "إضافة إلى المفضلة";
+            btn.title = title;
+            btn.setAttribute("aria-label", title);
+            if (window.showToast) { window.showToast(!wasFav ? "تمت الإضافة إلى المفضلة." : "تمت الإزالة من المفضلة."); }
+        })
+        .catch(function () { form.submit(); });
 });

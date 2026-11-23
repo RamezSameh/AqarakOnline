@@ -33,9 +33,8 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
         _ => ""
     };
 }
-<article class="listing-card@(Model.IsEffectivelyFeatured ? " featured-card" : "")@(Model.IsUrgent ? " urgent-card" : "")@(Model.IsAvailable ? " availability-available" : " availability-unavailable")" data-listing-id="@Model.Id" data-listing-type="@Model.ListingType">
+<article class="listing-card@(Model.IsEffectivelyFeatured ? " featured-card" : "")@(Model.IsUrgent ? " urgent-card" : "")" data-listing-id="@Model.Id" data-listing-type="@Model.ListingType">
     <div class="card-photo-wrap">
-    <span class="card-avail-chip @(Model.IsAvailable ? "available" : "closed")">@(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</span>
     @if (photos.Count > 0)
     {
         <div class="card-photos" data-photo-count="@photos.Count">
@@ -64,24 +63,28 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
                 <form asp-controller="Favorites" asp-action="Toggle" method="post" class="inline-form">
                     <input type="hidden" name="listingId" value="@Model.Id" />
                     <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
-                    <button type="submit" class="btn btn-ghost favorite-btn @(isFavorite ? "is-favorite" : "")" title="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")" aria-label="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")">@(isFavorite ? "♥" : "♡")</button>
+                    <button type="submit" class="btn btn-ghost favorite-btn @(isFavorite ? "is-favorite" : "")" title="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")" aria-label="@(isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة")">🔖</button>
                 </form>
             }
             else
             {
-                <button type="button" class="btn btn-ghost favorite-btn guest-favorite" data-id="@Model.Id" title="إضافة إلى المفضلة">♡</button>
+                <button type="button" class="btn btn-ghost favorite-btn guest-favorite" data-id="@Model.Id" title="إضافة إلى المفضلة">🔖</button>
             }
-            <button type="button" class="btn btn-ghost compare-toggle" data-id="@Model.Id" data-add="⚖️" data-added="✓" data-max="@L.T("CompareMax")" title="@L.T("AddToCompare")">⚖️</button>
             <button type="button" class="btn btn-ghost card-menu-btn" data-id="@Model.Id" title="خيارات" aria-label="خيارات">⋮</button>
         </div>
     </div>
+    <div class="availability-bar @(Model.IsAvailable ? "available" : "closed")">● @(Model.IsAvailable ? L.T("Available") : L.T("NotAvailable"))</div>
     <div class="listing-body">
         <div class="listing-meta">
             <span class="badge @(Model.ListingType == ListingType.Sale ? "badge-sale" : "badge-rent")">@L.ListingTypeText(Model.ListingType)</span>
+            @if (Model.IsPriceNegotiable)
+            {
+                <span class="badge badge-negotiable">@L.T("Negotiable")</span>
+            }
             <span class="badge badge-pt-@Model.PropertyType">@typeIcon @L.PropertyTypeText(Model.PropertyType)</span>
             @if (Model.IsEffectivelyFeatured)
             {
-                <span class="badge badge-featured">⭐ @L.T("Featured")</span>
+                <span class="badge badge-featured">@L.T("Featured")</span>
             }
             @if (Model.IsUrgent)
             {
@@ -100,9 +103,8 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
         <p class="listing-area">📍 @Model.Area • 📐 @Model.AreaSqm م²</p>
         @if (facts.Any())
         {
-            <p class="listing-facts">@string.Join(" • ", facts.Take(3))</p>
+            <p class="listing-facts">@string.Join(" • ", facts.Take(4))</p>
         }
-        <p class="listing-published">📅 @(Model.UpdatedAt.HasValue && Model.UpdatedAt > Model.CreatedAt ? "آخر تحديث " + L.RelativeTime(Model.UpdatedAt.Value) : L.RelativeTime(Model.CreatedAt)) • 👁 @Model.ViewCount • @Model.AdNumber</p>
         @if (Model.Approval != ListingApproval.Approved)
         {
             <p class="listing-status">@L.T("ApprovalStatus"): @L.ApprovalText(Model.Approval)</p>
@@ -113,20 +115,20 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
             @if (Model.IsAvailable && Model.Approval == ListingApproval.Approved && !isOwner)
             {
                 <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id"><span aria-hidden="true">💬</span> <span class="contact-label">@L.T("ContactUs")</span></a>
+                <a class="btn btn-whatsapp" href="https://wa.me/@ContactOptions.Value.WhatsAppDigits?text=@Uri.EscapeDataString($"بخصوص الإعلان {Model.AdNumber}")" target="_blank" rel="noopener">واتساب</a>
             }
             @if (isOwner)
             {
-                <form asp-controller="Listings" asp-action="Bump" method="post" class="inline-form">
+                <form asp-controller="Listings" asp-action="Bump" method="post" class="inline-form owner-action">
                     <input type="hidden" name="id" value="@Model.Id" />
                     <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
                     <button type="submit" class="btn btn-ghost" title="@L.T("RenewListing")">🔄</button>
                 </form>
-                <form asp-controller="Listings" asp-action="Duplicate" method="post" class="inline-form">
+                <form asp-controller="Listings" asp-action="Duplicate" method="post" class="inline-form owner-action">
                     <input type="hidden" name="id" value="@Model.Id" />
                     <button type="submit" class="btn btn-ghost" title="@L.T("CopyListing")">📋</button>
                 </form>
             }
-            <button type="button" class="btn btn-ghost share-copy" data-url="@($"{Context.Request.Scheme}://{Context.Request.Host}/Listings/Details/{Model.Id}")" title="@L.T("Share")">↗</button>
             </div>
         </div>
     </div>

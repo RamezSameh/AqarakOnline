@@ -288,12 +288,12 @@ else
         <form asp-controller="Favorites" asp-action="Toggle" method="post" class="inline-form">
             <input type="hidden" name="listingId" value="@Model.Id" />
             <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
-            <button type="submit" class="btn btn-ghost favorite-btn @(isFavorite ? "is-favorite" : "")">@(isFavorite ? "♥ في المفضلة" : "♡ إضافة إلى المفضلة")</button>
+            <button type="submit" class="btn btn-ghost favorite-btn @(isFavorite ? "is-favorite" : "")" data-add="🔖 إضافة إلى المفضلة" data-added="🔖 في المفضلة">@(isFavorite ? "🔖 في المفضلة" : "🔖 إضافة إلى المفضلة")</button>
         </form>
     }
     else
     {
-        <button type="button" class="btn btn-ghost favorite-btn guest-favorite guest-fav-details" data-id="@Model.Id" title="إضافة إلى المفضلة">♡ إضافة إلى المفضلة</button>
+        <button type="button" class="btn btn-ghost favorite-btn guest-favorite guest-fav-details" data-id="@Model.Id" title="إضافة إلى المفضلة">🔖 إضافة إلى المفضلة</button>
     }
     @if (isOwnListing)
     {

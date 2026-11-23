@@ -162,7 +162,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 .password-toggle { white-space: nowrap; }
 /* زر المفضلة: القلب الممتلئ يميز العقار المحفوظ. */
 .favorite-btn { font-size: 18px; line-height: 1; }
-.favorite-btn.is-favorite { color: #f87171; border-color: #f87171; }
+.favorite-btn.is-favorite { color: #f59e0b; border-color: #f59e0b; }
 /* أيقونة الإشعارات وقائمتها. */
 .bell-wrap { position: relative; }
 .bell-btn { position: relative; padding: 8px 12px; border: 1px solid #475569; border-radius: 6px; background: transparent; color: #f1f5f9; font: inherit; cursor: pointer; }
@@ -331,9 +331,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 .gallery-thumb { flex-basis: 110px; }
 .gallery-thumb img { height: 84px; }
 
-/* (6)(7) بطاقتا مميز / عاجل */
-.listing-card.featured-card { border: 2px solid #f59e0b; box-shadow: 0 0 0 1px #f59e0b, 0 8px 24px rgba(245, 158, 11, .25); }
-.listing-card.featured-card:hover { box-shadow: 0 0 0 1px #f59e0b, 0 12px 28px rgba(245, 158, 11, .35); }
+/* (7) بطاقة عاجل */
 .listing-card.urgent-card { border: 2px solid #ef4444; }
 
 /* (8) شريط تواصل ثابت أسفل التفاصيل في الموبايل */
@@ -362,16 +360,12 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 .cards-slider { display: flex; gap: 16px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; padding-bottom: 8px; margin-top: 20px; }
 /* Batch 70 — كروت سلايدر الرئيسية أصغر على الشاشة الكبيرة (320 ← 260px، 4 كروت في الصف بدل 3). */
 .cards-slider .listing-card { flex: 0 0 260px; scroll-snap-align: start; }
-/* Batch 40 — الأكثر مشاهدة بقى سلايدر زي باقي أقسام الرئيسية: العنصر المرتب
-   (.ranked-item) ياخد نفس عرض كارت السلايدر بدل ما الشبكة تنزله عمود واحد. */
-.cards-slider .ranked-item { flex: 0 0 320px; scroll-snap-align: start; }
 
 /* (3) أزرار المفضلة والمقارنة فوق صورة الكارت */
 .card-photo-wrap { position: relative; }
 .card-photo-actions { position: absolute; top: 10px; inset-inline-end: 10px; display: flex; gap: 8px; z-index: 2; }
 .card-photo-actions .btn { background: rgba(15, 23, 42, .75); border-color: transparent; min-height: 0; padding: 6px 10px; backdrop-filter: blur(4px); }
-.card-photo-actions .favorite-btn.is-favorite { color: #f87171; }
-.card-photo-actions .compare-toggle.is-selected { color: #38bdf8; }
+.card-photo-actions .favorite-btn.is-favorite { color: #f59e0b; }
 
 /* (4) حالات فارغة أجمل */
 .empty-state { text-align: center; padding: 48px 20px; }
@@ -520,8 +514,6 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 /* Batch 24 — design 6 */
 /* (1) أيقونة فيديو على الكارت */
 .video-badge { position: absolute; top: 10px; inset-inline-start: 10px; z-index: 3; background: rgba(0, 0, 0, .65); color: #fff; border-radius: 999px; padding: 4px 8px; font-size: 14px; }
-/* (2) تاريخ النشر أوضح على الكارت */
-.listing-published { color: #94a3b8; font-size: 13px; margin: 2px 0; }
 /* (5) أزرار مشاركة دائرية في التفاصيل */
 .share-row .share-icon { border-radius: 50%; width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; }
 /* (6) أزرار تنقل المعرض أكبر في الموبايل */
@@ -688,9 +680,6 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 .contact-big-btn { display: inline-flex; align-items: center; gap: 6px; padding: 12px 20px; font-size: 17px; }
 /* 31 — الهيرو بخلفية صورة */
 .hero { background-image: linear-gradient(rgba(15, 23, 42, .55), rgba(15, 23, 42, .75)), url("/images/hero.jpg"); background-size: cover; background-position: center; }
-/* 32 — ترقيم الأكثر مشاهدة */
-.ranked-item { position: relative; }
-.rank-num { position: absolute; top: 8px; inset-inline-start: 8px; z-index: 3; width: 30px; height: 30px; border-radius: 50%; background: #f59e0b; color: #fff; font-weight: 800; display: grid; place-items: center; box-shadow: 0 2px 8px rgba(0, 0, 0, .4); }
 /* 33 — زر عرض الكل أوضح */
 .section-head .btn { padding: 10px 20px; font-weight: 800; }
 /* 34 — ترتيب النتائج كأزرار */
@@ -823,11 +812,6 @@ main h1 { font-weight: 800; }
 .badge-furnishing-partial { background: #b45309; color: #fff; }
 /* 5 — full-width details button on the card */
 .view-details-full { flex: 1 1 100%; }
-/* 6 — hide card share buttons on mobile */
-@media (max-width: 640px) {
-    .listing-card .actions .share-copy,
-    .listing-card .actions a[href^="https://t.me"] { display: none; }
-}
 /* 9 — circular gallery thumbs */
 .gallery-thumb { flex-basis: 84px; }
 .gallery-thumb img { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; }
@@ -845,8 +829,7 @@ main h1 { font-weight: 800; }
 /* 21 — compact my-listings */
 .my-listings-compact .card-photo-wrap { display: none; }
 .my-listings-compact .listing-body { padding: 8px 12px; }
-.my-listings-compact .listing-facts,
-.my-listings-compact .listing-published { display: none; }
+.my-listings-compact .listing-facts { display: none; }
 /* 30 — finishing filter chips */
 .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
 .filter-chip { border: 1px solid #334155; border-radius: 999px; padding: 6px 14px; cursor: pointer; }
@@ -888,10 +871,6 @@ main h1 { font-weight: 800; }
     .listing-card h3 { font-size: 16px; }
     .listing-price { font-size: 26px; }
 }
-@media (hover: hover) and (min-width: 641px) {
-    .listing-card .actions .share-copy, .listing-card .actions a[href^="https://t.me"] { opacity: 0; transition: opacity .3s ease; }
-    .listing-card:hover .actions .share-copy, .listing-card:hover .actions a[href^="https://t.me"] { opacity: 1; }
-}
 .listing-card { opacity: 0; transform: translateY(12px); transition: opacity .5s ease, transform .5s ease; }
 .listing-card.revealed { opacity: 1; transform: translateY(0); }
 .listing-card.revealed:hover { transform: translateY(-4px) rotate(-.5deg); }
@@ -901,13 +880,6 @@ main h1 { font-weight: 800; }
     .listing-card.revealed:hover { transform: none; }
     .nav-create-primary { animation: none; }
 }
-.listing-card.availability-available { border-inline-start: 3px solid #22c55e; }
-.listing-card.availability-unavailable { border-inline-start: 3px solid #64748b; }
-.listing-card.featured-card { position: relative; }
-.listing-card.featured-card::before { content: "⭐ مميز"; position: absolute; top: 14px; left: -34px; transform: rotate(-45deg); background: #f59e0b; color: #fff; padding: 4px 36px; font-size: 12px; font-weight: 800; z-index: 4; box-shadow: 0 2px 6px rgba(0, 0, 0, .3); }
-.listing-type-strip { height: 6px; }
-.listing-type-Sale { background: #6366f1; }
-.listing-type-Rent { background: #22c55e; }
 .gallery-main { background: #000; border-radius: 12px; padding: 8px; }
 .details-facts { display: block; }
 .details-facts p { display: flex; justify-content: space-between; gap: 12px; border: none; border-bottom: 1px solid #334155; border-radius: 0; background: transparent; padding: 10px 4px; }
@@ -1409,31 +1381,41 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
 .card-foot .actions { flex-wrap: nowrap; gap: 8px; }
 .card-foot .actions .btn { padding: 7px 10px; font-size: 13px; }
 
-/* Batch 98 — شريط «متاح» العريض اتشال من الكارت (كان ~43px عالفاضي)؛
-   الحالة بقت شارة صغيرة على الصورة (تحت على الطرف) من غير ما تاخد أي ارتفاع. */
-.card-avail-chip { position: absolute; bottom: 10px; inset-inline-start: 10px; z-index: 3; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #fff; background: #065f46; }
-.card-avail-chip.closed { background: #7f1d1d; }
-
-/* Batch 99 — كروت «الأكثر مشاهدة» غير متناسقة مع باقي الكروت: الـ ranked-item كان لسه
-   320px من قبل Batch 70 اللي صغّر كروت السلايدر لـ 260px (والقاعدة نفسها مكتوب عليها
-   «نفس عرض كارت السلايدر»)، وعلى الموبايل كان 320px وباقي الكروت 280px.
-   دلوقتي نفس العرض بالظبط في الحالتين. وشارة الفيديو 🎬 في كروت الأكثر مشاهدة
-   كانت بتتداخل مع رقم الترتيب (الاتنين فوق على الطرف) — نزلت لتحت الرقم. */
-.cards-slider .ranked-item { flex-basis: 260px; }
-.ranked-item .video-badge { top: 46px; }
-@media (max-width: 640px) {
-    .cards-slider .ranked-item { flex-basis: 280px; }
-}
-
 /* Batch 100 — (1) السعر كان بيتقص في كروت السلايدر على الشاشة الكبيرة: الكارت 260px
    (الداخلي 232px) والسعر «2,500 جنيه شهريًا» + «تواصل معنا» + ↗ = ~306px، فالـ ellipsis
    بتاع Batch 97 كان بيقص السعر. في السلايدر بس: السعر 18px، وزرار التواصل أيقونة 💬
-   بس (النص مخفي)، وأيقونة المشاركة مخفية (المشاركة في ورقة ⋮ وصفحة التفاصيل) — فالسعر
-   يظهر كامل في سطر واحد. كروت الشبكة (صفحة الإعلانات) زي ما هي.
-   (2) سحب السلايدرات بالماوس على الشاشة الكبيرة: الكود في site.js (Batch 100). */
+   بس (النص مخفي)، وزرار واتساب مخفي (واتساب في صفحة التفاصيل) — فالسعر يظهر كامل
+   في سطر واحد. كروت الشبكة (صفحة الإعلانات) زي ما هي.
+   (2) السحب بالماوس اتلغى في Batch 101 (أسهم جانبية بداله — الكود في site.js). */
 .cards-slider .card-foot .listing-price { font-size: 18px; }
 .cards-slider .card-foot .contact-label { display: none; }
-.cards-slider .card-foot .share-copy { display: none; }
-.cards-slider { cursor: grab; }
-.cards-slider.dragging { cursor: grabbing; scroll-snap-type: none; }
-.cards-slider.dragging, .cards-slider.dragging * { cursor: grabbing !important; }
+.cards-slider .card-foot .btn-whatsapp { display: none; }
+
+/* Batch 101 — الكارت نفس تصميم الشكل 2 من صفحة المقارنة (لقطة الشاشة):
+   - شريط «متاح» الأخضر رجع بس تحت الصورة (● متاح) بدل الشارة اللي كانت على الصورة.
+   - شريط النوع الملون (6px) والحد الأخضر/الرمادي على طرف الكارت اتشالوا.
+   - «مميز» بقت حبة ذهبية صغيرة «★ مميز» على الصورة بدل الشريط المائل، ومن غير الحد الذهبي.
+   - سطر التاريخ والمشاهدات ورقم الإعلان اتشال من الكارت.
+   - زرار «واتساب» الأخضر في صف السعر بدل «مشاركة» (بيفتح واتساب الموقع برسالة عن الإعلان).
+   - زرارا التجديد والتكرار بتوع المالك بيظهروا في «إعلاناتي» بس.
+   - شارة الفيديو 🎬 نزلت لتحت على الطرف (الحبة الذهبية خدت مكانها فوق).
+   - المفضلة بقت 🔖 ذهبية بدل القلب (القلب اتشال من الكارت وصفحة التفاصيل).
+   - أسهم جانبية للسلايدرات على الشاشة الكبيرة بدل السحب بالماوس (الكود في site.js). */
+.availability-bar { padding: 8px 16px; font-size: 15px; font-weight: 800; text-align: center; letter-spacing: .5px; }
+.availability-bar.available { background: #16a34a; color: #fff; }
+.availability-bar.closed { background: #7f1d1d; color: #fff; }
+.featured-card .card-photo-wrap::before { content: "★ مميز"; position: absolute; top: 10px; inset-inline-start: 10px; z-index: 3; background: #f59e0b; color: #fff; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; box-shadow: 0 2px 6px rgba(0, 0, 0, .3); }
+.card-photo-wrap .video-badge { top: auto; bottom: 10px; }
+.btn-whatsapp { background: #25D366; color: #fff; }
+.btn-whatsapp:hover { background: #1eb856; }
+.badge-negotiable { background: #475569; color: #fff; }
+.listing-card form.owner-action { display: none; }
+.my-listing .listing-card form.owner-action { display: inline; }
+.slider-wrap { position: relative; }
+.slider-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 5; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(15, 23, 42, .75); color: #fff; font-size: 22px; line-height: 1; cursor: pointer; backdrop-filter: blur(4px); box-shadow: 0 2px 8px rgba(0, 0, 0, .4); display: none; }
+.slider-arrow.prev { inset-inline-start: 8px; }
+.slider-arrow.next { inset-inline-end: 8px; }
+.slider-arrow:disabled { opacity: .35; cursor: default; }
+@media (min-width: 861px) {
+    .slider-wrap.has-overflow .slider-arrow { display: block; }
+}
