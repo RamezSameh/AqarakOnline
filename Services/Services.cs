@@ -164,6 +164,8 @@ public class LanguageService
         ["OwnerDetailsHint"] = ("هنستخدمها للتواصل معاك بخصوص إعلانك، ومش هتظهر للزوار.", "We'll use them to contact you about your listing; they won't be shown to visitors."),
         ["OwnerName"] = ("اسم صاحب الإعلان", "Owner name"),
         ["OwnerPhone"] = ("رقم الهاتف / واتساب", "Phone / WhatsApp"),
+        ["WriteYourName"] = ("اكتب اسمك", "Write your name"),
+        ["YourNumberForFollowUp"] = ("اكتب رقمك للمتابعة", "Write your number for follow-up"),
         ["NegotiableOnly"] = ("قابل للتفاوض فقط", "Negotiable only"),
         ["RentPeriod"] = ("مدة الإيجار", "Rent period"),
         ["Monthly"] = ("شهري", "Monthly"),
