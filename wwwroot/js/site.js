@@ -1941,14 +1941,21 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // 4/5 — درج الفلاتر السفلي في الموبايل والتابلت + زر الفلترة العائم.
+    // Batch 68 — سكرول ورقة الفلاتر مستقل عن الإعلانات: قفل سكرول الصفحة
+    // وهي مفتوحة + منع تسرب السكرول (overscroll) للصفحة وراها.
     var sidebar = document.querySelector(".search-sidebar");
     var filterFab = document.getElementById("filterFab");
     var filterClose = document.getElementById("filterSheetClose");
+    function setFilterOpen(open) {
+        if (!sidebar) return;
+        sidebar.classList.toggle("open", open);
+        document.body.style.overflow = open ? "hidden" : "";
+    }
     if (sidebar && filterFab) {
-        filterFab.addEventListener("click", function () { sidebar.classList.toggle("open"); });
+        filterFab.addEventListener("click", function () { setFilterOpen(!sidebar.classList.contains("open")); });
     }
     if (sidebar && filterClose) {
-        filterClose.addEventListener("click", function () { sidebar.classList.remove("open"); });
+        filterClose.addEventListener("click", function () { setFilterOpen(false); });
     }
 
     // Batch 33 (4) — سحب ورقة للأسفل يغلقها (الفلاتر + ورقة الكارت).
@@ -1975,7 +1982,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (dy > 90) closeFn();
         });
     }
-    if (sidebar) addSheetSwipe(sidebar, function () { sidebar.classList.remove("open"); });
+    if (sidebar) addSheetSwipe(sidebar, function () { setFilterOpen(false); });
 
     /* Batch 33 (11) — أكورديون الفوتر بقى <details> أصلي في _Layout، من غير JS. */
 
