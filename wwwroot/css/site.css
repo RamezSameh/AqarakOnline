@@ -1380,7 +1380,7 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
    - شارة الفيديو 🎬 نزلت لتحت على الطرف (الحبة الذهبية خدت مكانها فوق).
    - المفضلة بقت 🔖 ذهبية بدل القلب (القلب اتشال من الكارت وصفحة التفاصيل).
    - أسهم جانبية للسلايدرات على الشاشة الكبيرة بدل السحب بالماوس (الكود في site.js). */
-.availability-bar { padding: 4px 16px; font-size: 13px; font-weight: 800; text-align: center; letter-spacing: .5px; }
+.availability-bar { padding: 2px 12px; font-size: 12px; font-weight: 800; text-align: center; letter-spacing: .5px; }
 .availability-bar.available { background: #16a34a; color: #fff; }
 .availability-bar.closed { background: #7f1d1d; color: #fff; }
 .featured-card .card-photo-wrap::before { content: "★ مميز"; position: absolute; top: 10px; inset-inline-start: 10px; z-index: 3; background: #f59e0b; color: #fff; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; box-shadow: 0 2px 6px rgba(0, 0, 0, .3); }
