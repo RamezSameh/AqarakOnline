@@ -595,11 +595,20 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
         function addPickedFiles(files) {
+            // الحد 5 صور للإعلان (نفس حد السيرفر): الصور الحالية + المختارة قبل كده + الجديدة.
+            var maxPhotos = 5;
+            var existing = document.querySelectorAll("#existingPhotos li").length;
+            var remaining = maxPhotos - existing - pickedFiles.files.length;
+            var skipped = 0;
             Array.from(files).forEach(function (file) {
-                if (file.type.startsWith("image/")) {
-                    pickedFiles.items.add(file);
-                }
+                if (!file.type.startsWith("image/")) { return; }
+                if (remaining <= 0) { skipped++; return; }
+                pickedFiles.items.add(file);
+                remaining--;
             });
+            if (skipped > 0 && window.showToast) {
+                window.showToast("أقصى عدد للصور 5 — تم تجاهل " + skipped + " صورة زيادة");
+            }
             photoInput.files = pickedFiles.files;
             renderPhotoPreview();
         }
