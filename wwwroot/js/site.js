@@ -52,6 +52,43 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Batch 84 — سحب القائمة الجانبية لقفلها (زي ورقة الفلاتر): سحب أفقي ناحية الحافة
+    // اللي طلعت منها (يمين في العربي / شمال في الإنجليزي) يقفلها؛ السحب العمودي
+    // يفضل سكرول عادي جوّه القايمة، والضغطة العادية على الروابط زي ما هي.
+    if (mainNav) {
+        var navStartX = 0, navStartY = 0, navDx = 0, navTouching = false, navSwiping = false;
+        mainNav.addEventListener("touchstart", function (e) {
+            if (e.touches.length !== 1) return;
+            if (!window.matchMedia("(max-width: 860px)").matches) return;
+            navStartX = e.touches[0].clientX; navStartY = e.touches[0].clientY;
+            navDx = 0; navTouching = true; navSwiping = false;
+        }, { passive: true });
+        mainNav.addEventListener("touchmove", function (e) {
+            if (!navTouching) return;
+            var dx = e.touches[0].clientX - navStartX;
+            var dy = e.touches[0].clientY - navStartY;
+            if (!navSwiping) {
+                if (Math.abs(dy) > Math.abs(dx)) { navTouching = false; return; }
+                if (Math.abs(dx) < 10) return;
+                navSwiping = true;
+                mainNav.style.transition = "none";
+            }
+            navDx = dx;
+            var rtl = document.documentElement.dir === "rtl";
+            var closing = rtl ? dx : -dx;
+            if (closing > 0) mainNav.style.transform = "translateX(" + dx + "px)";
+        }, { passive: true });
+        mainNav.addEventListener("touchend", function () {
+            if (!navTouching) return;
+            navTouching = false;
+            mainNav.style.transition = "";
+            mainNav.style.transform = "";
+            var rtl = document.documentElement.dir === "rtl";
+            var closing = rtl ? navDx : -navDx;
+            if (navSwiping && closing > 90) setNavOpen(false);
+        });
+    }
+
     // نافذة الإشعارات المنبثقة (الجرس): فتح/إغلاق بزر الجرس، أو زر ✕،
     // أو الضغط على الخلفية، أو زر Escape. بتفويض الأحداث (delegation)
     // حتى تعمل بعد استبدال HTML الجرس لحظيًا.
