@@ -1058,8 +1058,11 @@ document.addEventListener("DOMContentLoaded", function () {
     function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; }
     function checked(id) { var el = document.getElementById(id); return !!(el && el.checked); }
     function customFeaturesText() {
-        var el = form.querySelector("input[name='customFeatures']");
-        return el ? el.value.trim() : "";
+        var texts = [];
+        form.querySelectorAll("input[name='customFeatures']").forEach(function (el) {
+            if (el.value.trim()) { texts.push(el.value.trim()); }
+        });
+        return texts.join("، ");
     }
     function updateCompleteness() {
         if (!bar || !pct) { return; }
@@ -1406,6 +1409,43 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     if (elevatorInput) { elevatorInput.addEventListener("change", toggleElevatorCount); }
     toggleElevatorCount();
+    // Batch 109 — ميزات مخصصة متعددة: كل ميزة في حقل لوحدها، زرار «إضافة ميزة» يزوّد
+    // حقل، و✕ بتحذف الصف (لو صف واحد بس، بتفضّيه بدل ما تحذفه).
+    var customList = document.getElementById("customFeaturesList");
+    var addCustomBtn = document.getElementById("addCustomFeatureBtn");
+    if (customList) {
+        customList.addEventListener("click", function (e) {
+            var btn = e.target && e.target.closest ? e.target.closest(".custom-feature-remove") : null;
+            if (!btn) { return; }
+            var row = btn.closest(".custom-feature-row");
+            var rows = customList.querySelectorAll(".custom-feature-row");
+            if (rows.length <= 1) {
+                var input = row ? row.querySelector("input") : null;
+                if (input) { input.value = ""; input.focus(); }
+                return;
+            }
+            if (row) { row.remove(); }
+        });
+    }
+    if (addCustomBtn && customList) {
+        addCustomBtn.addEventListener("click", function () {
+            var row = document.createElement("div");
+            row.className = "custom-feature-row";
+            var input = document.createElement("input");
+            input.type = "text";
+            input.name = "customFeatures";
+            input.placeholder = "اكتب ميزة مش موجودة في الاختيارات";
+            var remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "btn btn-ghost custom-feature-remove";
+            remove.setAttribute("aria-label", "حذف الميزة");
+            remove.textContent = "✕";
+            row.appendChild(input);
+            row.appendChild(remove);
+            customList.appendChild(row);
+            input.focus();
+        });
+    }
     // 20 — السعر بتنسيق آلاف تلقائي (قراءة فقط تحت الحقل).
     var priceInput = document.getElementById("Price");
     var priceFormatted = document.getElementById("priceFormatted");

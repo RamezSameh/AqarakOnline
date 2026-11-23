@@ -166,7 +166,16 @@
         </div>
     }
     <label>@L.T("CustomFeature")</label>
-    <input type="text" name="customFeatures" value="@string.Join("، ", Model.FeaturesList.Except(AqarakOnline.Models.ListingFeatures.All))" placeholder="اكتب ميزة مش موجودة في الاختيارات (افصل بين الميزات بفاصلة)" />
+    <div id="customFeaturesList">
+        @foreach (var custom in Model.FeaturesList.Except(AqarakOnline.Models.ListingFeatures.All).DefaultIfEmpty(""))
+        {
+            <div class="custom-feature-row">
+                <input type="text" name="customFeatures" value="@custom" placeholder="اكتب ميزة مش موجودة في الاختيارات" />
+                <button type="button" class="btn btn-ghost custom-feature-remove" aria-label="حذف الميزة">✕</button>
+            </div>
+        }
+    </div>
+    <button type="button" class="btn btn-ghost" id="addCustomFeatureBtn">＋ إضافة ميزة</button>
 
     <h3 class="form-group-title">@L.T("PriceOptions")</h3>
     <div class="pick-chips">

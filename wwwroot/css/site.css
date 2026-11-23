@@ -1450,3 +1450,10 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
    (grayscale + opacity) عشان حالة المفضلة تبان على الكارت اللي فيه الأيقونة بس —
    واللون الذهبي للحالة المتضافة بقى أحمر (#ef4444). */
 .favorite-btn:not(.is-favorite) { filter: grayscale(1); opacity: .6; }
+
+/* Batch 109 — ميزات مخصصة متعددة: كل ميزة في حقل لوحدها + زرار «إضافة ميزة».
+   (قبل كده كان حقل واحد بس والميزات بتتفصل بفاصلة.) */
+.custom-feature-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.form .custom-feature-row input { flex: 1; min-width: 0; width: auto; }
+.custom-feature-remove { flex: 0 0 auto; }
+#addCustomFeatureBtn { margin-bottom: 12px; }

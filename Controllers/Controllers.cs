@@ -768,7 +768,7 @@ public class ListingsController : Controller
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(100_000_000)]
     [EnableRateLimiting("upload")]
-    public async Task<IActionResult> Create(Listing listing, string[]? selectedFeatures = null, string? customFeatures = null)
+    public async Task<IActionResult> Create(Listing listing, string[]? selectedFeatures = null, string[]? customFeatures = null)
     {
         listing.Features = ListingFeatureComposer.ComposeFeatures(selectedFeatures, customFeatures);
         ValidateAttachments(listing.PhotoFiles, listing.VideoFile, existingPhotoCount: 0, existingVideo: false);
@@ -845,7 +845,7 @@ public class ListingsController : Controller
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(100_000_000)]
     [EnableRateLimiting("upload")]
-    public async Task<IActionResult> Edit(int id, Listing model, string? photoOrder, string[]? selectedFeatures = null, string? customFeatures = null)
+    public async Task<IActionResult> Edit(int id, Listing model, string? photoOrder, string[]? selectedFeatures = null, string[]? customFeatures = null)
     {
         var listing = await _context.Listings.Include(l => l.Attachments)
             .FirstOrDefaultAsync(l => l.Id == id);
@@ -4066,19 +4066,23 @@ public class NotificationsController : Controller
 /// <summary>تجميع المميزات من الاختيارات الجاهزة + الميزات المخصصة المكتوبة، مفصولة بسطر لكل ميزة.</summary>
 public static class ListingFeatureComposer
 {
-    public static string? ComposeFeatures(string[]? selectedFeatures, string? customFeatures)
+    public static string? ComposeFeatures(string[]? selectedFeatures, string[]? customFeatures)
     {
         var features = new List<string>();
         if (selectedFeatures != null)
         {
             features.AddRange(selectedFeatures.Where(f => ListingFeatures.All.Contains(f)));
         }
-        if (!string.IsNullOrWhiteSpace(customFeatures))
+        if (customFeatures != null)
         {
-            features.AddRange(customFeatures
-                .Split(new[] { '\n', '\r', ',', '،' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(f => f.Trim())
-                .Where(f => f.Length > 0 && !ListingFeatures.All.Contains(f)));
+            foreach (var custom in customFeatures)
+            {
+                if (string.IsNullOrWhiteSpace(custom)) { continue; }
+                features.AddRange(custom
+                    .Split(new[] { '\n', '\r', ',', '،' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(f => f.Trim())
+                    .Where(f => f.Length > 0 && !ListingFeatures.All.Contains(f)));
+            }
         }
         var joined = string.Join("\n", features.Distinct());
         if (string.IsNullOrEmpty(joined))
