@@ -944,9 +944,9 @@ document.addEventListener("DOMContentLoaded", function () {
             btn.classList.toggle("is-favorite", on);
             btn.setAttribute("title", on ? "إزالة من المفضلة" : "إضافة إلى المفضلة");
             if (btn.classList.contains("guest-fav-details")) {
-                btn.textContent = on ? "♥ في المفضلة" : "♡ إضافة إلى المفضلة";
+                btn.textContent = on ? "🔖 في المفضلة" : "🔖 إضافة إلى المفضلة";
             } else {
-                btn.textContent = on ? "♥" : "♡";
+                btn.textContent = "🔖";
             }
         });
     }
@@ -2058,6 +2058,14 @@ document.addEventListener("DOMContentLoaded", function () {
         var shareBtn = card.querySelector(".actions .share-copy");
         var url = shareBtn ? shareBtn.getAttribute("data-url") : (detailsLink ? detailsLink.href : location.href);
         if (cardSheetTitle) cardSheetTitle.textContent = title;
+        var sheetFav = document.getElementById("cardSheetFav");
+        if (sheetFav) {
+            var cardFavBtn = card.querySelector(".favorite-btn");
+            var favOn = cardFavBtn ? cardFavBtn.classList.contains("is-favorite") : false;
+            sheetFav.classList.toggle("is-favorite", favOn);
+            var favLabel = sheetFav.querySelector("span");
+            if (favLabel) favLabel.textContent = favOn ? "في المفضلة" : "إضافة إلى المفضلة";
+        }
         var whats = document.getElementById("cardSheetWhats");
         if (whats) whats.href = "https://wa.me/?text=" + encodeURIComponent((title ? title + " - " : "") + url);
         var det = document.getElementById("cardSheetDetails");

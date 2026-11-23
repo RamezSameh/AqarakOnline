@@ -1419,3 +1419,11 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
 @media (min-width: 861px) {
     .slider-wrap.has-overflow .slider-arrow { display: block; }
 }
+
+/* Batch 104 — أيقونة المفضلة في ورقة الكارت: بقت 🔖 بدل ♥ (زي الكارت)، وبتعكس الحالة —
+   ذهبية + «في المفضلة» لو الإعلان متضاف أصلًا، و«إضافة إلى المفضلة» لو مش متضاف.
+   وزر 🔖 على الكارت نفسه بقى يعمل pop صغير لما يتضاف (إحساس تفاعلي).
+   (إصلاح تابع لـ B101: refreshGuestFavoriteButtons كان بيرجّع ♥/♡ للزوار عند تحميل الصفحة.) */
+.sheet-action.is-favorite { color: #f59e0b; }
+.card-photo-actions .favorite-btn { transition: transform .15s ease; }
+.card-photo-actions .favorite-btn.is-favorite { transform: scale(1.15); }
