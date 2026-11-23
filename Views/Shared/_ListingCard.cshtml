@@ -96,7 +96,6 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
             {
                 <span class="badge badge-trusted">✓ @L.T("TrustedAdvertiser")</span>
             }
-            <span class="ad-number">@L.T("AdNumber"): @Model.AdNumber</span>
         </div>
         <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id" title="@Model.Title">@Model.Title</a></h3>
         <p class="listing-area">📍 @Model.Area • 📐 @Model.AreaSqm م²</p>
@@ -104,7 +103,7 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
         {
             <p class="listing-facts">@string.Join(" • ", facts.Take(3))</p>
         }
-        <p class="listing-published">📅 @(Model.UpdatedAt.HasValue && Model.UpdatedAt > Model.CreatedAt ? "آخر تحديث " + L.RelativeTime(Model.UpdatedAt.Value) : L.RelativeTime(Model.CreatedAt)) • 👁 @Model.ViewCount</p>
+        <p class="listing-published">📅 @(Model.UpdatedAt.HasValue && Model.UpdatedAt > Model.CreatedAt ? "آخر تحديث " + L.RelativeTime(Model.UpdatedAt.Value) : L.RelativeTime(Model.CreatedAt)) • 👁 @Model.ViewCount • @Model.AdNumber</p>
         @if (Model.Approval != ListingApproval.Approved)
         {
             <p class="listing-status">@L.T("ApprovalStatus"): @L.ApprovalText(Model.Approval)</p>
@@ -112,7 +111,6 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
         <div class="card-foot">
             <p class="listing-price">@L.PriceText(Model.Price, Model.ListingType)</p>
             <div class="actions">
-            <a class="btn btn-primary view-details-full" asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@L.T("ViewDetails")</a>
             @if (Model.IsAvailable && Model.Approval == ListingApproval.Approved && !isOwner)
             {
                 <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id">@L.T("ContactUs")</a>
@@ -129,8 +127,7 @@ if (Model.ApartmentsCount.HasValue) { facts.Add($"{L.T("ApartmentsCount")}: {Mod
                     <button type="submit" class="btn btn-ghost" title="@L.T("CopyListing")">📋</button>
                 </form>
             }
-            <button type="button" class="btn btn-ghost share-copy" data-url="@($"{Context.Request.Scheme}://{Context.Request.Host}/Listings/Details/{Model.Id}")" title="@L.T("Share")">↗ @L.T("Share")</button>
-            <a class="btn btn-ghost" href="https://t.me/share/url?url=@Uri.EscapeDataString($"{Context.Request.Scheme}://{Context.Request.Host}/Listings/Details/{Model.Id}")&text=@Uri.EscapeDataString(Model.Title)" target="_blank" rel="noopener" title="تيليجرام">✈️</a>
+            <button type="button" class="btn btn-ghost share-copy" data-url="@($"{Context.Request.Scheme}://{Context.Request.Host}/Listings/Details/{Model.Id}")" title="@L.T("Share")">↗</button>
             </div>
         </div>
     </div>

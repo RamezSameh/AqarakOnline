@@ -1407,3 +1407,12 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
 .card-foot { flex-wrap: wrap; }
 .card-foot .listing-price { white-space: nowrap; }
 .card-foot .actions .btn { padding: 8px 12px; font-size: 14px; }
+
+/* Batch 97 — الكارت نفس الشكل 2: صف السعر والأزرار سطر واحد من غير لف ولا قص.
+   زرار «عرض التفاصيل» اتشال من الكارت (الكارت كله بيفتح التفاصيل أصلًا — الضغط على أي حتة فيه)،
+   و«مشاركة» بقت أيقونة ↗ بس، وتيليجرام اتشال من الكارت (المشاركة كلها في صفحة التفاصيل
+   وورقة ⋮ في الموبايل)، ورقم الإعلان نزل لسطر التاريخ — فالصف والشارات بقوا سطر واحد. */
+.card-foot { flex-wrap: nowrap; gap: 8px; }
+.card-foot .listing-price { font-size: 20px; overflow: hidden; text-overflow: ellipsis; }
+.card-foot .actions { flex-wrap: nowrap; gap: 8px; }
+.card-foot .actions .btn { padding: 7px 10px; font-size: 13px; }

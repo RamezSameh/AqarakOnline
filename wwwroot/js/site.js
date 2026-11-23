@@ -2073,7 +2073,7 @@ document.addEventListener("DOMContentLoaded", function () {
         currentCard = card;
         var titleEl = card.querySelector(".listing-body h3 a");
         var title = titleEl ? titleEl.textContent.trim() : "";
-        var detailsLink = card.querySelector(".view-details-full");
+        var detailsLink = card.querySelector(".listing-body h3 a"); // Batch 97: زرار «عرض التفاصيل» اتشال من الكارت، لينك العنوان هو لينك التفاصيل.
         var shareBtn = card.querySelector(".actions .share-copy");
         var url = shareBtn ? shareBtn.getAttribute("data-url") : (detailsLink ? detailsLink.href : location.href);
         if (cardSheetTitle) cardSheetTitle.textContent = title;
