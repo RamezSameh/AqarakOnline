@@ -148,29 +148,42 @@
     <input asp-for="SaleReason" maxlength="200" placeholder="اختياري — للبيع فقط" />
     </div>
 
-    <label>@L.T("Amenities")</label>
-    <label class="toggle-label"><input asp-for="HasParking" type="checkbox" /><span class="toggle-slider"></span> @L.T("Parking")</label>
-    <label class="toggle-label"><input asp-for="HasElevator" type="checkbox" /><span class="toggle-slider"></span> @L.T("Elevator")</label>
-    <label>@L.T("ElevatorCount")</label>
-    <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="ElevatorCount" type="number" min="1" max="20" step="1" inputmode="numeric" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
-    <span asp-validation-for="ElevatorCount" class="field-error"></span>
-    <label class="toggle-label"><input asp-for="HasBalcony" type="checkbox" /><span class="toggle-slider"></span> @L.T("Balcony")</label>
-    <label class="toggle-label"><input asp-for="HasAirConditioning" type="checkbox" /><span class="toggle-slider"></span> @L.T("AirConditioning")</label>
-    <label class="toggle-label"><input asp-for="HasSecurity" type="checkbox" /><span class="toggle-slider"></span> @L.T("Security")</label>
-
-    <label>@L.T("OtherAmenities")</label>
-    <div class="features-picker">
-        @foreach (var feature in AqarakOnline.Models.ListingFeatures.All)
-        {
-            <label><input type="checkbox" name="selectedFeatures" value="@feature" checked="@(Model.FeaturesList.Contains(feature))" /> @feature</label>
-        }
+    <h3 class="form-group-title">@L.T("Amenities")</h3>
+    <p class="form-group-hint">@L.T("AmenitiesHint")</p>
+    <div class="pick-chips">
+        <label class="pick-chip"><input asp-for="HasParking" type="checkbox" /><span>@L.T("Parking")</span></label>
+        <label class="pick-chip"><input asp-for="HasElevator" type="checkbox" /><span>@L.T("Elevator")</span></label>
+        <label class="pick-chip"><input asp-for="HasBalcony" type="checkbox" /><span>@L.T("Balcony")</span></label>
+        <label class="pick-chip"><input asp-for="HasAirConditioning" type="checkbox" /><span>@L.T("AirConditioning")</span></label>
+        <label class="pick-chip"><input asp-for="HasSecurity" type="checkbox" /><span>@L.T("Security")</span></label>
     </div>
+    <div id="elevatorCountField" style="@(Model.HasElevator ? "" : "display:none;")">
+        <label>@L.T("ElevatorCount")</label>
+        <div class="stepper"><button type="button" class="stepper-btn" data-step="-1" aria-label="تقليل">−</button><input asp-for="ElevatorCount" type="number" min="1" max="20" step="1" inputmode="numeric" /><button type="button" class="stepper-btn" data-step="1" aria-label="زيادة">+</button></div>
+        <span asp-validation-for="ElevatorCount" class="field-error"></span>
+    </div>
+
+    <h3 class="form-group-title">@L.T("OtherAmenities")</h3>
+    <p class="form-group-hint">@L.T("FeaturesHint")</p>
+    @foreach (var group in AqarakOnline.Models.ListingFeatures.Groups)
+    {
+        <h4 class="form-subgroup-title">@group.Title</h4>
+        <div class="pick-chips">
+            @foreach (var feature in group.Items)
+            {
+                <label class="pick-chip"><input type="checkbox" name="selectedFeatures" value="@feature" checked="@(Model.FeaturesList.Contains(feature))" /><span>@feature</span></label>
+            }
+        </div>
+    }
     <label>@L.T("CustomFeature")</label>
     <input type="text" name="customFeatures" value="@string.Join("، ", Model.FeaturesList.Except(AqarakOnline.Models.ListingFeatures.All))" placeholder="اكتب ميزة مش موجودة في الاختيارات (افصل بين الميزات بفاصلة)" />
 
-    <label><input asp-for="AcceptsInstallments" type="checkbox" /> @L.T("AcceptsInstallments")</label>
-    <label><input asp-for="IsPriceNegotiable" type="checkbox" /> @L.T("Negotiable")</label>
-    <label class="urgent-option"><input asp-for="IsUrgent" type="checkbox" /> 🔥 @L.T("Urgent")</label>
+    <h3 class="form-group-title">@L.T("PriceOptions")</h3>
+    <div class="pick-chips">
+        <label class="pick-chip"><input asp-for="AcceptsInstallments" type="checkbox" /><span>@L.T("AcceptsInstallments")</span></label>
+        <label class="pick-chip"><input asp-for="IsPriceNegotiable" type="checkbox" /><span>@L.T("Negotiable")</span></label>
+        <label class="pick-chip"><input asp-for="IsUrgent" type="checkbox" /><span>🔥 @L.T("Urgent")</span></label>
+    </div>
 
     <div id="rentFields">
     <label>@L.T("RentPeriod")</label>
@@ -184,10 +197,12 @@
     <input asp-for="DepositMonths" type="number" min="0" max="24" step="1" inputmode="numeric" />
     </div>
 
-    <label>@L.T("Meters")</label>
-    <label><input asp-for="HasElectricityMeter" type="checkbox" /> @L.T("ElectricityMeter")</label>
-    <label><input asp-for="HasGasMeter" type="checkbox" /> @L.T("GasMeter")</label>
-    <label><input asp-for="HasWaterMeter" type="checkbox" /> @L.T("WaterMeter")</label>
+    <h3 class="form-group-title">@L.T("Meters")</h3>
+    <div class="pick-chips">
+        <label class="pick-chip"><input asp-for="HasElectricityMeter" type="checkbox" /><span>@L.T("ElectricityMeter")</span></label>
+        <label class="pick-chip"><input asp-for="HasGasMeter" type="checkbox" /><span>@L.T("GasMeter")</span></label>
+        <label class="pick-chip"><input asp-for="HasWaterMeter" type="checkbox" /><span>@L.T("WaterMeter")</span></label>
+    </div>
 
     <label>@L.T("LandArea")</label>
     <input asp-for="LandAreaSqm" type="number" min="0" step="1" inputmode="numeric" />

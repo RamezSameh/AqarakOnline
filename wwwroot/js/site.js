@@ -1398,6 +1398,14 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         toggleListingTypeFields();
     }
+    // Batch 105 — عدد الأسانسير يظهر بس لما الأاسانسير متعلم، عشان ما يقطعش صف المزايا.
+    var elevatorField = document.getElementById("elevatorCountField");
+    var elevatorInput = document.getElementById("HasElevator");
+    function toggleElevatorCount() {
+        if (elevatorField) { elevatorField.style.display = (elevatorInput && elevatorInput.checked) ? "" : "none"; }
+    }
+    if (elevatorInput) { elevatorInput.addEventListener("change", toggleElevatorCount); }
+    toggleElevatorCount();
     // 20 — السعر بتنسيق آلاف تلقائي (قراءة فقط تحت الحقل).
     var priceInput = document.getElementById("Price");
     var priceFormatted = document.getElementById("priceFormatted");

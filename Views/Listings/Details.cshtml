@@ -151,51 +151,6 @@ else
 {
     <p><strong>@L.T("Finishing"):</strong> @L.FinishingText(Model.Finishing.Value)</p>
 }
-@{
-    var amenityNames = new List<string>();
-    if (Model.HasParking) { amenityNames.Add(L.T("Parking")); }
-    if (Model.HasElevator) { amenityNames.Add(L.T("Elevator")); }
-    if (Model.HasBalcony) { amenityNames.Add(L.T("Balcony")); }
-    if (Model.HasAirConditioning) { amenityNames.Add(L.T("AirConditioning")); }
-    if (Model.HasSecurity) { amenityNames.Add(L.T("Security")); }
-}
-@if (amenityNames.Any())
-{
-    <p><strong>@L.T("Amenities"):</strong> @string.Join(" • ", amenityNames)</p>
-}
-@if (Model.AcceptsInstallments)
-{
-    <p><strong>@L.T("AcceptsInstallments")</strong></p>
-}
-@if (Model.UpdatedAt.HasValue)
-{
-    <p><strong>@L.T("LastUpdated"):</strong> @L.RelativeTime(Model.UpdatedAt.Value)</p>
-}
-@if (Model.IsPriceNegotiable)
-{
-    <p><strong>@L.T("Negotiable")</strong></p>
-}
-@if (Model.ListingType == ListingType.Rent)
-{
-    if (Model.RentPeriod.HasValue)
-    {
-        <p><strong>@L.T("RentPeriod"):</strong> @(Model.RentPeriod.Value == RentPeriod.Monthly ? L.T("Monthly") : L.T("Yearly"))</p>
-    }
-    if (Model.DepositMonths.HasValue)
-    {
-        <p><strong>@L.T("DepositMonths"):</strong> @Model.DepositMonths</p>
-    }
-}
-@{
-    var meterNames = new List<string>();
-    if (Model.HasElectricityMeter) { meterNames.Add(L.T("ElectricityMeter")); }
-    if (Model.HasGasMeter) { meterNames.Add(L.T("GasMeter")); }
-    if (Model.HasWaterMeter) { meterNames.Add(L.T("WaterMeter")); }
-}
-@if (meterNames.Any())
-{
-    <p><strong>@L.T("Meters"):</strong> @string.Join(" • ", meterNames)</p>
-}
 @if (Model.LandAreaSqm.HasValue)
 {
     <p><strong>@L.T("LandArea"):</strong> @Model.LandAreaSqm م²</p>
@@ -212,13 +167,25 @@ else
 {
     <p><strong>@L.T("ElevatorCount"):</strong> @Model.ElevatorCount</p>
 }
+</div>
+<h3 class="details-subhead">السعر والدفع</h3>
+<div class="details-facts">
 <p class="details-price"><strong>@L.T("Price"):</strong> @L.PriceText(Model.Price, Model.ListingType)</p>
 @if (Model.IsPriceReduced)
 {
     <p><strong>@L.T("OriginalPrice"):</strong> <del>@Model.OriginalPrice.ToString("N0") جنيه</del></p>
 }
-</div>
-</details>
+@if (Model.ListingType == ListingType.Rent)
+{
+    if (Model.RentPeriod.HasValue)
+    {
+        <p><strong>@L.T("RentPeriod"):</strong> @(Model.RentPeriod.Value == RentPeriod.Monthly ? L.T("Monthly") : L.T("Yearly"))</p>
+    }
+    if (Model.DepositMonths.HasValue)
+    {
+        <p><strong>@L.T("DepositMonths"):</strong> @Model.DepositMonths</p>
+    }
+}
 @{
     var avgSqm = ViewBag.AreaAvgPricePerSqm as decimal?;
     var mySqm = ViewBag.PricePerSqm as decimal?;
@@ -226,13 +193,28 @@ else
 @if (avgSqm.HasValue && mySqm.HasValue)
 {
     var diff = (mySqm.Value - avgSqm.Value) / avgSqm.Value * 100;
-    <p class="per-sqm-big"><strong>متوسط سعر المتر في @Model.Area:</strong> @avgSqm.Value.ToString("N0") جنيه/م² — سعر المتر في الإعلان ده: @mySqm.Value.ToString("N0") جنيه/م² (@(diff < -0.5m ? $"أقل من المتوسط بنسبة {Math.Abs(diff):0}%" : diff > 0.5m ? $"أعلى من المتوسط بنسبة {diff:0}%" : "يساوي متوسط المنطقة"))</p>
+    <p class="fact-wide"><strong>متوسط سعر المتر في @Model.Area:</strong> @avgSqm.Value.ToString("N0") جنيه/م² — سعر المتر في الإعلان ده: @mySqm.Value.ToString("N0") جنيه/م² (@(diff < -0.5m ? $"أقل من المتوسط بنسبة {Math.Abs(diff):0}%" : diff > 0.5m ? $"أعلى من المتوسط بنسبة {diff:0}%" : "يساوي متوسط المنطقة"))</p>
 }
-<p class="details-views"><strong>@L.T("Views"):</strong> @Model.ViewCount</p>
-<p><strong>@L.T("PublishedAt"):</strong> @L.RelativeTime(Model.CreatedAt)</p>
+</div>
+@if (Model.IsPriceNegotiable || Model.AcceptsInstallments)
+{
+<div class="details-chips">
+@if (Model.IsPriceNegotiable)
+{
+    <span class="badge">✓ @L.T("Negotiable")</span>
+}
+@if (Model.AcceptsInstallments)
+{
+    <span class="badge">✓ @L.T("AcceptsInstallments")</span>
+}
+</div>
+}
+</details>
+<p class="details-meta">👁 @Model.ViewCount @L.T("Views") • @L.T("PublishedAt"): @L.RelativeTime(Model.CreatedAt)@if (Model.UpdatedAt.HasValue){<text> • @L.T("LastUpdated"): @L.RelativeTime(Model.UpdatedAt.Value)</text>}</p>
 
 @if (User.IsInRole("Admin"))
 {
+<div class="admin-box">
     <h2>@L.T("AdvertiserData")</h2>
     <p><strong>@L.T("PhoneNumber"):</strong> @(Model.Owner?.PhoneNumber ?? "-")</p>
     <p><strong>@L.T("Address"):</strong> @(Model.Owner?.Address ?? "-")</p>
@@ -241,6 +223,7 @@ else
         <p><strong>العنوان التفصيلي للعقار (للأدمن فقط):</strong> @Model.DetailedAddress</p>
     }
     <p><strong>@L.T("ApprovalStatus"):</strong> @L.ApprovalText(Model.Approval)</p>
+</div>
 }
 
 <section class="details-section">
@@ -251,7 +234,7 @@ else
 {
 <section class="details-section">
     <h2>@L.T("Features")</h2>
-    <ul>
+    <ul class="features-chips">
         @foreach (var feature in Model.FeaturesList)
         {
             <li>@feature</li>

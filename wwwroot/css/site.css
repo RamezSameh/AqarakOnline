@@ -284,10 +284,6 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 /* معاينة الإعلان قبل النشر. */
 .listing-preview { margin-top: 20px; }
 
-/* اختيار المميزات من قائمة جاهزة في نموذج الإعلان. */
-.features-picker { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 8px; }
-.features-picker label { display: inline-flex; align-items: center; gap: 6px; }
-
 .back-to-top { position: fixed; bottom: 16px; inset-inline-end: 16px; z-index: 60; width: 44px; height: 44px; border-radius: 50%; border: 1px solid #334155; background: #1e293b; color: #f8fafc; font-size: 20px; line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
 .back-to-top.visible { display: flex; }
 [data-theme="light"] .back-to-top { background: #fff; color: #0f172a; border-color: #cbd5e1; }
@@ -623,11 +619,6 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
     .details-side-actions .alert-info { margin: 0; }
 }
 [data-theme="light"] .details-side-actions { background: #fff; }
-/* 10 — سعر المتر بخط كبير */
-.per-sqm-big { font-size: 20px; font-weight: 800; color: #c7d2fe; }
-[data-theme="light"] .per-sqm-big { color: #4338ca; }
-/* 11 — عداد المشاهدات أوضح */
-.details-views { font-size: 18px; font-weight: 700; }
 /* 12 — العدادات والمرافق كجدول */
 .meters-table { margin-top: 28px; }
 .meters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
@@ -881,11 +872,6 @@ main h1 { font-weight: 800; }
     .nav-create-primary { animation: none; }
 }
 .gallery-main { background: #000; border-radius: 12px; padding: 8px; }
-.details-facts { display: block; }
-.details-facts p { display: flex; justify-content: space-between; gap: 12px; border: none; border-bottom: 1px solid #334155; border-radius: 0; background: transparent; padding: 10px 4px; }
-.details-facts p strong { color: #94a3b8; }
-.details-facts p.details-price { background: rgba(99, 102, 241, .15); border-radius: 10px; padding: 12px 16px; border-bottom: none; }
-.urgent-option { background: rgba(239, 68, 68, .12); border: 1px solid #ef4444; border-radius: 8px; padding: 8px 12px; }
 .password-strength { height: 8px; background: #334155; border-radius: 999px; overflow: hidden; margin-top: 6px; }
 .password-strength-bar { height: 100%; width: 0; transition: width .3s ease, background .3s ease; }
 .details-nav { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
@@ -1020,13 +1006,6 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
 .stepper-btn { width: 44px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; font-size: 20px; font-weight: 800; cursor: pointer; }
 .stepper-btn:first-child { border-radius: 10px 0 0 10px; }
 .stepper-btn:last-child { border-radius: 0 10px 10px 0; }
-/* (29) المرافق كمفاتيح تبديل */
-.toggle-label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.toggle-label input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
-.toggle-slider { width: 44px; height: 24px; border-radius: 999px; background: #334155; position: relative; flex: 0 0 auto; transition: background .2s; }
-.toggle-slider::after { content: ""; position: absolute; top: 2px; inset-inline-start: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .2s; }
-.toggle-label input:checked + .toggle-slider { background: #6366f1; }
-.toggle-label input:checked + .toggle-slider::after { transform: translateX(-20px); }
 /* (32) أسباب البلاغ كخيارات مرئية */
 .report-reasons { display: grid; gap: 8px; margin: 6px 0 12px; }
 .report-reason { display: flex; align-items: center; gap: 10px; border: 1px solid #334155; border-radius: 12px; padding: 12px 16px; cursor: pointer; font-weight: 700; }
@@ -1082,8 +1061,8 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
 }
 [data-theme="light"] .main-nav { background: #f8fafc; }
 
-/* Batch 31 — إصلاح تنسيق الفورم: الليبلز والحقول اللي جوه حاويات (خطوات التسجيل، أقسام تعديل المستخدم، صف السعر/المساحة) كانت بتتدفق inline جنب بعض، فكل حقل يطلع جنب الليبل الغلط. الليبل يبقى block فوق حقله، والحقل بملء العرض. الاستثناءات: مفاتيح التبديل وبطاقات اختيار النوع واختيارات المميزات ليهم تنسيقهم الخاص. */
-.form label:not(.toggle-label):not(.type-option):not(.features-picker *) { display: block; }
+/* Batch 31 — إصلاح تنسيق الفورم: الليبلز والحقول اللي جوه حاويات (خطوات التسجيل، أقسام تعديل المستخدم، صف السعر/المساحة) كانت بتتدفق inline جنب بعض، فكل حقل يطلع جنب الليبل الغلط. الليبل يبقى block فوق حقله، والحقل بملء العرض. الاستثناءات: بطاقات اختيار النوع وحبات الاختيار (pick-chip) ليهم تنسيقهم الخاص. */
+.form label:not(.type-option):not(.pick-chip) { display: block; }
 .form input:not([type="checkbox"]):not([type="radio"]), .form select, .form textarea { width: 100%; }
 
 /* Batch 33 — تحسينات الموبايل: شريط تنقل سفلي + ورقة إجراءات الكارت + سحب الفلاتر + هوامش آمنة + تصغير المحتوى والأزرار. */
@@ -1427,3 +1406,40 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
 .sheet-action.is-favorite { color: #f59e0b; }
 .card-photo-actions .favorite-btn { transition: transform .15s ease; }
 .card-photo-actions .favorite-btn.is-favorite { transform: scale(1.15); }
+
+/* Batch 105 — إعادة تصميم صفحة التفاصيل واختيار المزايا/المميزات في إضافة إعلان.
+   المشكلة كانت: المواصفات قائمة طويلة مسطحة من ~20 سطر بلا تجميع، والمزايا والعدادات
+   متكررين مرتين (سطر جوة المواصفات + جدول «العدادات والمرافق»)، والمشاهدات/النشر/التحديث
+   سطور سايبة. والفورم كان فيه 4 أشكال اختيار مختلفة (مفاتيح تبديل + تشيك بوكسات عادية +
+   تشيك بوكسات المميزات) وعدد الأسانسير قاطع صف المزايا. */
+/* صفحة التفاصيل: بطاقات المواصفات بدل القائمة — الليبل فوق والقيمة تحت (الشبكة الأصلية
+   رجعت بعد حذف قاعدة display:block اللي كانت مسطّحاها). */
+.details-facts p strong { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 2px; }
+[data-theme="light"] .details-facts p strong { color: #64748b; }
+.details-facts .fact-wide { grid-column: 1 / -1; }
+.details-subhead { font-size: 15px; margin: 18px 0 8px; }
+.details-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+.details-meta { color: #94a3b8; font-size: 13px; margin: 4px 0 12px; }
+[data-theme="light"] .details-meta { color: #64748b; }
+.admin-box { border: 1px solid #f59e0b; border-radius: 12px; padding: 14px 16px; background: rgba(245, 158, 11, .08); margin: 16px 0; }
+.admin-box h2 { margin-top: 0; }
+[data-theme="light"] .admin-box { background: #fffbeb; }
+.features-chips { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; }
+.features-chips li { background: #1e293b; border: 1px solid #334155; border-radius: 999px; padding: 6px 14px; }
+.features-chips li::before { content: "✓ "; color: #22c55e; }
+[data-theme="light"] .features-chips li { background: #fff; border-color: #cbd5e1; }
+/* نموذج الإعلان: زر اختيار واحد (chip) للمزايا والمميزات والعدادات وخيارات السعر —
+   التشيك بوكس مخفي والـ span هي الحبة؛ المتعلم يتلون بنفسجي. */
+.pick-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.pick-chip { display: inline-flex; cursor: pointer; }
+.pick-chip input { position: absolute; opacity: 0; width: 0; height: 0; }
+.pick-chip span { display: inline-flex; align-items: center; border: 1px solid #334155; border-radius: 999px; padding: 8px 14px; background: #1e293b; transition: background .15s ease, border-color .15s ease; }
+.pick-chip input:checked + span { background: #6366f1; border-color: #6366f1; color: #fff; }
+.pick-chip input:focus-visible + span { outline: 2px solid #818cf8; outline-offset: 2px; }
+[data-theme="light"] .pick-chip span { background: #fff; border-color: #cbd5e1; }
+[data-theme="light"] .pick-chip input:checked + span { background: #6366f1; border-color: #6366f1; color: #fff; }
+.form-group-title { font-size: 17px; margin: 20px 0 4px; }
+.form-group-hint { color: #94a3b8; font-size: 13px; margin: 0 0 10px; }
+[data-theme="light"] .form-group-hint { color: #64748b; }
+.form-subgroup-title { font-size: 14px; color: #94a3b8; margin: 12px 0 6px; }
+[data-theme="light"] .form-subgroup-title { color: #64748b; }
