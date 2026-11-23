@@ -955,6 +955,9 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
     .nav-section { display: block; width: 100%; font-weight: 800; color: #94a3b8; padding: 12px 12px 4px; font-size: 14px; }
     /* (1) الهيدر في الموبايل بسطرين */
     .header-actions { order: 3; flex: 1 1 100%; overflow-x: auto; }
+    /* Batch 66 — شارة الجرس كانت بتتقص من فوق على الموبايل: الشارة طالعة
+       8px فوق الزرار وصف الأزرار عليه overflow-x:auto فبيقص الزيادة. */
+    .bell-badge { top: 0; }
 }
 /* (3) صورة الكارت 16/9 في الموبايل */
 @media (max-width: 640px) { .listing-photo { aspect-ratio: 16/9; } }
