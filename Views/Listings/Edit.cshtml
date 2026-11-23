@@ -233,13 +233,13 @@
     <label>صور توضيحية (حتى 5 صور)</label>
     <div id="photoDropZone" class="drop-zone">
         <span>@L.T("DropPhotosHere")</span>
-        <input asp-for="PhotoFiles" type="file" accept="image/*" multiple capture="environment" />
+        <input asp-for="PhotoFiles" type="file" accept="image/*" multiple />
         <div id="photoPreview" class="photo-preview"></div>
         <button type="button" id="clearPhotosBtn" class="btn btn-ghost">حذف كل الصور المختارة</button>
     </div>
     <small>الصور بتتصغّر وتتضغط تلقائيًا عند الرفع، وحجم الصورة الواحدة 10 ميجا بحد أقصى.</small>
     <label>فيديو (حتى 25 ميجا)</label>
-    <input asp-for="VideoFile" type="file" accept="video/*" capture="environment" />
+    <input asp-for="VideoFile" type="file" accept="video/*" />
     <div id="videoPreview" class="video-preview"></div>
 
     @if (isEdit && Model.Attachments.Any(a => a.Kind == AttachmentKind.Photo))
