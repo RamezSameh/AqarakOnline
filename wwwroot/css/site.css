@@ -1362,3 +1362,10 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
 @media (max-width: 860px) {
     [data-theme="light"] .filter-group input[type="range"] { background: #e2e8f0; }
 }
+
+/* Batch 90 — ترتيب الدرج الجانبي: «أضف إعلان» اتشالت منه على الموبايل (موجودة في الشريط
+   السفلي)، وتسجيل الخروج بقت آخر حاجة وثابتة تحت بخط فاصل فوقها. */
+@media (max-width: 860px) {
+    .main-nav .inline-form.mobile-only { margin-top: auto; border-top: 1px solid #334155; }
+}
+[data-theme="light"] .main-nav .inline-form.mobile-only { border-top-color: #e2e8f0; }
