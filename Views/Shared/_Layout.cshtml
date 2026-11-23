@@ -94,7 +94,7 @@
                             <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>
                             <a class="nav-link @(currentController == "SavedSearches" ? "active" : "")" asp-controller="SavedSearches" asp-action="Index">🔔 @L.T("SavedSearches")</a>
                             <a class="nav-link @(currentController == "Viewings" ? "active" : "")" asp-controller="Viewings" asp-action="Index">📅 @L.T("Viewings")</a>
-                            <a class="nav-link @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">👤 @L.T("MyAccount")</a>
+                            <a class="nav-link user-menu-myaccount @(currentController == "Account" && currentAction == "MyAccount" ? "active" : "")" asp-controller="Account" asp-action="MyAccount">👤 @L.T("MyAccount")</a>
                         </div>
                     </div>
                     <form asp-controller="Account" asp-action="Logout" method="post" class="inline-form desktop-only">
