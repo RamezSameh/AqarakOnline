@@ -1236,7 +1236,12 @@ document.addEventListener("DOMContentLoaded", function () {
         var title = document.getElementById("Title");
         var price = document.getElementById("Price");
         var areaSqm = document.getElementById("AreaSqm");
-        var type = document.getElementById("PropertyType");
+        var listingType = form.querySelector("input[name='ListingType']:checked");
+        var propertyType = form.querySelector("input[name='PropertyType']:checked");
+        var propertyTypeLabel = propertyType ? propertyType.closest("label") : null;
+        var propertyTypeText = propertyTypeLabel ? (propertyTypeLabel.getAttribute("data-text") || propertyTypeLabel.textContent.trim()) : "";
+        var listingTypeLabel = listingType ? listingType.closest("label") : null;
+        var listingTypeText = listingTypeLabel ? listingTypeLabel.textContent.trim() : "";
         var area = document.getElementById("Area");
         var newPhotos = document.querySelectorAll("#photoPreview .photo-preview-item").length;
         var existingPhotos = document.querySelectorAll("#existingPhotos li").length;
@@ -1244,7 +1249,8 @@ document.addEventListener("DOMContentLoaded", function () {
             + "<p><strong>العنوان:</strong> " + (title ? title.value : "") + "</p>"
             + "<p><strong>السعر:</strong> " + (price && price.value ? Number(price.value).toLocaleString("en-US") + " جنيه" : "-") + "</p>"
             + "<p><strong>المساحة:</strong> " + (areaSqm && areaSqm.value ? areaSqm.value + " م²" : "-") + "</p>"
-            + "<p><strong>النوع:</strong> " + (type ? type.options[type.selectedIndex].text : "") + "</p>"
+            + "<p><strong>نوع الإعلان:</strong> " + listingTypeText + "</p>"
+            + "<p><strong>نوع العقار:</strong> " + propertyTypeText + "</p>"
             + "<p><strong>المنطقة:</strong> " + (area ? area.options[area.selectedIndex].text : "") + "</p>"
             + "<p><strong>عدد الصور:</strong> " + (newPhotos + existingPhotos) + "</p>";
     }
