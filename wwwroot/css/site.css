@@ -1380,3 +1380,11 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
 @media (max-width: 860px) {
     .main-nav .nav-cta.desktop-only { display: none; }
 }
+
+/* Batch 94 — زرارين تسجيل خروج على الديسكتوب: فورم الخروج بتاع الدرج (mobile-only)
+   كان باين على الديسكتوب كمان، لأن `.inline-form { display: inline; }` (سطر 49) بتغلب
+   `.mobile-only { display: none; }` (سطر 23) — نفس الـ specificity ومتأخرة عنها في الملف.
+   قاعدة أقوى هنا بتخفيه على الديسكتوب. */
+@media (min-width: 861px) {
+    .main-nav .inline-form.mobile-only { display: none; }
+}
