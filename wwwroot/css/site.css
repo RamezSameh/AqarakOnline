@@ -201,12 +201,9 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
     .main-nav.open { display: flex; }
     .desktop-only { display: none; }
     .mobile-only { display: flex; }
-    .panel-account { flex-direction: column; gap: 8px; border-top: 1px solid #1e293b; padding-top: 12px; margin-top: 6px; }
-    .panel-account .profile-link, .panel-account .btn { text-align: center; }
     .main-nav .nav-link, .main-nav .nav-cta, .main-nav .nav-auth { text-align: center; padding: 14px 16px; font-size: 17px; }
     .main-nav .nav-cta { margin: 4px 0; }
     .main-nav .admin-nav-btn { justify-content: center; padding: 14px 16px; font-size: 17px; }
-    .panel-account .profile-link, .panel-account .btn { padding: 12px 16px; }
     .table { display: block; overflow-x: auto; }
 }
 @media (max-width: 600px) { .hero h1 { font-size: 34px; } .hero-search input { min-width: 0; flex: 1; } }
@@ -958,10 +955,7 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
 @media (min-width: 1400px) { .site-header .container { width: 100%; max-width: none; padding-inline: 24px; } }
 /* (18) الفوتر بـ 4 أعمدة على الديسكتوب */
 @media (min-width: 900px) { .footer-grid { grid-template-columns: 1.2fr 1fr 1fr; } }
-/* (2) أقسام قائمة الموبايل */
-.nav-section { display: none; }
 @media (max-width: 860px) {
-    .nav-section { display: block; width: 100%; font-weight: 800; color: #94a3b8; padding: 12px 12px 4px; font-size: 14px; }
     /* (1) الهيدر في الموبايل بسطرين */
     .header-actions { order: 3; flex: 1 1 100%; overflow-x: auto; }
     /* Batch 66 — شارة الجرس كانت بتتقص من فوق على الموبايل: الشارة طالعة
@@ -1108,15 +1102,11 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
     .drawer-head-text small { font-size: 11px; opacity: .85; }
     .drawer-close { margin-inline-start: auto; background: transparent; border: none; color: #fff; font-size: 17px; width: 36px; height: 36px; cursor: pointer; flex: 0 0 auto; }
     .drawer-only { display: contents; }
-    .main-nav .nav-section { padding: 10px 16px 2px; padding-inline-start: 42px; font-size: 11px; color: #64748b; border-top: 1px solid #334155; margin-top: 10px; }
-    .drawer-head + .nav-section { border-top: none; margin-top: 0; }
     .main-nav .nav-link, .main-nav .nav-cta, .main-nav .admin-nav-btn, .main-nav .nav-auth { text-align: start; justify-content: flex-start; padding: 10px 16px; font-size: 14px; }
+    .main-nav button.nav-link { width: 100%; background: none; border: none; font-family: inherit; cursor: pointer; }
     .main-nav .nav-cta { margin: 6px 16px 2px; justify-content: center; }
-    .panel-account { border-top: 1px solid #334155; padding: 10px 16px 0; }
-    .main-nav .panel-account .btn { font-size: 14px; }
 }
 [data-theme="light"] .main-nav { background: #f8fafc; }
-[data-theme="light"] .main-nav .nav-section { border-top-color: #e2e8f0; color: #64748b; }
 
 /* Batch 31 — إصلاح تنسيق الفورم: الليبلز والحقول اللي جوه حاويات (خطوات التسجيل، أقسام تعديل المستخدم، صف السعر/المساحة) كانت بتتدفق inline جنب بعض، فكل حقل يطلع جنب الليبل الغلط. الليبل يبقى block فوق حقله، والحقل بملء العرض. الاستثناءات: مفاتيح التبديل وبطاقات اختيار النوع واختيارات المميزات ليهم تنسيقهم الخاص. */
 .form label:not(.toggle-label):not(.type-option):not(.features-picker *) { display: block; }
