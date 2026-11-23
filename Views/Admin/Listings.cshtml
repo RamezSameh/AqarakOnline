@@ -37,7 +37,7 @@ else
             <article class="admin-card admin-listing-card">
                 <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></h3>
                 <p><strong>@listing.AdNumber</strong> • @L.ListingTypeText(listing.ListingType) • @L.PriceText(listing.Price, listing.ListingType)</p>
-                <p>@(listing.Owner?.FullName ?? listing.Owner?.UserName ?? L.T("SiteAdmin")) — @(listing.Owner?.PhoneNumber ?? "-") — @(listing.Owner?.Address ?? "-")</p>
+                <p>@(listing.Owner?.FullName ?? listing.Owner?.UserName ?? listing.GuestName ?? L.T("SiteAdmin")) — @(listing.Owner?.PhoneNumber ?? listing.GuestPhone ?? "-") — @(listing.Owner?.Address ?? "-")</p>
                 <p>@L.ApprovalText(listing.Approval) • @(listing.IsEffectivelyFeatured ? "⭐" : "-")
                     @if (listing.FeaturedUntil.HasValue && listing.IsFeatured)
                     {

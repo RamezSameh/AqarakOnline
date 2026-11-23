@@ -39,6 +39,19 @@
     <details class="form-step-details step-details-1" open>
     <summary class="form-step step-1"><span class="step-num">1</span> بيانات الإعلان</summary>
 
+    @if (User.Identity?.IsAuthenticated != true)
+    {
+    @* Batch 111 — الضيف بيضيف إعلان ببياناته (اسم + هاتف/واتساب) بدون حساب. *@
+    <h3 class="form-group-title">@L.T("OwnerDetails")</h3>
+    <p class="form-group-hint">@L.T("OwnerDetailsHint")</p>
+    <label>@L.T("OwnerName") *</label>
+    <input asp-for="GuestName" placeholder="مثال: أحمد محمد" />
+    <span asp-validation-for="GuestName" class="field-error"></span>
+    <label>@L.T("OwnerPhone") *</label>
+    <input asp-for="GuestPhone" placeholder="مثال: 015XXXXXXXX" inputmode="tel" />
+    <span asp-validation-for="GuestPhone" class="field-error"></span>
+    }
+
     <label>@L.T("Title")</label>
     <input asp-for="Title" placeholder="مثال: شقة 3 غرف في مدينة نصر" />
     <small id="titleCounter" class="char-counter"></small>

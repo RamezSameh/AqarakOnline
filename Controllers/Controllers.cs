@@ -325,6 +325,7 @@ public class ListingsController : Controller
 
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
+    [AllowAnonymous]
     [HttpGet]
     [EnableRateLimiting("search")]
     public async Task<IActionResult> Index(
@@ -597,6 +598,7 @@ public class ListingsController : Controller
     }
 
     /// <summary>اقتراحات أثناء الكتابة في البحث: مناطق مطابقة + عناوين إعلانات مطابقة.</summary>
+    [AllowAnonymous]
     [HttpGet]
     [EnableRateLimiting("search")]
     public async Task<IActionResult> Suggest(string? term)
@@ -619,6 +621,7 @@ public class ListingsController : Controller
         return Json(result);
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
@@ -686,7 +689,7 @@ public class ListingsController : Controller
         return View(listing);
     }
 
-    [Authorize]
+    [AllowAnonymous]
     /// <summary>
     /// صفحة منطقة (للـ SEO): نفس نتائج البحث لكن برابط ثابت لكل منطقة،
     /// مثل /Listings/Area/مدينة-نصر،-القاهرة — وتظهر في sitemap.xml.
@@ -722,6 +725,7 @@ public class ListingsController : Controller
     }
 
     /// <summary>مقارنة حتى 3 إعلانات مقبولة جنب بعض (ids مفصولة بفاصلة).</summary>
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> Compare(string? ids)
     {
@@ -738,6 +742,7 @@ public class ListingsController : Controller
     }
 
     /// <summary>متوسط سعر المتر للإعلانات المقبولة والمتاحة في منطقة — لاقتراح سعر استرشادي في فورم الإضافة.</summary>
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> AreaAverage(string area)
     {
@@ -753,17 +758,21 @@ public class ListingsController : Controller
         return Json(new { avgPerSqm = Math.Round(avg, 0) });
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> Create()
     {
         var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-        ViewBag.MyListings = await _context.Listings
+        // الضيف مالوش إعلانات سابقة ينسخ منها — القائمة فاضية له.
+        ViewBag.MyListings = userId == null
+            ? new List<Listing>()
+            : await _context.Listings
             .Where(l => l.OwnerId == userId)
             .OrderByDescending(l => l.CreatedAt).Take(20).ToListAsync();
         return View(new Listing());
     }
 
-    [Authorize]
+    [AllowAnonymous]
     [HttpPost]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(100_000_000)]
@@ -776,12 +785,34 @@ public class ListingsController : Controller
         {
             ModelState.AddModelError(nameof(Listing.Floor), "الدور مطلوب عند إضافة شقة.");
         }
+        // Batch 111 — الضيف بينشئ إعلان ببياناته (اسم + هاتف/واتساب) بدون حساب؛
+        // الإعلان بيتسجل ببيانات صاحب الإعلان الضيف وبيفضل معلّق لحد موافقة الأدمن.
+        var isGuest = User.Identity?.IsAuthenticated != true;
+        var guestName = (listing.GuestName ?? string.Empty).Trim();
+        var guestPhone = Services.PhoneHelper.Normalize(listing.GuestPhone);
+        if (isGuest)
+        {
+            if (guestName.Length < 2 || guestName.Length > 100)
+            {
+                ModelState.AddModelError(nameof(Listing.GuestName), "الاسم مطلوب (حرفان على الأقل).");
+            }
+            if (!Services.PhoneHelper.IsValidEgyptianMobile(guestPhone))
+            {
+                ModelState.AddModelError(nameof(Listing.GuestPhone), "رقم الموبايل يجب أن يكون 11 رقمًا بالضبط ويبدأ بـ 01");
+            }
+            else if (await _context.BlockedPhones.AnyAsync(b => b.PhoneNumber == guestPhone))
+            {
+                ModelState.AddModelError(nameof(Listing.GuestPhone), "رقم الهاتف ده محظور.");
+            }
+        }
         if (!ModelState.IsValid)
         {
             return View(listing);
         }
 
-        listing.OwnerId = CurrentUserId;
+        listing.OwnerId = isGuest ? null : CurrentUserId;
+        listing.GuestName = isGuest ? guestName : null;
+        listing.GuestPhone = isGuest ? guestPhone : null;
         listing.CreatedAt = DateTime.UtcNow;
         listing.IsAvailable = true;
         // السعر الأصلي = سعر الإنشاء؛ أي تخفيض لاحق يظهر شارة «تم تخفيض السعر».
@@ -810,13 +841,14 @@ public class ListingsController : Controller
         listing.AdNumber = $"AQ-{listing.Id:D4}";
         await SaveAttachmentsAsync(listing);
         await _context.SaveChangesAsync();
-        await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId, "إنشاء", "تم إنشاء الإعلان.");
+        await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId, "إنشاء", "تم إنشاء الإعلان.", isGuest ? guestName : null);
 
         if (listing.Approval == ListingApproval.Pending)
         {
             await _hub.Clients.Group(Services.RealtimeHub.AdminsGroup).SendAsync("refreshAdminNav");
             TempData["Info"] = "تم إرسال إعلانك للمراجعة، وسيظهر للعامة بعد موافقة الأدمن.";
-            return RedirectToAction(nameof(MyListings));
+            // الضيف مالوش صفحة «إعلاناتي» — يرجع الرئيسية بالرسالة.
+            return isGuest ? RedirectToAction("Index", "Home") : RedirectToAction(nameof(MyListings));
         }
         await SavedSearchAlerts.NotifyMatchingAsync(_context, listing, _hub);
         await _hub.Clients.All.SendAsync("listingsChanged");
@@ -1496,7 +1528,7 @@ public class ContactController : Controller
 
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
-    [Authorize]
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> Contact(int listingId, string? intent = null)
     {
@@ -1539,7 +1571,7 @@ public class ContactController : Controller
         });
     }
 
-    [Authorize]
+    [AllowAnonymous]
     [HttpPost]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting("contact")]
@@ -1556,6 +1588,17 @@ public class ContactController : Controller
         {
             return Forbid();
         }
+        // Batch 111 — الضيف بيطلب شراء/إيجار باسمه ورقم هاتفه بدون حساب؛
+        // رقم الهاتف لازم يكون موبايل مصري صحيح ومش محظور.
+        var buyerPhone = Services.PhoneHelper.Normalize(request.BuyerPhone);
+        if (!Services.PhoneHelper.IsValidEgyptianMobile(buyerPhone))
+        {
+            ModelState.AddModelError(nameof(ContactRequest.BuyerPhone), "رقم الموبايل يجب أن يكون 11 رقمًا بالضبط ويبدأ بـ 01");
+        }
+        else if (await _context.BlockedPhones.AnyAsync(b => b.PhoneNumber == buyerPhone))
+        {
+            ModelState.AddModelError(nameof(ContactRequest.BuyerPhone), "رقم الهاتف ده محظور.");
+        }
         if (!ModelState.IsValid)
         {
             ViewBag.Listing = listing;
@@ -1565,7 +1608,9 @@ public class ContactController : Controller
             return View(request);
         }
 
-        request.BuyerId = CurrentUserId;
+        request.BuyerId = string.IsNullOrEmpty(CurrentUserId) ? null : CurrentUserId;
+        request.BuyerName = request.BuyerName.Trim();
+        request.BuyerPhone = buyerPhone;
         request.CreatedAt = DateTime.UtcNow;
         request.IsReplied = false;
         if (!string.IsNullOrWhiteSpace(preferredTime))
@@ -1580,7 +1625,7 @@ public class ContactController : Controller
         return RedirectToAction(nameof(Success), new { id = request.Id });
     }
 
-    [Authorize]
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> Success(int id)
     {
@@ -1590,7 +1635,9 @@ public class ContactController : Controller
         {
             return NotFound();
         }
-        if (request.BuyerId != CurrentUserId && !User.IsInRole("Admin"))
+        // Batch 111 — طلب الضيف (BuyerId فاضي) بيتعرض لصاحبه من غير حساب؛
+        // طلبات الحسابات لسه محمية بمقارنة الـ BuyerId.
+        if (!string.IsNullOrEmpty(request.BuyerId) && request.BuyerId != CurrentUserId && !User.IsInRole("Admin"))
         {
             return Forbid();
         }
@@ -4096,7 +4143,7 @@ public static class ListingFeatureComposer
 /// <summary>سجل تعديلات الإعلانات (للأدمن): يسجّل من قام بالإجراء واسمه وقتها.</summary>
 public static class AuditLogHelper
 {
-    public static async Task AddAsync(ApplicationDbContext context, int listingId, string userId, string action, string? details)
+    public static async Task AddAsync(ApplicationDbContext context, int listingId, string userId, string action, string? details, string? displayName = null)
     {
         var user = await context.Users.FindAsync(userId);
         var cleanDetails = string.IsNullOrWhiteSpace(details) ? null : details.Trim();
@@ -4108,7 +4155,7 @@ public static class AuditLogHelper
         {
             ListingId = listingId,
             UserId = userId,
-            UserName = user?.FullName ?? user?.UserName ?? "مستخدم",
+            UserName = displayName ?? user?.FullName ?? user?.UserName ?? "مستخدم",
             Action = action,
             Details = cleanDetails,
             CreatedAt = DateTime.UtcNow
@@ -4576,9 +4623,11 @@ public class ViewingsController : Controller
         return View(mine);
     }
 
+    [AllowAnonymous]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(int listingId, DateTime? requestedAt, string? message, string? duration = null, int? slotId = null)
+    [EnableRateLimiting("contact")]
+    public async Task<IActionResult> Create(int listingId, DateTime? requestedAt, string? message, string? duration = null, int? slotId = null, string? requesterName = null, string? requesterPhone = null)
     {
         var listing = await _context.Listings.FirstOrDefaultAsync(l => l.Id == listingId);
         if (listing == null)
@@ -4588,6 +4637,28 @@ public class ViewingsController : Controller
         if (listing.OwnerId == CurrentUserId)
         {
             return Forbid();
+        }
+        // Batch 111 — الضيف بيطلب معاينة باسمه ورقم هاتفه بدون حساب.
+        var isGuest = User.Identity?.IsAuthenticated != true;
+        var guestName = (requesterName ?? string.Empty).Trim();
+        var guestPhone = Services.PhoneHelper.Normalize(requesterPhone);
+        if (isGuest)
+        {
+            if (guestName.Length < 2 || guestName.Length > 100)
+            {
+                TempData["Error"] = "الاسم مطلوب (حرفان على الأقل).";
+                return RedirectToAction("Details", "Listings", new { id = listingId });
+            }
+            if (!Services.PhoneHelper.IsValidEgyptianMobile(guestPhone))
+            {
+                TempData["Error"] = "رقم الموبايل يجب أن يكون 11 رقمًا بالضبط ويبدأ بـ 01";
+                return RedirectToAction("Details", "Listings", new { id = listingId });
+            }
+            if (await _context.BlockedPhones.AnyAsync(b => b.PhoneNumber == guestPhone))
+            {
+                TempData["Error"] = "رقم الهاتف ده محظور.";
+                return RedirectToAction("Details", "Listings", new { id = listingId });
+            }
         }
         // Batch 41 (7) — الحجز من ميعاد متاح حدده صاحب الإعلان.
         ViewingSlot? slot = null;
@@ -4619,7 +4690,9 @@ public class ViewingsController : Controller
         _context.ViewingAppointments.Add(new ViewingAppointment
         {
             ListingId = listingId,
-            RequesterId = CurrentUserId,
+            RequesterId = string.IsNullOrEmpty(CurrentUserId) ? null : CurrentUserId,
+            RequesterName = isGuest ? guestName : null,
+            RequesterPhone = isGuest ? guestPhone : null,
             RequestedAt = requestedAt.Value,
             Status = ViewingStatus.Pending,
             Message = cleanMessage,
@@ -4631,10 +4704,10 @@ public class ViewingsController : Controller
             slot.IsBooked = true;
             await _context.SaveChangesAsync();
         }
-        var requester = await _context.Users.FindAsync(CurrentUserId);
-        var requesterName = (requester?.FullName ?? requester?.UserName ?? "مستخدم").Split(' ')[0];
+        var requester = isGuest ? null : await _context.Users.FindAsync(CurrentUserId);
+        var requesterFirstName = (isGuest ? guestName : requester?.FullName ?? requester?.UserName ?? "مستخدم").Split(' ')[0];
         await NotifyAdminAsync("طلب معاينة جديد",
-            $"{requesterName} طلب معاينة «{listing.Title}» يوم {requestedAt:dd/MM/yyyy HH:mm}.");
+            $"{requesterFirstName} طلب معاينة «{listing.Title}» يوم {requestedAt:dd/MM/yyyy HH:mm}.");
         TempData["Info"] = "تم إرسال طلب المعاينة — إدارة الموقع هتنسّق معاك الميعاد.";
         return RedirectToAction("Details", "Listings", new { id = listingId });
     }
@@ -5167,9 +5240,11 @@ public class OffersController : Controller
     }
 
     /// <summary>تقديم عرض سعر على إعلان (ليس لصاحب الإعلان).</summary>
+    [AllowAnonymous]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(int listingId, decimal amount, string? message)
+    [EnableRateLimiting("contact")]
+    public async Task<IActionResult> Create(int listingId, decimal amount, string? message, string? buyerName = null, string? buyerPhone = null)
     {
         var listing = await _context.Listings.FirstOrDefaultAsync(l => l.Id == listingId);
         if (listing == null || listing.Approval != ListingApproval.Approved || !listing.IsAvailable)
@@ -5185,6 +5260,28 @@ public class OffersController : Controller
             TempData["Error"] = "مبلغ العرض لازم يكون أكبر من صفر.";
             return RedirectToAction("Details", "Listings", new { id = listingId });
         }
+        // Batch 111 — الضيف بيقدّم عرض سعر باسمه ورقم هاتفه بدون حساب.
+        var isGuest = User.Identity?.IsAuthenticated != true;
+        var guestName = (buyerName ?? string.Empty).Trim();
+        var guestPhone = Services.PhoneHelper.Normalize(buyerPhone);
+        if (isGuest)
+        {
+            if (guestName.Length < 2 || guestName.Length > 100)
+            {
+                TempData["Error"] = "الاسم مطلوب (حرفان على الأقل).";
+                return RedirectToAction("Details", "Listings", new { id = listingId });
+            }
+            if (!Services.PhoneHelper.IsValidEgyptianMobile(guestPhone))
+            {
+                TempData["Error"] = "رقم الموبايل يجب أن يكون 11 رقمًا بالضبط ويبدأ بـ 01";
+                return RedirectToAction("Details", "Listings", new { id = listingId });
+            }
+            if (await _context.BlockedPhones.AnyAsync(b => b.PhoneNumber == guestPhone))
+            {
+                TempData["Error"] = "رقم الهاتف ده محظور.";
+                return RedirectToAction("Details", "Listings", new { id = listingId });
+            }
+        }
         var cleanMessage = string.IsNullOrWhiteSpace(message) ? null : message.Trim();
         if (cleanMessage != null && cleanMessage.Length > 500)
         {
@@ -5193,7 +5290,9 @@ public class OffersController : Controller
         _context.ListingOffers.Add(new ListingOffer
         {
             ListingId = listingId,
-            BuyerId = CurrentUserId,
+            BuyerId = string.IsNullOrEmpty(CurrentUserId) ? null : CurrentUserId,
+            BuyerName = isGuest ? guestName : null,
+            BuyerPhone = isGuest ? guestPhone : null,
             Amount = amount,
             Message = cleanMessage,
             Status = OfferStatus.Pending,
@@ -5202,9 +5301,13 @@ public class OffersController : Controller
         await _context.SaveChangesAsync();
         await NotifyAdminAsync("عرض سعر جديد",
             $"عرض سعر {amount:N0} جنيه على «{listing.Title}» ({listing.AdNumber}).", "/Admin/Offers");
-        await NotifyUserAsync(listing.OwnerId, "وصل عرض سعر على إعلانك",
-            $"وصل عرض سعر {amount:N0} جنيه على «{listing.Title}». إدارة الموقع هتنسّق معاك — بدون تواصل مباشر مع المشتري.",
-            "/Offers/ReceivedOffers");
+        // تنبيه صاحب الإعلان بس لو ليه حساب؛ إعلان الضيف مالوش حساب يتنبّه.
+        if (listing.OwnerId != null)
+        {
+            await NotifyUserAsync(listing.OwnerId, "وصل عرض سعر على إعلانك",
+                $"وصل عرض سعر {amount:N0} جنيه على «{listing.Title}». إدارة الموقع هتنسّق معاك — بدون تواصل مباشر مع المشتري.",
+                "/Offers/ReceivedOffers");
+        }
         TempData["Info"] = "تم إرسال عرضك — إدارة الموقع هتوصله لصاحب الإعلان وتبلغك بالرد.";
         return RedirectToAction("Details", "Listings", new { id = listingId });
     }

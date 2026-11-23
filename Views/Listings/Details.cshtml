@@ -216,7 +216,11 @@ else
 {
 <div class="admin-box">
     <h2>@L.T("AdvertiserData")</h2>
-    <p><strong>@L.T("PhoneNumber"):</strong> @(Model.Owner?.PhoneNumber ?? "-")</p>
+    @if (Model.Owner == null && !string.IsNullOrWhiteSpace(Model.GuestName))
+    {
+        <p><strong>@L.T("OwnerName"):</strong> @Model.GuestName</p>
+    }
+    <p><strong>@L.T("PhoneNumber"):</strong> @(Model.Owner?.PhoneNumber ?? Model.GuestPhone ?? "-")</p>
     <p><strong>@L.T("Address"):</strong> @(Model.Owner?.Address ?? "-")</p>
     @if (!string.IsNullOrWhiteSpace(Model.DetailedAddress))
     {
@@ -339,10 +343,13 @@ else
         }
         <a class="btn btn-ghost" asp-controller="Contact" asp-action="Contact" asp-route-listingId="@Model.Id">@L.T("ContactUs")</a>
         <a class="btn btn-ghost" href="tel:@ContactOptions.Value.Phone">📞 @L.T("CallUs")</a>
-        <a class="btn btn-ghost report-btn" asp-action="Report" asp-route-id="@Model.Id">🚩 @L.T("ReportListing")</a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a class="btn btn-ghost report-btn" asp-action="Report" asp-route-id="@Model.Id">🚩 @L.T("ReportListing")</a>
+        }
     }
-    @* Batch 41 (2) — عرض سعر عبر الأدمن (ليس لصاحب الإعلان). *@
-    @if (User.Identity?.IsAuthenticated == true && Model.OwnerId != User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value && Model.IsAvailable)
+    @* Batch 41 (2) — عرض سعر عبر الأدمن (ليس لصاحب الإعلان). Batch 111: مفتوح للضيف باسمه ورقم هاتفه. *@
+    @if ((Model.OwnerId == null || Model.OwnerId != User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value) && Model.IsAvailable)
     {
         @if (ViewBag.MyPendingOffer is ListingOffer pendingOffer)
         {
@@ -357,6 +364,13 @@ else
                     <p><small>عرضك بيوصل لصاحب الإعلان عن طريق إدارة الموقع — بدون تواصل مباشر.</small></p>
                     <label>مبلغ العرض (جنيه) *</label>
                     <input type="number" name="amount" min="1" required placeholder="@Model.Price.ToString("N0")" />
+                    @if (User.Identity?.IsAuthenticated != true)
+                    {
+                    <label>@L.T("BuyerName") *</label>
+                    <input type="text" name="buyerName" required maxlength="100" placeholder="اسمك" />
+                    <label>@L.T("BuyerPhone") *</label>
+                    <input type="tel" name="buyerPhone" required maxlength="50" placeholder="01XXXXXXXXX" />
+                    }
                     <label>رسالة (اختياري)</label>
                     <textarea name="message" rows="2" maxlength="500"></textarea>
                     <button type="submit" class="btn btn-primary">إرسال العرض</button>
@@ -428,6 +442,14 @@ else
             </select>
             <label>2 — @L.T("ViewingMessage")</label>
             <textarea name="message" rows="2" maxlength="500"></textarea>
+            @if (User.Identity?.IsAuthenticated != true)
+            {
+            @* Batch 111 — الضيف بيطلب معاينة باسمه ورقم هاتفه بدون حساب. *@
+            <label>@L.T("BuyerName") *</label>
+            <input type="text" name="requesterName" required maxlength="100" placeholder="اسمك" />
+            <label>@L.T("BuyerPhone") *</label>
+            <input type="tel" name="requesterPhone" required maxlength="50" placeholder="01XXXXXXXXX" />
+            }
             <button type="submit" class="btn btn-primary">3 — @L.T("BookViewing")</button>
         </form>
     </section>

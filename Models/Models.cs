@@ -367,6 +367,13 @@ public class Listing
     public string? OwnerId { get; set; }
     public ApplicationUser? Owner { get; set; }
 
+    /// <summary>بيانات صاحب الإعلان الضيف (بدون حساب): الاسم ورقم الهاتف/واتساب. فارغة للإعلانات المربوطة بحساب.</summary>
+    [MaxLength(200)]
+    public string? GuestName { get; set; }
+
+    [MaxLength(50)]
+    public string? GuestPhone { get; set; }
+
     public List<ListingAttachment> Attachments { get; set; } = new();
 
     [NotMapped]
@@ -586,8 +593,15 @@ public class ViewingAppointment
     public int ListingId { get; set; }
     public Listing? Listing { get; set; }
 
-    public string RequesterId { get; set; } = string.Empty;
+    public string? RequesterId { get; set; }
     public ApplicationUser? Requester { get; set; }
+
+    /// <summary>بيانات طالب المعاينة الضيف (بدون حساب): الاسم ورقم الهاتف/واتساب.</summary>
+    [MaxLength(200)]
+    public string? RequesterName { get; set; }
+
+    [MaxLength(50)]
+    public string? RequesterPhone { get; set; }
 
     /// <summary>الميعاد المطلوب (بتوقيت المستخدم المحلي كما أدخله).</summary>
     public DateTime RequestedAt { get; set; }
@@ -734,8 +748,15 @@ public class ListingOffer
     public int ListingId { get; set; }
     public Listing? Listing { get; set; }
 
-    public string BuyerId { get; set; } = string.Empty;
+    public string? BuyerId { get; set; }
     public ApplicationUser? Buyer { get; set; }
+
+    /// <summary>بيانات مقدّم العرض الضيف (بدون حساب): الاسم ورقم الهاتف/واتساب.</summary>
+    [MaxLength(200)]
+    public string? BuyerName { get; set; }
+
+    [MaxLength(50)]
+    public string? BuyerPhone { get; set; }
 
     [Range(1, 1000000000, ErrorMessage = "مبلغ العرض يجب أن يكون أكبر من صفر")]
     public decimal Amount { get; set; }

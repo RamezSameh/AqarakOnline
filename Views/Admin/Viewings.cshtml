@@ -13,7 +13,7 @@ else
         {
             <article class="viewing-card status-@viewing.Status">
                 <h3><a asp-controller="Listings" asp-action="Details" asp-route-id="@viewing.ListingId">@viewing.Listing?.Title</a></h3>
-                <p>@(viewing.Requester?.FullName ?? viewing.Requester?.UserName ?? "-") — @(viewing.Requester?.PhoneNumber ?? "-")</p>
+                <p>@(viewing.Requester?.FullName ?? viewing.Requester?.UserName ?? viewing.RequesterName ?? "ضيف") — @(viewing.Requester?.PhoneNumber ?? viewing.RequesterPhone ?? "-")</p>
                 <p>@viewing.RequestedAt.ToString("dd/MM/yyyy HH:mm")</p>
                 <p>@(viewing.Message ?? "-")</p>
                 <p><span class="viewing-status">@L.ViewingStatusText(viewing.Status)</span></p>

@@ -16,7 +16,7 @@ else
             {
                 <tr>
                     <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@o.ListingId">@o.Listing?.Title</a><br /><small>@o.Listing?.AdNumber • سعر الإعلان: @o.Listing?.Price.ToString("N0") جنيه</small></td>
-                    <td>@o.Buyer?.FullName<br /><small>@o.Buyer?.PhoneNumber</small></td>
+                    <td>@(o.Buyer?.FullName ?? o.BuyerName ?? "ضيف")<br /><small>@(o.Buyer?.PhoneNumber ?? o.BuyerPhone ?? "-")</small></td>
                     <td><strong>@o.Amount.ToString("N0") جنيه</strong>@if (!string.IsNullOrWhiteSpace(o.Message))
                     {<br /><small>@o.Message</small>}</td>
                     <td>@(o.CounterAmount.HasValue ? o.CounterAmount.Value.ToString("N0") + " جنيه" : "—")</td>

@@ -398,6 +398,14 @@ namespace AqarakOnline.Migrations
                     b.Property<int>("Furnishing")
                         .HasColumnType("int");
 
+                    b.Property<string>("GuestName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("GuestPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<bool>("HasAirConditioning")
                         .HasColumnType("bit");
 
@@ -587,8 +595,15 @@ namespace AqarakOnline.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("BuyerId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("BuyerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("BuyerPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal?>("CounterAmount")
                         .HasPrecision(18, 2)
@@ -947,8 +962,15 @@ namespace AqarakOnline.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("RequesterId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("RequesterName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("RequesterPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -1260,9 +1282,7 @@ namespace AqarakOnline.Migrations
                 {
                     b.HasOne("AqarakOnline.Models.ApplicationUser", "Buyer")
                         .WithMany()
-                        .HasForeignKey("BuyerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("BuyerId");
 
                     b.HasOne("AqarakOnline.Models.Listing", "Listing")
                         .WithMany()
@@ -1357,8 +1377,7 @@ namespace AqarakOnline.Migrations
                     b.HasOne("AqarakOnline.Models.ApplicationUser", "Requester")
                         .WithMany()
                         .HasForeignKey("RequesterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Listing");
 
