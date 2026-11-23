@@ -1,23 +1,4 @@
 @model IEnumerable<Listing>
-@{
-    var sortOptions = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
-    {
-        new(L.T("SortNewest"), "newest", ViewBag.Sort == "newest"),
-        new(L.T("SortPriceAsc"), "priceAsc", ViewBag.Sort == "priceAsc"),
-        new(L.T("SortPriceDesc"), "priceDesc", ViewBag.Sort == "priceDesc"),
-        new(L.T("SortViewsDesc"), "viewsDesc", ViewBag.Sort == "viewsDesc"),
-        new(L.T("SortAreaAsc"), "areaAsc", ViewBag.Sort == "areaAsc"),
-        new(L.T("SortAreaDesc"), "areaDesc", ViewBag.Sort == "areaDesc")
-    };
-    var typeOptions = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
-    {
-        new(L.T("All"), "", string.IsNullOrWhiteSpace(ViewBag.PropertyType))
-    };
-    foreach (PropertyType pt in Enum.GetValues(typeof(PropertyType)))
-    {
-        typeOptions.Add(new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(L.PropertyTypeText(pt), pt.ToString(), ViewBag.PropertyType == pt.ToString()));
-    }
-}
 <h1>@L.T("Favorites") (@Model.Count())</h1>
 @if (!Model.Any())
 {
@@ -26,24 +7,6 @@
 }
 else
 {
-    <form class="filter-form" asp-controller="Favorites" asp-action="Index" method="get">
-        <label class="sort-label sort-select-hidden">
-            @L.T("SortBy")
-            <select name="sort" id="favoritesSortSelect" asp-items="sortOptions"></select>
-        </label>
-        <div class="fav-sort-tabs">
-            @foreach (var opt in sortOptions)
-            {
-                <button type="button" class="btn tab-chip @(ViewBag.Sort == opt.Value ? "active" : "")" data-sort="@opt.Value">@opt.Text</button>
-            }
-        </div>
-        <label class="sort-label">
-            @L.T("PropertyType")
-            <select name="propertyType" asp-items="typeOptions"></select>
-        </label>
-        <input type="search" name="search" value="@ViewBag.Search" placeholder="@L.T("Search")" />
-        <button type="submit" class="btn btn-primary">@L.T("Filter")</button>
-    </form>
     <div class="actions">
         <button type="button" id="compareAllBtn" class="btn btn-primary">مقارنة الكل ⚖️</button>
         @if (User.Identity?.IsAuthenticated == true)

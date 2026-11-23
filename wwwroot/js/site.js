@@ -1997,16 +1997,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // 35 — ترتيب المفضلة كأزرار tabs.
-    var favSortSelect = document.getElementById("favoritesSortSelect");
-    document.querySelectorAll(".fav-sort-tabs .tab-chip").forEach(function (chip) {
-        chip.addEventListener("click", function () {
-            if (!favSortSelect) { return; }
-            favSortSelect.value = chip.getAttribute("data-sort");
-            favSortSelect.form.submit();
-        });
-    });
-
     // 27 — أزرار + و - للغرف والحمامات والدور وعدد الأسانسيرات.
     document.querySelectorAll(".stepper").forEach(function (stepper) {
         var input = stepper.querySelector("input[type='number']");

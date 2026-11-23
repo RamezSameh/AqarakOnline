@@ -4839,44 +4839,15 @@ public class FavoritesController : Controller
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> Index(string? sort = null, string? propertyType = null, string? search = null)
+    public async Task<IActionResult> Index()
     {
-        var sortKey = (sort ?? "newest").ToLowerInvariant() switch
-        {
-            "priceasc" => "priceAsc",
-            "pricedesc" => "priceDesc",
-            "viewsdesc" => "viewsDesc",
-            "areaasc" => "areaAsc",
-            "areadesc" => "areaDesc",
-            _ => "newest"
-        };
-        ViewBag.Sort = sortKey;
-        ViewBag.PropertyType = propertyType;
-        ViewBag.Search = search;
         if (User.Identity?.IsAuthenticated == true)
         {
             var query = _context.Favorites
                 .Include(f => f.Listing).ThenInclude(l => l!.Owner)
                 .Include(f => f.Listing).ThenInclude(l => l!.Attachments)
                 .Where(f => f.UserId == CurrentUserId);
-            if (!string.IsNullOrWhiteSpace(propertyType) && Enum.TryParse<PropertyType>(propertyType, out var pt))
-            {
-                query = query.Where(f => f.Listing!.PropertyType == pt);
-            }
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var term = search.Trim();
-                query = query.Where(f => f.Listing!.Title.Contains(term) || f.Listing!.Area.Contains(term));
-            }
-            var listings = sortKey switch
-            {
-                "priceAsc" => await query.OrderBy(f => f.Listing!.Price).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
-                "priceDesc" => await query.OrderByDescending(f => f.Listing!.Price).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
-                "viewsDesc" => await query.OrderByDescending(f => f.Listing!.ViewCount).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
-                "areaAsc" => await query.OrderBy(f => f.Listing!.Area).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
-                "areaDesc" => await query.OrderByDescending(f => f.Listing!.Area).ThenByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync(),
-                _ => await query.OrderByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync()
-            };
+            var listings = await query.OrderByDescending(f => f.CreatedAt).Select(f => f.Listing!).ToListAsync();
             ViewBag.FavoriteListingIds = listings.Select(l => l.Id).ToHashSet();
             return View(listings);
         }
@@ -4890,35 +4861,6 @@ public class FavoritesController : Controller
             .ToListAsync();
         var ordered = guestIds.Select(id => guestListings.FirstOrDefault(l => l.Id == id))
             .Where(l => l != null).Select(l => l!).ToList();
-        if (!string.IsNullOrWhiteSpace(propertyType) && Enum.TryParse<PropertyType>(propertyType, out var gpt))
-        {
-            ordered = ordered.Where(l => l.PropertyType == gpt).ToList();
-        }
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var term = search.Trim();
-            ordered = ordered.Where(l => l.Title.Contains(term) || l.Area.Contains(term)).ToList();
-        }
-        if (sortKey == "priceAsc")
-        {
-            ordered = ordered.OrderBy(l => l.Price).ToList();
-        }
-        else if (sortKey == "priceDesc")
-        {
-            ordered = ordered.OrderByDescending(l => l.Price).ToList();
-        }
-        else if (sortKey == "viewsDesc")
-        {
-            ordered = ordered.OrderByDescending(l => l.ViewCount).ToList();
-        }
-        else if (sortKey == "areaAsc")
-        {
-            ordered = ordered.OrderBy(l => l.Area).ToList();
-        }
-        else if (sortKey == "areaDesc")
-        {
-            ordered = ordered.OrderByDescending(l => l.Area).ToList();
-        }
         ViewBag.FavoriteListingIds = ordered.Select(l => l.Id).ToHashSet();
         return View(ordered);
     }
