@@ -93,6 +93,87 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // الضغط على إشعار في نافذة الجرس يعلّمه كمقروءًا فورًا: يحدّث شارة الجرس
+    // وسطر «غير مقروء» لحظيًا، وبعدين يكمّل للرابط زي قبل بالظبط (ولو الفشل
+    // في الحفظ، التنقل بيكمل برضه). مفوَّض حتى يعمل بعد استبدال HTML الجرس.
+    function syncBellUnread(count) {
+        var btn = document.getElementById("bellBtn");
+        var badge = document.querySelector("#bellBtn .bell-badge");
+        if (count > 0) {
+            if (badge) {
+                badge.textContent = count;
+            } else if (btn) {
+                badge = document.createElement("span");
+                badge.className = "bell-badge";
+                badge.textContent = count;
+                btn.appendChild(badge);
+            }
+        } else if (badge) {
+            badge.remove();
+        }
+        var unreadLine = document.querySelector("#bellDropdown .bell-unread");
+        if (unreadLine) {
+            if (count > 0) {
+                unreadLine.textContent = "غير مقروء: " + count;
+            } else {
+                unreadLine.remove();
+            }
+        }
+        var markAllForm = document.querySelector("#bellDropdown .bell-foot form");
+        if (markAllForm && count <= 0) {
+            markAllForm.remove();
+        }
+    }
+    document.addEventListener("click", function (event) {
+        var item = event.target.closest(".bell-item.unread");
+        if (!item) {
+            return;
+        }
+        var id = item.getAttribute("data-notification-id");
+        var tokenInput = document.querySelector('#bellDropdown input[name="__RequestVerificationToken"]');
+        if (!id || !tokenInput) {
+            return;
+        }
+        var link = event.target.closest("a");
+        var href = link ? link.getAttribute("href") : null;
+        if (href) {
+            event.preventDefault();
+        }
+        var badge = document.querySelector("#bellBtn .bell-badge");
+        var current = badge ? parseInt(badge.textContent, 10) : NaN;
+        item.classList.remove("unread");
+        if (!isNaN(current) && current > 0) {
+            syncBellUnread(current - 1);
+        }
+        var navigated = false;
+        function go() {
+            if (!navigated) {
+                navigated = true;
+                if (href) {
+                    window.location.href = href;
+                }
+            }
+        }
+        var timer = setTimeout(go, 3000);
+        fetch("/Notifications/MarkRead", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: "id=" + encodeURIComponent(id) +
+                "&__RequestVerificationToken=" + encodeURIComponent(tokenInput.value)
+        })
+            .then(function (response) { return response.ok ? response.json() : null; })
+            .then(function (data) {
+                if (data && typeof data.unreadCount === "number") {
+                    syncBellUnread(data.unreadCount);
+                }
+            })
+            .catch(function () { /* يبقى التحديث المتفائل؛ والتنقل يكمل */ })
+            .then(function () { clearTimeout(timer); go(); });
+    });
+
     // اللوحة الجانبية للإدارة (Side Navbar): زرار واحد يفتح لوحة
     // منزلقة من الجنب بكل خصائص الأدمن. فتحها يقفل نافذة الجرس.
     // بتفويض الأحداث حتى تعمل بعد استبدال HTML الإدارة لحظيًا.

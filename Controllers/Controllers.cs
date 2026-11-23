@@ -3944,6 +3944,19 @@ public class NotificationsController : Controller
             });
             await _context.SaveChangesAsync();
         }
+        // طلب AJAX من الجرس: يرجع العدد الجديد بدل إعادة التوجيه لصفحة الإشعارات.
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            var activeIds = await _context.Notifications
+                .Where(n => n.IsActive && (n.TargetUserId == null || n.TargetUserId == CurrentUserId))
+                .Select(n => n.Id)
+                .ToListAsync();
+            var readIds = await _context.NotificationReads
+                .Where(r => r.UserId == CurrentUserId)
+                .Select(r => r.NotificationId)
+                .ToListAsync();
+            return Json(new { ok = true, unreadCount = activeIds.Count(x => !readIds.Contains(x)) });
+        }
         return RedirectToAction(nameof(Index));
     }
 

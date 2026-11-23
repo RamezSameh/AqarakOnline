@@ -9,6 +9,7 @@
     </button>
     <div class="bell-dropdown" id="bellDropdown" hidden>
       <div class="bell-modal" role="dialog" aria-modal="true" aria-label="الإشعارات">
+        @Html.AntiForgeryToken()
         <div class="bell-head">
             <strong>الإشعارات</strong>
             <button type="button" class="bell-close" id="bellClose" aria-label="إغلاق">✕</button>
@@ -25,7 +26,7 @@
         {
             @foreach (var row in Model.Items)
             {
-                <div class="bell-item @(row.IsRead ? "" : "unread")">
+                <div class="bell-item @(row.IsRead ? "" : "unread")" data-notification-id="@row.Notification.Id">
                     @if (!string.IsNullOrEmpty(row.Notification.Url))
                     {
                         <a href="@row.Notification.Url"><strong>@row.Notification.Title</strong></a>
