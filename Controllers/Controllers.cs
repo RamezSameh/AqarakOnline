@@ -918,6 +918,7 @@ public class ListingsController : Controller
         listing.BuildingFloors = model.BuildingFloors;
         listing.UpdatedAt = DateTime.UtcNow;
         listing.IsAvailable = model.IsAvailable;
+        ClearFeaturedIfUnavailable(listing);
         if (!User.IsInRole("Admin"))
         {
             listing.Approval = ListingApproval.Pending;
@@ -1039,6 +1040,16 @@ public class ListingsController : Controller
     [Authorize]
     [HttpGet]
     /// <summary>إيقاف/تشغيل إعلان بسرعة من «إعلاناتي» — لصاحب الإعلان أو الأدمن.</summary>
+    /// <summary>إعلان غير متاح يفقد التمييز تلقائيًا (Batch 69).</summary>
+    private static void ClearFeaturedIfUnavailable(Listing listing)
+    {
+        if (!listing.IsAvailable && listing.IsFeatured)
+        {
+            listing.IsFeatured = false;
+            listing.FeaturedUntil = null;
+        }
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleAvailability(int id)
@@ -1053,6 +1064,7 @@ public class ListingsController : Controller
             return Forbid();
         }
         listing.IsAvailable = !listing.IsAvailable;
+        ClearFeaturedIfUnavailable(listing);
         listing.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         await AuditLogHelper.AddAsync(_context, listing.Id, CurrentUserId,
@@ -1403,6 +1415,7 @@ public class ListingsController : Controller
             return NotFound();
         }
         listing.IsAvailable = false;
+        ClearFeaturedIfUnavailable(listing);
         await _context.SaveChangesAsync();
         await _hub.Clients.All.SendAsync("listingsChanged");
         return RedirectToAction("Listings", "Admin");
@@ -3061,6 +3074,11 @@ public class AdminController : Controller
         }
         if (days.HasValue)
         {
+            if (!listing.IsAvailable)
+            {
+                TempData["Error"] = "الإعلان غير متاح — شغّله الأول قبل التمييز.";
+                return RedirectToAction(nameof(Listings));
+            }
             listing.IsFeatured = true;
             listing.FeaturedUntil = DateTime.UtcNow.AddDays(days.Value);
             TempData["Info"] = $"تم تمييز الإعلان لمدة {days.Value} أيام.";
