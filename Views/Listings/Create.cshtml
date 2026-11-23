@@ -45,10 +45,10 @@
     <h3 class="form-group-title">@L.T("OwnerDetails")</h3>
     <p class="form-group-hint">@L.T("OwnerDetailsHint")</p>
     <label>@L.T("OwnerName") *</label>
-    <input asp-for="GuestName" placeholder="مثال: أحمد محمد" />
+    <input asp-for="GuestName" placeholder="مثال: أحمد محمد" data-val="true" data-val-required="الاسم مطلوب (حرفان على الأقل)." />
     <span asp-validation-for="GuestName" class="field-error"></span>
     <label>@L.T("OwnerPhone") *</label>
-    <input asp-for="GuestPhone" placeholder="مثال: 015XXXXXXXX" inputmode="tel" />
+    <input asp-for="GuestPhone" placeholder="مثال: 015XXXXXXXX" inputmode="tel" data-val="true" data-val-required="رقم الموبايل يجب أن يكون 11 رقمًا بالضبط ويبدأ بـ 01" />
     <span asp-validation-for="GuestPhone" class="field-error"></span>
     }
 
