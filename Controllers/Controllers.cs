@@ -4838,6 +4838,7 @@ public class FavoritesController : Controller
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> Index(string? sort = null, string? propertyType = null, string? search = null)
     {
         var sortKey = (sort ?? "newest").ToLowerInvariant() switch
