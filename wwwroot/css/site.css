@@ -1413,3 +1413,14 @@ html[data-theme="light"] { scrollbar-color: #6366f1 #e2e8f0; }
    الحالة بقت شارة صغيرة على الصورة (تحت على الطرف) من غير ما تاخد أي ارتفاع. */
 .card-avail-chip { position: absolute; bottom: 10px; inset-inline-start: 10px; z-index: 3; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #fff; background: #065f46; }
 .card-avail-chip.closed { background: #7f1d1d; }
+
+/* Batch 99 — كروت «الأكثر مشاهدة» غير متناسقة مع باقي الكروت: الـ ranked-item كان لسه
+   320px من قبل Batch 70 اللي صغّر كروت السلايدر لـ 260px (والقاعدة نفسها مكتوب عليها
+   «نفس عرض كارت السلايدر»)، وعلى الموبايل كان 320px وباقي الكروت 280px.
+   دلوقتي نفس العرض بالظبط في الحالتين. وشارة الفيديو 🎬 في كروت الأكثر مشاهدة
+   كانت بتتداخل مع رقم الترتيب (الاتنين فوق على الطرف) — نزلت لتحت الرقم. */
+.cards-slider .ranked-item { flex-basis: 260px; }
+.ranked-item .video-badge { top: 46px; }
+@media (max-width: 640px) {
+    .cards-slider .ranked-item { flex-basis: 280px; }
+}
