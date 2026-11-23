@@ -3,10 +3,10 @@
 <section class="account-card">
 <h2>نظرة عامة</h2>
 <div class="cards-grid">
-    <div class="listing-card stat-card"><div class="listing-body"><h3>إعلاناتي</h3><p class="stat-number">@Model.MyListingsCount</p><p>مقبول: @Model.ApprovedListingsCount | معلّق: @Model.PendingListingsCount</p></div></div>
-    <div class="listing-card stat-card"><div class="listing-body"><h3>المفضلة</h3><p class="stat-number">@Model.FavoritesCount</p></div></div>
-    <div class="listing-card stat-card"><div class="listing-body"><h3>بحثي المحفوظ</h3><p class="stat-number">@Model.SavedSearchesCount</p></div></div>
-    <div class="listing-card stat-card"><div class="listing-body"><h3>تنبيهات غير مقروءة</h3><p class="stat-number">@Model.UnreadNotificationsCount</p></div></div>
+    <a class="listing-card stat-card" asp-controller="Listings" asp-action="MyListings"><div class="listing-body"><h3>📋 إعلاناتي</h3><p class="stat-number">@Model.MyListingsCount</p><p>مقبول: @Model.ApprovedListingsCount | معلّق: @Model.PendingListingsCount</p></div></a>
+    <a class="listing-card stat-card" asp-controller="SavedSearches" asp-action="Index"><div class="listing-body"><h3>🔍 بحثي المحفوظ</h3><p class="stat-number">@Model.SavedSearchesCount</p></div></a>
+    <a class="listing-card stat-card" asp-controller="Viewings" asp-action="Index"><div class="listing-body"><h3>📅 مواعيد المعاينة</h3><p class="stat-number">@Model.ActiveViewingsCount</p></div></a>
+    <a class="listing-card stat-card" asp-controller="Notifications" asp-action="Index"><div class="listing-body"><h3>🔔 تنبيهات غير مقروءة</h3><p class="stat-number">@Model.UnreadNotificationsCount</p></div></a>
 </div>
 </section>
 <section class="account-card">
@@ -28,16 +28,12 @@
 </section>
 }
 <section class="account-card">
-<h2>روابط سريعة</h2>
-<div class="quick-links">
-    <a class="btn btn-ghost quick-link" asp-controller="Listings" asp-action="MyListings">📋 إعلاناتي</a>
-    <a class="btn btn-ghost quick-link" asp-controller="SavedSearches" asp-action="Index">🔍 بحثي المحفوظ</a>
-    <a class="btn btn-ghost quick-link" asp-controller="Viewings" asp-action="Index">📅 مواعيد المعاينة</a>
-    <a class="btn btn-ghost quick-link" asp-controller="Notifications" asp-action="Index">🔔 التنبيهات</a>
-    <a class="btn btn-ghost quick-link" asp-controller="PropertyRequests" asp-action="Index">📋 طلبات عقار</a>
-    <a class="btn btn-ghost quick-link" asp-controller="PropertyRequests" asp-action="MyRequests">📝 طلباتي</a>
-    <a class="btn btn-ghost quick-link" asp-controller="Offers" asp-action="MyOffers">💰 عروضي</a>
-    <a class="btn btn-ghost quick-link" asp-controller="Offers" asp-action="ReceivedOffers">💰 العروض الواردة</a>
+<h2>أقسام حسابي</h2>
+<div class="account-menu">
+    <a class="account-menu-item" asp-controller="PropertyRequests" asp-action="Index"><span>📋 طلبات عقار</span><span class="account-menu-chev">‹</span></a>
+    <a class="account-menu-item" asp-controller="PropertyRequests" asp-action="MyRequests"><span>📝 طلباتي</span><span class="account-menu-chev">‹</span></a>
+    <a class="account-menu-item" asp-controller="Offers" asp-action="MyOffers"><span>💰 عروضي</span><span class="account-menu-chev">‹</span></a>
+    <a class="account-menu-item" asp-controller="Offers" asp-action="ReceivedOffers"><span>💰 العروض الواردة</span><span class="account-menu-chev">‹</span></a>
 </div>
 </section>
 <section class="account-card">

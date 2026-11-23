@@ -375,8 +375,8 @@ public class AccountController : Controller
             MyListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == userId),
             ApprovedListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == userId && l.Approval == ListingApproval.Approved),
             PendingListingsCount = await _context.Listings.CountAsync(l => l.OwnerId == userId && l.Approval == ListingApproval.Pending),
-            FavoritesCount = await _context.Favorites.CountAsync(f => f.UserId == userId),
             SavedSearchesCount = await _context.SavedSearches.CountAsync(s => s.UserId == userId),
+            ActiveViewingsCount = await _context.ViewingAppointments.CountAsync(v => v.RequesterId == userId && (v.Status == ViewingStatus.Pending || v.Status == ViewingStatus.Confirmed)),
             UnreadNotificationsCount = await _context.Notifications
                 .Where(n => n.IsActive && (n.TargetUserId == null || n.TargetUserId == userId)
                     && !_context.NotificationReads.Any(r => r.NotificationId == n.Id && r.UserId == userId))
@@ -475,8 +475,10 @@ public class MyAccountViewModel
     public int MyListingsCount { get; set; }
     public int ApprovedListingsCount { get; set; }
     public int PendingListingsCount { get; set; }
-    public int FavoritesCount { get; set; }
     public int SavedSearchesCount { get; set; }
+
+    /// <summary>مواعيد معاينة نشطة (قيد الانتظار أو مؤكدة) طلبها المستخدم.</summary>
+    public int ActiveViewingsCount { get; set; }
     public int UnreadNotificationsCount { get; set; }
     public DateTime? LastActivityAt { get; set; }
     public List<Notification> RecentNotifications { get; set; } = new();

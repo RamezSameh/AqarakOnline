@@ -384,6 +384,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 
 /* (5) بطاقات إحصائيات «حسابي» */
 .stat-card { text-align: center; }
+a.stat-card { text-decoration: none; color: inherit; }
 .stat-card .stat-number { font-size: 36px; font-weight: 800; color: #c7d2fe; margin: 8px 0; }
 [data-theme="light"] .stat-card .stat-number { color: #4338ca; }
 
@@ -670,8 +671,14 @@ img.listing-photo.loaded, img.gallery-main-photo.loaded { filter: blur(0); }
 [data-theme="light"] .status-Pending { color: #b45309; }
 [data-theme="light"] .status-Rejected { color: #b91c1c; }
 /* 25 — روابط سريعة في حسابي */
-.quick-links { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
-.quick-link { padding: 14px 20px; font-size: 17px; }
+/* Batch 77 — قائمة أقسام حسابي بدل «روابط سريعة»: صفوف بأيقونة وسهم. */
+.account-menu { display: flex; flex-direction: column; }
+.account-menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 12px; border-bottom: 1px solid #334155; text-decoration: none; color: inherit; font-size: 17px; }
+.account-menu-item:last-child { border-bottom: none; }
+.account-menu-item:hover { background: #0f172a; }
+.account-menu-chev { margin-inline-start: auto; color: #94a3b8; }
+[data-theme="light"] .account-menu-item { border-bottom-color: #e2e8f0; }
+[data-theme="light"] .account-menu-item:hover { background: #f1f5f9; }
 /* 27 — زر تشغيل البحث المحفوظ أكبر */
 .run-search-btn { padding: 12px 22px; font-size: 16px; }
 /* 28/29 — الدخول والتسجيل بخلفية متدرجة */
