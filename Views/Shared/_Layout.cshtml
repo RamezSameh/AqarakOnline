@@ -35,12 +35,11 @@
                     <div class="drawer-head-text"><strong>@L.T("Brand")</strong><small>@L.T("Tagline")</small></div>
                     <button type="button" class="drawer-close" id="drawerClose" aria-label="إغلاق">✕</button>
                 </div>
-                <span class="nav-section">الإعلانات</span>
+                <span class="nav-section">القائمة</span>
                 <a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">🏠 @L.T("Home")</a>
                 <a class="nav-link @(currentController == "Listings" && currentAction == "Index" ? "active" : "")" asp-controller="Listings" asp-action="Index">🏘️ @L.T("Listings")</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
-                    <span class="nav-section">حسابي</span>
                     <div class="drawer-only">
                         <a class="nav-link @(currentController == "Listings" && currentAction == "MyListings" ? "active" : "")" asp-controller="Listings" asp-action="MyListings">📋 @L.T("MyListings")</a>
                         <a class="nav-link @(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">♥ @L.T("Favorites")</a>

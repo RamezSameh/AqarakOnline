@@ -1091,13 +1091,15 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
     .drawer-head-text small { font-size: 11px; opacity: .85; }
     .drawer-close { margin-inline-start: auto; background: transparent; border: none; color: #fff; font-size: 17px; width: 36px; height: 36px; cursor: pointer; flex: 0 0 auto; }
     .drawer-only { display: contents; }
-    .main-nav .nav-section { padding: 10px 16px 2px; padding-inline-start: 42px; font-size: 12px; }
+    .main-nav .nav-section { padding: 10px 16px 2px; padding-inline-start: 42px; font-size: 11px; color: #64748b; border-top: 1px solid #334155; margin-top: 10px; }
+    .drawer-head + .nav-section { border-top: none; margin-top: 0; }
     .main-nav .nav-link, .main-nav .nav-cta, .main-nav .admin-nav-btn, .main-nav .nav-auth { text-align: start; justify-content: flex-start; padding: 10px 16px; font-size: 14px; }
     .main-nav .nav-cta { margin: 6px 16px 2px; justify-content: center; }
     .panel-account { border-top: 1px solid #334155; padding: 10px 16px 0; }
     .main-nav .panel-account .btn { font-size: 14px; }
 }
 [data-theme="light"] .main-nav { background: #f8fafc; }
+[data-theme="light"] .main-nav .nav-section { border-top-color: #e2e8f0; color: #64748b; }
 
 /* Batch 31 — إصلاح تنسيق الفورم: الليبلز والحقول اللي جوه حاويات (خطوات التسجيل، أقسام تعديل المستخدم، صف السعر/المساحة) كانت بتتدفق inline جنب بعض، فكل حقل يطلع جنب الليبل الغلط. الليبل يبقى block فوق حقله، والحقل بملء العرض. الاستثناءات: مفاتيح التبديل وبطاقات اختيار النوع واختيارات المميزات ليهم تنسيقهم الخاص. */
 .form label:not(.toggle-label):not(.type-option):not(.features-picker *) { display: block; }
