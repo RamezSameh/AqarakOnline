@@ -1948,16 +1948,22 @@ document.addEventListener("DOMContentLoaded", function () {
     var sidebar = document.querySelector(".search-sidebar");
     var filterFab = document.getElementById("filterFab");
     var filterClose = document.getElementById("filterSheetClose");
+    var filterBackdrop = document.getElementById("filterBackdrop");
     function setFilterOpen(open) {
         if (!sidebar) return;
         sidebar.classList.toggle("open", open);
         document.body.style.overflow = open ? "hidden" : "";
+        if (filterBackdrop) { filterBackdrop.hidden = !open; }
     }
     if (sidebar && filterFab) {
         filterFab.addEventListener("click", function () { setFilterOpen(!sidebar.classList.contains("open")); });
     }
     if (sidebar && filterClose) {
         filterClose.addEventListener("click", function () { setFilterOpen(false); });
+    }
+    // Batch 83 — الضغط برّه ورقة الفلاتر يقفلها، زي خلفية القائمة الجانبية.
+    if (filterBackdrop) {
+        filterBackdrop.addEventListener("click", function () { setFilterOpen(false); });
     }
 
     // Batch 81 — زر «بحث» في الشريط السفلي يفتح الإعلانات وورقة الفلاتر مفتوحة على خانة البحث.
@@ -1994,7 +2000,29 @@ document.addEventListener("DOMContentLoaded", function () {
             if (dy > 90) closeFn();
         });
     }
-    if (sidebar) addSheetSwipe(sidebar, function () { setFilterOpen(false); });
+    // Batch 83 — سحب ورقة الفلاتر لأسفل يغلقها من أي مكان فيها وهي في أولها (زي ورق التطبيقات):
+    // لو الفلاتر متمررة لتحت، السحب يكمّل سكرول عادي؛ ولو في أولها، السحب لتحت يقفل الورقة.
+    if (sidebar) {
+        var sheetDragY = 0, sheetDragDy = 0, sheetDragging = false;
+        sidebar.addEventListener("touchstart", function (e) {
+            if (e.touches.length !== 1) return;
+            if (sidebar.scrollTop > 0) return;
+            sheetDragging = true; sheetDragY = e.touches[0].clientY; sheetDragDy = 0;
+            sidebar.style.transition = "none";
+        }, { passive: true });
+        sidebar.addEventListener("touchmove", function (e) {
+            if (!sheetDragging) return;
+            sheetDragDy = e.touches[0].clientY - sheetDragY;
+            if (sheetDragDy > 0) sidebar.style.transform = "translateY(" + sheetDragDy + "px)";
+        }, { passive: true });
+        sidebar.addEventListener("touchend", function () {
+            if (!sheetDragging) return;
+            sheetDragging = false;
+            sidebar.style.transition = "";
+            sidebar.style.transform = "";
+            if (sheetDragDy > 90) setFilterOpen(false);
+        });
+    }
 
     /* Batch 33 (11) — أكورديون الفوتر بقى <details> أصلي في _Layout، من غير JS. */
 
