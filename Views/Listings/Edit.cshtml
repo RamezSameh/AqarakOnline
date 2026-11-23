@@ -73,12 +73,6 @@
     <input asp-for="DetailedAddress" />
     <span asp-validation-for="DetailedAddress" class="field-error"></span>
 
-    <label>@L.T("Details")</label>
-    <textarea asp-for="Description" rows="4" placeholder="اكتب وصفًا واضحًا للعقار..."></textarea>
-    <small id="descCounter" class="char-counter"></small>
-    <small id="descWordCounter" class="char-counter"></small>
-    <span asp-validation-for="Description" class="field-error"></span>
-
     <label>@L.T("Features")</label>
     <div class="features-picker">
         @foreach (var feature in AqarakOnline.Models.ListingFeatures.All)
@@ -88,6 +82,12 @@
     </div>
     <label>@L.T("CustomFeature")</label>
     <input type="text" name="customFeatures" value="@string.Join("، ", Model.FeaturesList.Except(AqarakOnline.Models.ListingFeatures.All))" placeholder="اكتب ميزة مش موجودة في الاختيارات (افصل بين الميزات بفاصلة)" />
+
+    <label>@L.T("AdditionalDetails")</label>
+    <textarea asp-for="Description" rows="4" placeholder="اكتب وصفًا واضحًا للعقار..."></textarea>
+    <small id="descCounter" class="char-counter"></small>
+    <small id="descWordCounter" class="char-counter"></small>
+    <span asp-validation-for="Description" class="field-error"></span>
 
     </details>
 

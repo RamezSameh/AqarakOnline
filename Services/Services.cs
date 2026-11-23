@@ -69,6 +69,7 @@ public class LanguageService
         ["Currency"] = ("جنيه", "EGP"),
         ["Area"] = ("المنطقة", "Area"),
         ["Details"] = ("التفاصيل", "Details"),
+        ["AdditionalDetails"] = ("تفاصيل إضافية", "Additional details"),
         ["Features"] = ("المميزات", "Features"),
         ["AdNumber"] = ("رقم الإعلان", "Ad number"),
         ["PropertyType"] = ("النوع", "Type"),
