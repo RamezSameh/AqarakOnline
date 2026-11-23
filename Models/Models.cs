@@ -246,7 +246,6 @@ public class Listing
     [MaxLength(500)]
     public string? DetailedAddress { get; set; }
 
-    [Required(ErrorMessage = "التفاصيل مطلوبة")]
     [MaxLength(2000)]
     public string Description { get; set; } = string.Empty;
 

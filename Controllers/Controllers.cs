@@ -886,7 +886,7 @@ public class ListingsController : Controller
         listing.PropertyType = model.PropertyType;
         listing.Area = model.Area;
         listing.DetailedAddress = model.DetailedAddress;
-        listing.Description = model.Description;
+        listing.Description = model.Description ?? string.Empty;
         listing.Features = ListingFeatureComposer.ComposeFeatures(selectedFeatures, customFeatures);
         listing.Price = model.Price;
         // لو السعر الجديد أعلى من الأصلي، الأصلي يتحدث معه؛

@@ -226,10 +226,13 @@ else
 </div>
 }
 
+@if (!string.IsNullOrWhiteSpace(Model.Description))
+{
 <section class="details-section">
     <h2>@L.T("Details")</h2>
     <p>@Model.Description</p>
 </section>
+}
 @if (Model.FeaturesList.Any())
 {
 <section class="details-section">
