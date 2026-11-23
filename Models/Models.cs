@@ -244,6 +244,7 @@ public class Listing
     /// العام ولا في صفحة التفاصيل العامة. العامة يرون المنطقة فقط.
     /// </summary>
     [MaxLength(500)]
+    [Required(ErrorMessage = "العنوان التفصيلي مطلوب")]
     public string? DetailedAddress { get; set; }
 
     [MaxLength(2000)]

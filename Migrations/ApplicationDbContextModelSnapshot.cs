@@ -376,6 +376,7 @@ namespace AqarakOnline.Migrations
                         .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("DetailedAddress")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
