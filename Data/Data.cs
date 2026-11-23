@@ -191,6 +191,20 @@ public static class SeedData
     }
 
     /// <summary>
+    /// Batch 74 — تنظيف بيانات قديمة: أي إعلان غير متاح كان مميزًا قبل Batch 69
+    /// يفقد التمييز (القاعدة: غير المتاح مينفعش يبقى مميز). يعمل عند كل تشغيل،
+    /// ولا يفعل شيئًا لو لم توجد إعلانات مخالفة.
+    /// </summary>
+    public static void ClearFeaturedForUnavailable(ApplicationDbContext context)
+    {
+        context.Listings
+            .Where(l => !l.IsAvailable && l.IsFeatured)
+            .ExecuteUpdate(s => s
+                .SetProperty(l => l.IsFeatured, false)
+                .SetProperty(l => l.FeaturedUntil, (DateTime?)null));
+    }
+
+    /// <summary>
     /// مستخدمون تجريبيون للتجربة المحلية فقط.
     /// تحذير أمني: كلمات المرور هنا معروفة ومنشورة مع الكود، فلا تنشر التطبيق
     /// بهذه الإعدادات أبدًا. قبل أي نشر عام، اضبط SeedTestUsers على false

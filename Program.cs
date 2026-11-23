@@ -249,6 +249,7 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
     SeedData.SeedListings(context);
     SeedData.SeedCollections(context);
+    SeedData.ClearFeaturedForUnavailable(context);
 
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     foreach (var role in new[] { "Admin", "User" })
