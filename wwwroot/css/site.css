@@ -363,7 +363,8 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 /* Batch 21 — design 3 */
 /* (1) سلايدر أفقي لأحدث الإعلانات في الرئيسية */
 .cards-slider { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; margin-top: 20px; }
-.cards-slider .listing-card { flex: 0 0 320px; scroll-snap-align: start; }
+/* Batch 70 — كروت سلايدر الرئيسية أصغر على الشاشة الكبيرة (320 ← 260px، 4 كروت في الصف بدل 3). */
+.cards-slider .listing-card { flex: 0 0 260px; scroll-snap-align: start; }
 /* Batch 40 — الأكثر مشاهدة بقى سلايدر زي باقي أقسام الرئيسية: العنصر المرتب
    (.ranked-item) ياخد نفس عرض كارت السلايدر بدل ما الشبكة تنزله عمود واحد. */
 .cards-slider .ranked-item { flex: 0 0 320px; scroll-snap-align: start; }
