@@ -1221,14 +1221,10 @@ html, body { overflow-x: hidden; overflow-x: clip; }
 .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
 .filter-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin: 8px 0; }
 .filter-checks label { display: flex; align-items: center; gap: 8px; margin: 0; }
-.filter-actions { position: sticky; bottom: 0; display: flex; gap: 10px; padding: 12px 0 4px; background: #0f172a; z-index: 5; }
+.filter-actions { display: flex; gap: 10px; padding: 12px 0 4px; }
 .filter-actions .btn { flex: 1; text-align: center; justify-content: center; }
 .filters-box .filter-form .btn-primary[type="submit"] { position: static; width: auto; box-shadow: none; }
 [data-theme="light"] .filters-box .filter-group { background: rgba(255, 255, 255, .6); border-color: #cbd5e1; }
-[data-theme="light"] .filter-actions { background: #f8fafc; }
-@media (max-width: 640px) {
-    .filter-actions { bottom: calc(72px + env(safe-area-inset-bottom)); }
-}
 /* (10) حسابي — قيمة الرسم وتنسيق التنبيهات وتصغير الأرقام */
 .chart-value { min-width: 32px; text-align: end; font-weight: 700; }
 .account-notifications { list-style: none; padding: 0; margin: 0; }
