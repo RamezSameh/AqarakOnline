@@ -245,29 +245,62 @@ else
     </ul>
 </section>
 }
+@if (Model.HasElectricityMeter || Model.HasGasMeter || Model.HasWaterMeter || Model.HasParking || Model.HasElevator || Model.HasBalcony || Model.HasAirConditioning || Model.HasSecurity)
+{
 <section class="meters-table">
     <h2>العدادات والمرافق</h2>
     <div class="meters-grid">
+        @if (Model.HasElectricityMeter || Model.HasGasMeter || Model.HasWaterMeter)
+        {
         <div>
             <h3>@L.T("Meters")</h3>
             <table class="table">
-                <tr><td>@L.T("ElectricityMeter")</td><td>@(Model.HasElectricityMeter ? "✓" : "✗")</td></tr>
-                <tr><td>@L.T("GasMeter")</td><td>@(Model.HasGasMeter ? "✓" : "✗")</td></tr>
-                <tr><td>@L.T("WaterMeter")</td><td>@(Model.HasWaterMeter ? "✓" : "✗")</td></tr>
+                @if (Model.HasElectricityMeter)
+                {
+                <tr><td>@L.T("ElectricityMeter")</td><td>✓</td></tr>
+                }
+                @if (Model.HasGasMeter)
+                {
+                <tr><td>@L.T("GasMeter")</td><td>✓</td></tr>
+                }
+                @if (Model.HasWaterMeter)
+                {
+                <tr><td>@L.T("WaterMeter")</td><td>✓</td></tr>
+                }
             </table>
         </div>
+        }
+        @if (Model.HasParking || Model.HasElevator || Model.HasBalcony || Model.HasAirConditioning || Model.HasSecurity)
+        {
         <div>
             <h3>@L.T("Amenities")</h3>
             <table class="table">
-                <tr><td>@L.T("Parking")</td><td>@(Model.HasParking ? "✓" : "✗")</td></tr>
-                <tr><td>@L.T("Elevator")</td><td>@(Model.HasElevator ? "✓" : "✗")</td></tr>
-                <tr><td>@L.T("Balcony")</td><td>@(Model.HasBalcony ? "✓" : "✗")</td></tr>
-                <tr><td>@L.T("AirConditioning")</td><td>@(Model.HasAirConditioning ? "✓" : "✗")</td></tr>
-                <tr><td>@L.T("Security")</td><td>@(Model.HasSecurity ? "✓" : "✗")</td></tr>
+                @if (Model.HasParking)
+                {
+                <tr><td>@L.T("Parking")</td><td>✓</td></tr>
+                }
+                @if (Model.HasElevator)
+                {
+                <tr><td>@L.T("Elevator")</td><td>✓</td></tr>
+                }
+                @if (Model.HasBalcony)
+                {
+                <tr><td>@L.T("Balcony")</td><td>✓</td></tr>
+                }
+                @if (Model.HasAirConditioning)
+                {
+                <tr><td>@L.T("AirConditioning")</td><td>✓</td></tr>
+                }
+                @if (Model.HasSecurity)
+                {
+                <tr><td>@L.T("Security")</td><td>✓</td></tr>
+                }
             </table>
         </div>
+        }
     </div>
 </section>
+}
     @if (User.Identity?.IsAuthenticated == true)
     {
         var isFavorite = ViewBag.IsFavorite == true;
