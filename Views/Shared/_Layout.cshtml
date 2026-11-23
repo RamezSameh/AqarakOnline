@@ -135,12 +135,14 @@
                 <p class="footer-brand">@L.T("Brand")</p>
                 <p>@L.T("Tagline")</p>
                 @await Component.InvokeAsync("FooterStats")
+                <div class="footer-popular-areas">
                 <p class="footer-heading">مناطق شائعة</p>
                 <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="مدينة نصر، القاهرة">مدينة نصر</a></p>
                 <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="المعادي، القاهرة">المعادي</a></p>
                 <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="التجمع الخامس، القاهرة الجديدة">التجمع الخامس</a></p>
                 <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="أكتوبر، الجيزة">6 أكتوبر</a></p>
                 <p>📍 <a asp-controller="Listings" asp-action="Area" asp-route-area="المهندسين، الجيزة">المهندسين</a></p>
+                </div>
             </div>
             <details class="footer-col">
                 <summary class="footer-heading">روابط سريعة</summary>
@@ -159,13 +161,14 @@
                 <p>👁️ <a asp-controller="Listings" asp-action="Index" asp-route-sort="viewsDesc">الأكثر مشاهدة</a></p>
                 }
             </details>
-            <details class="footer-col">
+            <details class="footer-col footer-contact-details">
                 <summary class="footer-heading">تواصل معنا</summary>
                 <p>@L.T("Phone"): <a href="tel:@ContactOptions.Value.Phone">@ContactOptions.Value.Phone</a></p>
                 <p>@L.T("WhatsApp"): @ContactOptions.Value.WhatsApp</p>
                 <p>@L.T("Email"): @ContactOptions.Value.Email</p>
                 <p>💬 <a href="https://wa.me/@ContactOptions.Value.WhatsAppDigits" target="_blank" rel="noopener">واتساب</a> • 📘 <a href="https://www.facebook.com/sharer/sharer.php?u=@Uri.EscapeDataString($"{Context.Request.Scheme}://{Context.Request.Host}/")" target="_blank" rel="noopener">شارك الموقع على فيسبوك</a></p>
             </details>
+            <a class="footer-col footer-contact-link" asp-controller="Home" asp-action="Contact">📞 @L.T("ContactUs")</a>
         </div>
         <p class="footer-copy">© 2026 @L.T("Brand") — جميع الحقوق محفوظة</p>
     </footer>

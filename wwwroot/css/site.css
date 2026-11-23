@@ -988,7 +988,14 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
 /* (9) إحصائيات الرئيسية عمود واحد في الموبايل */
 @media (max-width: 640px) { .home-stats { flex-direction: column; } .home-stats .stat { width: 100%; } }
 /* (10) الفوتر بترتيب تواصل أولًا في الموبايل */
-@media (max-width: 640px) { .footer-grid .footer-col:nth-child(3) { order: -1; } }
+/* Batch 78 — الفوتر على الموبايل: مناطق شائعة مخفية، وتواصل معنا رابط في الآخر يودي لصفحة التواصل (بدل الـ details اللي كان بيطلع أول بفضل order:-1). */
+.footer-contact-link { display: none; }
+@media (max-width: 640px) {
+    .footer-popular-areas { display: none; }
+    .footer-contact-details { display: none; }
+    .footer-contact-link { display: block; font-weight: 700; color: #f1f5f9; text-decoration: none; }
+}
+[data-theme="light"] .footer-contact-link { color: #0f172a; }
 /* (12) تبويبات التفاصيل بتمرير أفقي في الموبايل */
 @media (max-width: 640px) { .details-tab-buttons { overflow-x: auto; } .details-tab-btn { flex: 0 0 auto; } }
 /* (13) زر أضف إعلانك يختفي عند التمرير لأسفل */
