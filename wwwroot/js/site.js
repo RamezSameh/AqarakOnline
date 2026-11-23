@@ -907,7 +907,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var existing = document.querySelector("#existingPhotos img");
             if (existing) { photoUrl = existing.getAttribute("src") || ""; }
         }
-        var html = '<article class="listing-card"><div class="availability-bar available">متاح</div>';
+        var html = '<article class="listing-card revealed"><div class="availability-bar available">متاح</div>';
         html += photoUrl
             ? '<img class="listing-photo" src="' + escapeHtml(photoUrl) + '" alt="" />'
             : '<div class="listing-photo placeholder">لا توجد صورة</div>';
