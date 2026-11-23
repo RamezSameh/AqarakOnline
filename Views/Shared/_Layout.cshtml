@@ -73,6 +73,10 @@
                     <input type="text" name="search" placeholder="ابحث..." aria-label="بحث" />
                 </form>
                 <button type="button" id="mobileSearchBtn" class="btn btn-ghost header-search-btn" aria-label="بحث">🔍</button>
+                <form class="header-search-mobile" id="mobileSearchForm" asp-controller="Listings" asp-action="Index" method="get" hidden>
+                    <input type="text" name="search" placeholder="ابحث عن عقار..." aria-label="بحث" />
+                    <button type="submit" class="btn btn-primary">بحث</button>
+                </form>
                 <button type="button" id="themeToggle" class="btn btn-ghost" title="الوضع الفاتح / الداكن">☀️</button>
                 @await Component.InvokeAsync("NotificationBell")
                 @if (User.Identity?.IsAuthenticated == true)
@@ -104,10 +108,6 @@
             </div>
             <button type="button" class="nav-toggle" id="navToggle" aria-label="القائمة" aria-expanded="false" aria-controls="mainNav">☰</button>
         </div>
-        <form class="header-search-mobile" id="mobileSearchForm" asp-controller="Listings" asp-action="Index" method="get" hidden>
-            <input type="text" name="search" placeholder="ابحث عن عقار..." aria-label="بحث" />
-            <button type="submit" class="btn btn-primary">بحث</button>
-        </form>
         @* Batch 38 — الخلفية جوّه الـ header عمدًا: الدرج z-300 والخلفية z-290 لازم
            يبقوا في نفس سياق التكديس، وإلا الخلفية (برّه الهيدر) بتغطي الدرج كله. *@
         <div id="navBackdrop" class="nav-backdrop" hidden></div>

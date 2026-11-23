@@ -192,9 +192,9 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 .notification-item p { margin: 0 0 8px; }
 /* شاشات متوسطة وصغيرة: الـ navbar يتحول لقائمة قابلة للطي. */
 @media (max-width: 860px) {
-    .nav-toggle { display: inline-block; order: 2; min-width: 40px; min-height: 40px; font-size: 18px; }
+    .nav-toggle { display: inline-block; order: 2; min-width: 40px; min-height: 40px; font-size: 18px; margin-inline-start: auto; }
     .header-inner { gap: 8px; flex-wrap: wrap; min-height: 48px; padding: 6px 0; }
-    .brand { flex: 1; order: 1; font-size: 19px; }
+    .brand { flex: 0 0 auto; order: 1; font-size: 19px; }
     .header-actions { order: 2; margin-inline-start: 0; gap: 8px; }
     .header-actions .bell-btn, .header-actions .user-menu-btn, .header-actions .btn { min-height: 36px; padding: 6px 10px; }
     .main-nav { display: none; width: 100%; flex-direction: column; align-items: stretch; order: 4; border: 1px solid #334155; border-radius: 12px; background: #111827; padding: 12px; margin-top: 8px; max-height: 70vh; overflow-y: auto; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); }
@@ -933,7 +933,8 @@ main h1 { font-weight: 800; }
 @media (max-width: 860px) {
     .header-search-btn { display: inline-flex; }
 }
-.header-search-mobile { display: flex; gap: 8px; padding: 10px 16px; }
+.header-search-mobile { display: flex; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.header-search-mobile input { flex: 1; min-width: 0; }
 .header-search-mobile[hidden] { display: none; }
 @media (min-width: 861px) {
     .header-search-mobile { display: none; }
@@ -966,6 +967,8 @@ main h1 { font-size: clamp(26px, 4vw, 36px); }
     /* Batch 66 — شارة الجرس كانت بتتقص من فوق على الموبايل: الشارة طالعة
        8px فوق الزرار وصف الأزرار عليه overflow-x:auto فبيقص الزيادة. */
     .bell-badge { top: 0; }
+    /* Batch 79 — البحث يفتح جنب الأيقونة: عند الفتح تختفي باقي أزرار الصف وتتمدد الخانة. */
+    .header-actions.search-open > :not(#mobileSearchBtn):not(#mobileSearchForm) { display: none; }
 }
 /* (3) صورة الكارت 16/9 في الموبايل */
 @media (max-width: 640px) { .listing-photo { aspect-ratio: 16/9; } }

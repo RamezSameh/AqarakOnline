@@ -1767,6 +1767,8 @@ document.addEventListener("DOMContentLoaded", function () {
         mobileSearchBtn.addEventListener("click", function () {
             var hidden = mobileSearchForm.hidden;
             mobileSearchForm.hidden = !hidden;
+            var actions = mobileSearchBtn.closest(".header-actions");
+            if (actions) { actions.classList.toggle("search-open", hidden); }
             if (hidden) {
                 var input = mobileSearchForm.querySelector("input");
                 if (input) { input.focus(); }
