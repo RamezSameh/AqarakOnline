@@ -1240,3 +1240,17 @@ html, body { overflow-x: hidden; overflow-x: clip; }
     .home-stats .stat strong { font-size: 24px; }
     input, select, textarea { font-size: 16px; }
 }
+
+/* Batch 56 — كارت أصغر على الهواتف: صورة أقصر ومسافات وخطوط أقل. */
+@media (max-width: 640px) {
+    .listing-card { border-radius: 8px; }
+    .listing-photo { aspect-ratio: 2/1; }
+    .listing-body { padding: 10px 12px; }
+    .listing-card h3 { font-size: 16px; }
+    .listing-meta { gap: 6px; margin-bottom: 6px; }
+    .listing-area, .listing-facts { margin: 4px 0; }
+    .listing-facts + .listing-facts { display: none; }
+    .listing-price { font-size: 20px; padding: 4px 8px; margin: 4px 0; }
+    .listing-published, .listing-views { margin: 2px 0; }
+    .cards-slider .listing-card { flex-basis: 280px; }
+}
